@@ -302,7 +302,68 @@ serve(async (req) => {
     if (bkErr) return jsonError(`Insert business_knowledge failed: ${bkErr.message}`, 500);
   }
 
-  // 6. Update intake status
+  // 6. Clone A/B tests + variants from canonical source (stretch-zone-westborough)
+  // Templates use {locationName}/{senderName}/{slot1}/{slot2}/{bookingUrl}/{leadName} placeholders
+  // which get replaced at send time from workflow_location_config + check-availability, so the
+  // cloned templates work for any location without content edits. Admin reviews and tunes per
+  // location via /ab-configuration before flipping workflows_enabled=true.
+  const AB_SOURCE_SLUG = input.ab_source_slug || 'stretch-zone-westborough';
+  let clonedTests = 0;
+  let clonedVariants = 0;
+  try {
+    const { data: sourceTests, error: stErr } = await admin
+      .from('ab_tests')
+      .select('*')
+      .eq('location_slug', AB_SOURCE_SLUG)
+      .eq('status', 'active');
+    if (stErr) throw stErr;
+
+    for (const src of sourceTests || []) {
+      const { data: newTest, error: ntErr } = await admin
+        .from('ab_tests')
+        .insert({
+          name: src.name,
+          module: src.module,
+          touchpoint: src.touchpoint,
+          location_slug: slug,
+          location_slugs: [slug],
+          status: 'active',
+          started_at: new Date().toISOString(),
+          created_by: userId,
+        })
+        .select('id')
+        .single();
+      if (ntErr) throw ntErr;
+
+      const { data: srcVariants, error: svErr } = await admin
+        .from('ab_test_variants')
+        .select('variant_code,variant_label,prompt_instructions,weight,hidden_from_archive')
+        .eq('ab_test_id', src.id);
+      if (svErr) throw svErr;
+
+      if (srcVariants && srcVariants.length) {
+        const variantRows = srcVariants.map((v: any) => ({
+          ab_test_id: newTest.id,
+          variant_code: v.variant_code,
+          variant_label: v.variant_label,
+          prompt_instructions: v.prompt_instructions,
+          weight: v.weight,
+          hidden_from_archive: v.hidden_from_archive,
+        }));
+        const { error: insVarErr } = await admin
+          .from('ab_test_variants')
+          .insert(variantRows);
+        if (insVarErr) throw insVarErr;
+        clonedVariants += variantRows.length;
+      }
+      clonedTests += 1;
+    }
+  } catch (cloneErr: any) {
+    // Don't fail the whole provision if A/B clone fails; log and continue
+    console.error('A/B clone failed:', cloneErr.message);
+  }
+
+  // 7. Update intake status
   const { error: updateErr } = await admin
     .from('location_intake_submissions')
     .update({
@@ -321,11 +382,15 @@ serve(async (req) => {
       campaign_toggles: CAMPAIGN_TYPES.length,
       location_settings: Object.keys(DEFAULT_SETTINGS).length,
       business_knowledge: bk.length,
+      ab_tests_cloned: clonedTests,
+      ab_variants_cloned: clonedVariants,
     },
+    ab_source_slug: AB_SOURCE_SLUG,
     notes: [
       'workflows_enabled is FALSE. Flip to true in workflow_location_config when Twilio and hardcoded surfaces are wired.',
       'All campaign_toggles are OFF. Enable per campaign in /campaigns page.',
       'Hardcoded edge fns and n8n workflows NOT updated. See newlocation skill section 3.',
+      `A/B tests cloned from ${AB_SOURCE_SLUG}. Review + tune at /ab-configuration before go-live.`,
     ],
   }), {
     status: 200,
