@@ -1,6 +1,6 @@
 (() => {
-  const SUPABASE_URL = 'https://kxkchytrjhgsndnvvxhc.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_FsTW9ztAX9XgyspAV9s38w_torjlK-B';
+  const SUPABASE_URL = 'https://jjckotsrhuxxftwmdlwc.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_vJre2v0OdqOGfrNBHAJE0g_L3FaG1RA';
   const TABLE = 'location_intake_submissions';
   const BUCKET = 'intake-logos';
   const AUTOSAVE_KEY = 'velocity-intake-draft-v1';

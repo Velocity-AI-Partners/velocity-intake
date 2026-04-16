@@ -23,7 +23,7 @@ https://velocity-ai-partners.github.io/velocity-intake/
 
 ## Supabase config
 
-Project: VAP Staging (`kxkchytrjhgsndnvvxhc`)
+Project: VAP App production (`jjckotsrhuxxftwmdlwc`)
 
 Table: `location_intake_submissions` (see migration `001_create_location_intake_submissions.sql`)
 
@@ -40,15 +40,14 @@ RLS policies:
 3. Create a webhook on `location_intake_submissions` for INSERT events, HTTP POST to the Slack webhook URL with body template:
    ```json
    {
-     "text": "New intake: {{ record.business_name }} ({{ record.city }}, {{ record.crm_platform }}) — <https://supabase.com/dashboard/project/kxkchytrjhgsndnvvxhc/editor/{{ record.id }}|review>"
+     "text": "New intake: {{ record.business_name }} ({{ record.city }}, {{ record.crm_platform }}) - <https://supabase.com/dashboard/project/jjckotsrhuxxftwmdlwc/editor/{{ record.id }}|review>"
    }
    ```
 
 ## Honest v1 limitations
 
 - CRM password stored in plain text. Only admins can SELECT; anon can only INSERT. Acceptable at current scale. Encrypt via `pgsodium` before enterprise rollout.
-- Points at staging Supabase. Flip `SUPABASE_URL` + `SUPABASE_ANON_KEY` in `form.js` to production (`jjckotsrhuxxftwmdlwc`) when ready.
-- No admin review UI; use Supabase Studio table editor.
+- No admin review UI yet; use Supabase Studio table editor or the forthcoming `/new-location` page after PR #196 merges.
 - Logo upload is client-side direct to bucket. No server-side validation of file type or malware scan.
 - Honeypot-only bot defense. Upgrade to Cloudflare Turnstile if spam appears.
 
