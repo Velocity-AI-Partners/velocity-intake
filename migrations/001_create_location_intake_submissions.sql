@@ -72,6 +72,11 @@ create table if not exists public.location_intake_submissions (
 
 alter table public.location_intake_submissions enable row level security;
 
+-- Role grants (required in addition to RLS policies)
+grant insert on public.location_intake_submissions to anon;
+grant select, update on public.location_intake_submissions to authenticated;
+grant all on public.location_intake_submissions to service_role;
+
 -- Anon can INSERT only, and only if honeypot is empty
 drop policy if exists "anon_insert_intake" on public.location_intake_submissions;
 create policy "anon_insert_intake"

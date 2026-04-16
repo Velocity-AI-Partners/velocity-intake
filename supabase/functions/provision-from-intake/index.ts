@@ -189,15 +189,9 @@ serve(async (req) => {
   const { error: wlcErr } = await admin.from('workflow_location_config').insert(wlcRow);
   if (wlcErr) return jsonError(`Insert workflow_location_config failed: ${wlcErr.message}`, 500);
 
-  // 3. Campaign toggles, all OFF
-  const toggles = CAMPAIGN_TYPES.map((t) => ({
-    location_slug: slug,
-    campaign_type: t,
-    enabled: false,
-    updated_by: userId,
-  }));
-  const { error: togglesErr } = await admin.from('campaign_toggles').insert(toggles);
-  if (togglesErr) return jsonError(`Insert campaign_toggles failed: ${togglesErr.message}`, 500);
+  // 3. Campaign toggles are auto-created by the auto_provision_new_location trigger
+  //    when the locations row is inserted. No manual insert needed here. We record
+  //    the count for the response payload only.
 
   // 4. Location settings defaults (11 rows)
   const settingsRows = Object.entries(DEFAULT_SETTINGS).map(([k, v]) => ({
