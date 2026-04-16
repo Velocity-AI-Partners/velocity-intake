@@ -60,6 +60,28 @@
       </label>
 
       <label>
+        Business website URL
+        <input type="url" name="website_url" placeholder="https://">
+      </label>
+
+      <label>
+        Google Business Profile URL (optional)
+        <input type="url" name="google_business_profile_url" placeholder="https://g.page/...">
+        <small>Helps us keep hours and contact info aligned with what your customers already see.</small>
+      </label>
+
+      <fieldset class="inline-radios">
+        <legend>Is this one of multiple locations under the same brand?</legend>
+        <label class="radio"><input type="radio" name="is_multi_location" value="no" checked> No, standalone</label>
+        <label class="radio"><input type="radio" name="is_multi_location" value="yes"> Yes, part of a chain or franchise</label>
+      </fieldset>
+
+      <label id="parent-brand-wrap" hidden>
+        Parent brand or franchise name
+        <input type="text" name="parent_brand_name" placeholder="e.g. Stretch Zone, StretchLab, IMA">
+      </label>
+
+      <label>
         Studio logo (optional)
         <input type="file" name="logo" accept="image/png,image/jpeg" id="logo-input">
         <small>PNG or JPG, under 2MB. We use this in client-facing pages.</small>
@@ -109,6 +131,23 @@
         <input type="text" name="crm_store_id" placeholder="If you don't know, write 'unknown'">
         <small>Your CRM support can tell you. "unknown" is fine, we can find it.</small>
       </label>
+
+      <fieldset class="inline-radios">
+        <legend>Do you already have a Twilio account for SMS?</legend>
+        <label class="radio"><input type="radio" name="existing_twilio" value="no" checked> No, please provision one</label>
+        <label class="radio"><input type="radio" name="existing_twilio" value="yes"> Yes, use mine</label>
+      </fieldset>
+
+      <div id="twilio-existing-wrap" hidden>
+        <label>
+          Twilio Account SID
+          <input type="text" name="existing_twilio_account_sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+        </label>
+        <label>
+          Twilio Auth Token
+          <input type="password" name="existing_twilio_auth_token" placeholder="Found in your Twilio console">
+        </label>
+      </div>
     </section>
 
     <section>
@@ -156,6 +195,27 @@
       <label>
         Words or phrases to never use
         <textarea name="avoid_words" rows="2" placeholder="e.g. never say 'cheap', never use emojis"></textarea>
+      </label>
+
+      <label>
+        Instagram handle (optional)
+        <input type="text" name="instagram_handle" placeholder="@yourbusiness">
+      </label>
+
+      <label>
+        Facebook Page URL (optional)
+        <input type="url" name="facebook_page_url" placeholder="https://facebook.com/...">
+      </label>
+
+      <label>
+        TikTok handle (optional)
+        <input type="text" name="tiktok_handle" placeholder="@yourbusiness">
+      </label>
+
+      <label>
+        Preferred subdomain for SMS links (optional)
+        <input type="text" name="preferred_subdomain" placeholder="e.g. yourbrand (we'll use yourbrand.vap-app.com)">
+        <small>Leave blank and we'll pick something sensible.</small>
       </label>
     </section>
 
@@ -252,8 +312,14 @@
       <h2>8. Anything else?</h2>
 
       <label>
+        Preferred target launch date (optional)
+        <input type="date" name="target_launch_date">
+        <small>When would you like your AI system live? We'll aim for this.</small>
+      </label>
+
+      <label>
         Notes for the Velocity team
-        <textarea name="notes" rows="4" placeholder="Anything else we should know: existing Twilio account, special hours, multiple locations under one brand, anything."></textarea>
+        <textarea name="notes" rows="4" placeholder="Anything else we should know: special hours, existing automation tools, anything."></textarea>
       </label>
     </section>
 

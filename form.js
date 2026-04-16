@@ -134,7 +134,7 @@
           el.value = v;
         }
       }
-      toggleTrialURL();
+      applyConditionals();
     } catch (e) { /* invalid json, ignore */ }
   }
 
@@ -145,6 +145,22 @@
   function toggleTrialURL() {
     const yes = document.querySelector('[name="has_free_trial"][value="yes"]').checked;
     document.getElementById('trial-url-wrap').hidden = !yes;
+  }
+
+  function toggleParentBrand() {
+    const yes = document.querySelector('[name="is_multi_location"][value="yes"]').checked;
+    document.getElementById('parent-brand-wrap').hidden = !yes;
+  }
+
+  function toggleExistingTwilio() {
+    const yes = document.querySelector('[name="existing_twilio"][value="yes"]').checked;
+    document.getElementById('twilio-existing-wrap').hidden = !yes;
+  }
+
+  function applyConditionals() {
+    toggleTrialURL();
+    toggleParentBrand();
+    toggleExistingTwilio();
   }
 
   async function uploadLogo(file) {
@@ -257,6 +273,18 @@
         avoid_words: fd.get('avoid_words') || null,
         dashboard_users: collectUsers(),
         business_knowledge: collectBusinessKnowledge(fd),
+        website_url: fd.get('website_url') || null,
+        google_business_profile_url: fd.get('google_business_profile_url') || null,
+        is_multi_location: fd.get('is_multi_location') === 'yes',
+        parent_brand_name: fd.get('parent_brand_name') || null,
+        instagram_handle: fd.get('instagram_handle') || null,
+        facebook_page_url: fd.get('facebook_page_url') || null,
+        tiktok_handle: fd.get('tiktok_handle') || null,
+        preferred_subdomain: fd.get('preferred_subdomain') || null,
+        existing_twilio: fd.get('existing_twilio') === 'yes',
+        existing_twilio_account_sid: fd.get('existing_twilio_account_sid') || null,
+        existing_twilio_auth_token: fd.get('existing_twilio_auth_token') || null,
+        target_launch_date: fd.get('target_launch_date') || null,
         notes: fd.get('notes') || null,
         honeypot: fd.get('honeypot') || null,
         user_agent: navigator.userAgent
@@ -282,6 +310,8 @@
     document.getElementById('intake-form').addEventListener('input', saveDraft);
     document.getElementById('intake-form').addEventListener('change', (e) => {
       if (e.target.name === 'has_free_trial') toggleTrialURL();
+      if (e.target.name === 'is_multi_location') toggleParentBrand();
+      if (e.target.name === 'existing_twilio') toggleExistingTwilio();
       saveDraft();
     });
     document.getElementById('intake-form').addEventListener('submit', handleSubmit);

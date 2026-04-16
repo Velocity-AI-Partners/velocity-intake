@@ -44,6 +44,20 @@ create table if not exists public.location_intake_submissions (
   --  approved_phrases, forbidden_claims, first_visit, faq
   business_knowledge jsonb,
 
+  -- BRIEF #4 gap fields
+  website_url text,
+  google_business_profile_url text,
+  instagram_handle text,
+  facebook_page_url text,
+  tiktok_handle text,
+  existing_twilio boolean,
+  existing_twilio_account_sid text,
+  existing_twilio_auth_token text,
+  is_multi_location boolean,
+  parent_brand_name text,
+  target_launch_date date,
+  preferred_subdomain text,
+
   notes text,
 
   -- Meta + review
