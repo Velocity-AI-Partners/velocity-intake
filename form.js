@@ -377,13 +377,14 @@
     document.getElementById('error-box').hidden = true;
   }
 
-  function showDraftLink() {
+  function showDraftLink(scroll) {
     if (!draftId) return;
     const banner = document.getElementById('draft-banner');
     const linkEl = document.getElementById('draft-link');
     const url = `${window.location.origin}${window.location.pathname}?draft=${draftId}`;
     linkEl.value = url;
     banner.hidden = false;
+    if (scroll) banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   async function handleSaveDraft() {
@@ -409,7 +410,7 @@
         await insertRow(payload);
         setDraftIdInUrl(draftId);
       }
-      showDraftLink();
+      showDraftLink(true);
       btn.textContent = 'Saved \u2713';
       setTimeout(() => { btn.textContent = 'Save draft'; btn.disabled = false; }, 1500);
     } catch (err) {

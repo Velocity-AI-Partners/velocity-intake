@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Velocity AI Partners — New Location Intake</title>
 <meta name="description" content="Provide the details we need to set up your location on the Velocity AI platform.">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <main class="container">
@@ -13,15 +13,6 @@
     <h1>New Location Intake</h1>
     <p class="lead">Welcome. Fill out the info below so we can set up your AI system. Takes about 10 minutes. Use Save draft to come back later or hand off to someone else using the link we give you.</p>
   </header>
-
-  <div id="draft-banner" class="draft-banner" hidden>
-    <div class="draft-banner-title">Draft saved</div>
-    <p class="draft-banner-note">Share this link to continue on any device, or send it to the client to let them finish filling in the rest.</p>
-    <div class="draft-link-row">
-      <input type="text" id="draft-link" readonly>
-      <button type="button" id="copy-link-btn" class="btn-secondary">Copy link</button>
-    </div>
-  </div>
 
   <form id="intake-form" novalidate>
 
@@ -345,6 +336,15 @@
       <p class="submit-note">We'll review and reach out within 1 business day. Save draft if you need to come back later or hand this off.</p>
     </div>
 
+    <div id="draft-banner" class="draft-banner" hidden>
+      <div class="draft-banner-title">Draft saved</div>
+      <p class="draft-banner-note">Share this link to continue on any device, or send it to the client to let them finish filling in the rest.</p>
+      <div class="draft-link-row">
+        <input type="text" id="draft-link" readonly>
+        <button type="button" id="copy-link-btn" class="btn-secondary">Copy link</button>
+      </div>
+    </div>
+
     <div id="error-box" class="error-box" hidden></div>
   </form>
 
@@ -355,6 +355,6 @@
   </div>
 </main>
 
-<script src="form.js?v=3"></script>
+<script src="form.js?v=4"></script>
 </body>
 </html>
