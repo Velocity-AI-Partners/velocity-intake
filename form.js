@@ -257,7 +257,7 @@
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=representation'
+        Prefer: 'return=minimal'
       },
       body: JSON.stringify(payload)
     });
@@ -265,8 +265,6 @@
       const body = await resp.text();
       throw new Error(`Insert failed: ${resp.status} ${body}`);
     }
-    const rows = await resp.json();
-    return rows[0];
   }
 
   async function updateRow(id, payload) {
@@ -444,8 +442,9 @@
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
-        const row = await insertRow(payload);
-        draftId = row.id;
+        draftId = (crypto.randomUUID && crypto.randomUUID()) || generateUuid();
+        payload.id = draftId;
+        await insertRow(payload);
         setDraftIdInUrl(draftId);
       }
       showDraftLink();
@@ -457,6 +456,15 @@
       btn.textContent = 'Save draft';
       btn.disabled = false;
     }
+  }
+
+  function generateUuid() {
+    // Fallback for older browsers without crypto.randomUUID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
   }
 
   async function handleSubmit(e) {
@@ -499,6 +507,7 @@
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
+        payload.id = (crypto.randomUUID && crypto.randomUUID()) || generateUuid();
         await insertRow(payload);
       }
 
