@@ -14,6 +14,15 @@
     <p class="lead">Welcome. Fill out the info below so we can set up your AI system. Takes about 10 minutes. Your progress saves as you type.</p>
   </header>
 
+  <div id="draft-banner" class="draft-banner" hidden>
+    <div class="draft-banner-title">Draft saved</div>
+    <p class="draft-banner-note">Share this link to continue on any device, or send it to the client to let them finish filling in the rest.</p>
+    <div class="draft-link-row">
+      <input type="text" id="draft-link" readonly>
+      <button type="button" id="copy-link-btn" class="btn-secondary">Copy link</button>
+    </div>
+  </div>
+
   <form id="intake-form" novalidate>
 
     <section>
@@ -332,7 +341,8 @@
 
     <div class="submit-row">
       <button type="submit" id="submit-btn">Submit intake form</button>
-      <p class="submit-note">We'll review and reach out within 1 business day.</p>
+      <button type="button" id="save-draft-btn" class="btn-secondary">Save draft</button>
+      <p class="submit-note">We'll review and reach out within 1 business day. Save draft if you need to come back later or hand this off.</p>
     </div>
 
     <div id="error-box" class="error-box" hidden></div>

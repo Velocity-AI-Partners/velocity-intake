@@ -277,6 +277,51 @@ label.radio {
   color: var(--fg);
 }
 
+.draft-banner {
+  background: #f4f8ff;
+  border: 1px solid #c9d8f5;
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.draft-banner-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.draft-banner-note {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0 0 12px 0;
+}
+
+.draft-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.draft-link-row input {
+  flex: 1;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+#save-draft-btn {
+  margin-left: 12px;
+}
+
+.submit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.submit-row .submit-note {
+  flex-basis: 100%;
+}
+
 @media (max-width: 600px) {
   .hours-grid {
     grid-template-columns: 80px 1fr 1fr 60px;

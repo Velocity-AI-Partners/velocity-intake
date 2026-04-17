@@ -8,6 +8,23 @@
   const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   const DAY_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 
+  // Draft state: if the URL has ?draft=<uuid>, we are editing a server-side
+  // draft. Save Draft writes back to the same row; Submit flips status to
+  // 'pending'. If no draft param, we're on a blank form and the first Save
+  // Draft creates a new row + puts its id in the URL.
+  let draftId = null;
+
+  function getDraftIdFromUrl() {
+    const m = window.location.search.match(/[?&]draft=([0-9a-fA-F-]{36})\b/);
+    return m ? m[1] : null;
+  }
+
+  function setDraftIdInUrl(id) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('draft', id);
+    window.history.replaceState({}, '', url.toString());
+  }
+
   function renderHours() {
     const grid = document.getElementById('hours-grid');
     grid.innerHTML = DAYS.map(d => `
@@ -103,7 +120,7 @@
     return users;
   }
 
-  function saveDraft() {
+  function saveDraftLocal() {
     const form = document.getElementById('intake-form');
     const fd = new FormData(form);
     const obj = {};
@@ -116,29 +133,33 @@
     } catch (e) { /* storage full or disabled */ }
   }
 
-  function restoreDraft() {
+  function restoreDraftLocal() {
     try {
       const raw = localStorage.getItem(AUTOSAVE_KEY);
       if (!raw) return;
       const obj = JSON.parse(raw);
-      const form = document.getElementById('intake-form');
-      for (const [k, v] of Object.entries(obj)) {
-        const el = form.elements[k];
-        if (!el) continue;
-        if (el.type === 'radio') {
-          const radio = form.querySelector(`[name="${k}"][value="${v}"]`);
-          if (radio) radio.checked = true;
-        } else if (el.type === 'checkbox') {
-          el.checked = v === 'on' || v === true;
-        } else {
-          el.value = v;
-        }
-      }
-      applyConditionals();
+      applyFlatFormState(obj);
     } catch (e) { /* invalid json, ignore */ }
   }
 
-  function clearDraft() {
+  function applyFlatFormState(obj) {
+    const form = document.getElementById('intake-form');
+    for (const [k, v] of Object.entries(obj)) {
+      const el = form.elements[k];
+      if (!el) continue;
+      if (el.type === 'radio') {
+        const radio = form.querySelector(`[name="${k}"][value="${v}"]`);
+        if (radio) radio.checked = true;
+      } else if (el.type === 'checkbox') {
+        el.checked = v === 'on' || v === true;
+      } else {
+        el.value = v;
+      }
+    }
+    applyConditionals();
+  }
+
+  function clearDraftLocal() {
     try { localStorage.removeItem(AUTOSAVE_KEY); } catch (e) {}
   }
 
@@ -185,21 +206,204 @@
     return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
   }
 
-  async function submitSubmission(payload) {
+  function buildPayload(status) {
+    const form = document.getElementById('intake-form');
+    const fd = new FormData(form);
+    return {
+      status,
+      business_name: fd.get('business_name') || null,
+      city: fd.get('city') || null,
+      address: fd.get('address') || null,
+      timezone: fd.get('timezone') || null,
+      contact_email: fd.get('contact_email') || null,
+      contact_phone: fd.get('contact_phone') || null,
+      hours: collectHours(fd),
+      crm_platform: fd.get('crm_platform') || null,
+      crm_username: fd.get('crm_username') || null,
+      crm_password: fd.get('crm_password') || null,
+      crm_store_id: fd.get('crm_store_id') || null,
+      studio_phone_display: fd.get('studio_phone_display') || null,
+      assistant_name: fd.get('assistant_name') || null,
+      sign_off_name: fd.get('sign_off_name') || null,
+      intro_offer: fd.get('intro_offer') || null,
+      has_free_trial: fd.get('has_free_trial') === 'yes',
+      trial_booking_url: fd.get('trial_booking_url') || null,
+      preferred_words: fd.get('preferred_words') || null,
+      avoid_words: fd.get('avoid_words') || null,
+      dashboard_users: collectUsers(),
+      business_knowledge: collectBusinessKnowledge(fd),
+      website_url: fd.get('website_url') || null,
+      google_business_profile_url: fd.get('google_business_profile_url') || null,
+      is_multi_location: fd.get('is_multi_location') === 'yes',
+      parent_brand_name: fd.get('parent_brand_name') || null,
+      instagram_handle: fd.get('instagram_handle') || null,
+      facebook_page_url: fd.get('facebook_page_url') || null,
+      tiktok_handle: fd.get('tiktok_handle') || null,
+      preferred_subdomain: fd.get('preferred_subdomain') || null,
+      existing_twilio: fd.get('existing_twilio') === 'yes',
+      existing_twilio_account_sid: fd.get('existing_twilio_account_sid') || null,
+      existing_twilio_auth_token: fd.get('existing_twilio_auth_token') || null,
+      target_launch_date: fd.get('target_launch_date') || null,
+      notes: fd.get('notes') || null,
+      honeypot: fd.get('honeypot') || null,
+      user_agent: navigator.userAgent
+    };
+  }
+
+  async function insertRow(payload) {
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
       method: 'POST',
       headers: {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=minimal'
+        Prefer: 'return=representation'
       },
       body: JSON.stringify(payload)
     });
     if (!resp.ok) {
       const body = await resp.text();
-      throw new Error(`Submission failed: ${resp.status} ${body}`);
+      throw new Error(`Insert failed: ${resp.status} ${body}`);
     }
+    const rows = await resp.json();
+    return rows[0];
+  }
+
+  async function updateRow(id, payload) {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Update failed: ${resp.status} ${body}`);
+    }
+    const rows = await resp.json();
+    return rows[0];
+  }
+
+  async function fetchDraft(id) {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}&select=*`,
+      {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Draft load failed: ${resp.status} ${body}`);
+    }
+    const rows = await resp.json();
+    return rows[0] || null;
+  }
+
+  function applyServerRowToForm(row) {
+    const form = document.getElementById('intake-form');
+    const set = (name, value) => {
+      const el = form.elements[name];
+      if (!el || value == null) return;
+      if (el.type === 'checkbox') { el.checked = !!value; return; }
+      el.value = value;
+    };
+    const setRadio = (name, value) => {
+      if (value == null) return;
+      const stringValue = value === true ? 'yes' : value === false ? 'no' : String(value);
+      const radio = form.querySelector(`[name="${name}"][value="${stringValue}"]`);
+      if (radio) radio.checked = true;
+    };
+
+    set('business_name', row.business_name);
+    set('city', row.city);
+    set('address', row.address);
+    set('timezone', row.timezone);
+    set('contact_email', row.contact_email);
+    set('contact_phone', row.contact_phone);
+    set('website_url', row.website_url);
+    set('google_business_profile_url', row.google_business_profile_url);
+    setRadio('is_multi_location', row.is_multi_location);
+    set('parent_brand_name', row.parent_brand_name);
+
+    if (row.hours && typeof row.hours === 'object') {
+      for (const d of DAYS) {
+        const h = row.hours[d];
+        if (!h) continue;
+        const closedEl = form.elements[`hours_${d}_closed`];
+        const openEl = form.elements[`hours_${d}_open`];
+        const closeEl = form.elements[`hours_${d}_close`];
+        if (h.closed) {
+          if (closedEl) closedEl.checked = true;
+          if (openEl) openEl.disabled = true;
+          if (closeEl) closeEl.disabled = true;
+        } else {
+          if (closedEl) closedEl.checked = false;
+          if (openEl) { openEl.disabled = false; if (h.open) openEl.value = h.open; }
+          if (closeEl) { closeEl.disabled = false; if (h.close) closeEl.value = h.close; }
+        }
+      }
+    }
+
+    set('crm_platform', row.crm_platform);
+    set('crm_username', row.crm_username);
+    set('crm_password', row.crm_password);
+    set('crm_store_id', row.crm_store_id);
+    setRadio('existing_twilio', row.existing_twilio);
+    set('existing_twilio_account_sid', row.existing_twilio_account_sid);
+    set('existing_twilio_auth_token', row.existing_twilio_auth_token);
+
+    set('studio_phone_display', row.studio_phone_display);
+    set('assistant_name', row.assistant_name);
+    set('sign_off_name', row.sign_off_name);
+    set('intro_offer', row.intro_offer);
+    setRadio('has_free_trial', row.has_free_trial);
+    set('trial_booking_url', row.trial_booking_url);
+    set('preferred_words', row.preferred_words);
+    set('avoid_words', row.avoid_words);
+    set('instagram_handle', row.instagram_handle);
+    set('facebook_page_url', row.facebook_page_url);
+    set('tiktok_handle', row.tiktok_handle);
+    set('preferred_subdomain', row.preferred_subdomain);
+
+    const bk = row.business_knowledge || {};
+    set('bk_service_description', bk.service_description);
+    set('bk_single_session_rate', bk.single_session_rate);
+    set('bk_membership_pricing', bk.membership_pricing);
+    set('bk_package_pricing', bk.package_pricing);
+    set('bk_cancellation_policy', bk.cancellation_policy);
+    set('bk_eligibility', bk.eligibility);
+    set('bk_ideal_client', bk.ideal_client);
+    set('bk_unique_value', bk.unique_value);
+    set('bk_current_members', bk.current_members);
+    set('bk_approved_phrases', bk.approved_phrases);
+    set('bk_forbidden_claims', bk.forbidden_claims);
+    set('bk_first_visit', bk.first_visit);
+    set('bk_faq', bk.faq);
+
+    const users = Array.isArray(row.dashboard_users) ? row.dashboard_users : [];
+    const list = document.getElementById('users-list');
+    if (users.length > 0) {
+      list.innerHTML = '';
+      users.forEach((u, i) => {
+        list.insertAdjacentHTML('beforeend', userRowHTML(i));
+        const row = list.lastElementChild;
+        row.querySelector('[name$="_name"]').value = u.name || '';
+        row.querySelector('[name$="_email"]').value = u.email || '';
+        row.querySelector('[name$="_role"]').value = u.role || 'manager';
+      });
+    }
+
+    set('target_launch_date', row.target_launch_date);
+    set('notes', row.notes);
+
+    applyConditionals();
   }
 
   function showError(msg) {
@@ -211,6 +415,48 @@
 
   function hideError() {
     document.getElementById('error-box').hidden = true;
+  }
+
+  function showDraftLink() {
+    if (!draftId) return;
+    const banner = document.getElementById('draft-banner');
+    const linkEl = document.getElementById('draft-link');
+    const url = `${window.location.origin}${window.location.pathname}?draft=${draftId}`;
+    linkEl.value = url;
+    banner.hidden = false;
+  }
+
+  async function handleSaveDraft() {
+    hideError();
+    const btn = document.getElementById('save-draft-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    try {
+      const logoFile = document.getElementById('logo-input').files[0];
+      const payload = buildPayload('draft');
+      if (logoFile) {
+        if (logoFile.size > 2 * 1024 * 1024) {
+          showError('Logo is over 2MB. Please use a smaller image.');
+          return;
+        }
+        payload.logo_url = await uploadLogo(logoFile);
+      }
+      if (draftId) {
+        await updateRow(draftId, payload);
+      } else {
+        const row = await insertRow(payload);
+        draftId = row.id;
+        setDraftIdInUrl(draftId);
+      }
+      showDraftLink();
+      btn.textContent = 'Saved \u2713';
+      setTimeout(() => { btn.textContent = 'Save draft'; btn.disabled = false; }, 1500);
+    } catch (err) {
+      console.error(err);
+      showError(`Draft save failed: ${err.message}`);
+      btn.textContent = 'Save draft';
+      btn.disabled = false;
+    }
   }
 
   async function handleSubmit(e) {
@@ -238,8 +484,8 @@
         return;
       }
 
-      let logoUrl = null;
       const logoFile = document.getElementById('logo-input').files[0];
+      const payload = buildPayload('pending');
       if (logoFile) {
         if (logoFile.size > 2 * 1024 * 1024) {
           showError('Logo is over 2MB. Please use a smaller image.');
@@ -247,52 +493,18 @@
           btn.textContent = 'Submit intake form';
           return;
         }
-        logoUrl = await uploadLogo(logoFile);
+        payload.logo_url = await uploadLogo(logoFile);
       }
 
-      const payload = {
-        business_name: fd.get('business_name'),
-        city: fd.get('city') || null,
-        address: fd.get('address') || null,
-        timezone: fd.get('timezone'),
-        contact_email: fd.get('contact_email'),
-        contact_phone: fd.get('contact_phone') || null,
-        logo_url: logoUrl,
-        hours: collectHours(fd),
-        crm_platform: fd.get('crm_platform') || null,
-        crm_username: fd.get('crm_username') || null,
-        crm_password: fd.get('crm_password') || null,
-        crm_store_id: fd.get('crm_store_id') || null,
-        studio_phone_display: fd.get('studio_phone_display') || null,
-        assistant_name: fd.get('assistant_name') || null,
-        sign_off_name: fd.get('sign_off_name') || null,
-        intro_offer: fd.get('intro_offer') || null,
-        has_free_trial: fd.get('has_free_trial') === 'yes',
-        trial_booking_url: fd.get('trial_booking_url') || null,
-        preferred_words: fd.get('preferred_words') || null,
-        avoid_words: fd.get('avoid_words') || null,
-        dashboard_users: collectUsers(),
-        business_knowledge: collectBusinessKnowledge(fd),
-        website_url: fd.get('website_url') || null,
-        google_business_profile_url: fd.get('google_business_profile_url') || null,
-        is_multi_location: fd.get('is_multi_location') === 'yes',
-        parent_brand_name: fd.get('parent_brand_name') || null,
-        instagram_handle: fd.get('instagram_handle') || null,
-        facebook_page_url: fd.get('facebook_page_url') || null,
-        tiktok_handle: fd.get('tiktok_handle') || null,
-        preferred_subdomain: fd.get('preferred_subdomain') || null,
-        existing_twilio: fd.get('existing_twilio') === 'yes',
-        existing_twilio_account_sid: fd.get('existing_twilio_account_sid') || null,
-        existing_twilio_auth_token: fd.get('existing_twilio_auth_token') || null,
-        target_launch_date: fd.get('target_launch_date') || null,
-        notes: fd.get('notes') || null,
-        honeypot: fd.get('honeypot') || null,
-        user_agent: navigator.userAgent
-      };
+      if (draftId) {
+        await updateRow(draftId, payload);
+      } else {
+        await insertRow(payload);
+      }
 
-      await submitSubmission(payload);
-      clearDraft();
+      clearDraftLocal();
       document.getElementById('intake-form').hidden = true;
+      document.getElementById('draft-banner').hidden = true;
       document.getElementById('success-screen').hidden = false;
       document.getElementById('success-screen').scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
@@ -303,17 +515,54 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  async function initDraftFromUrl() {
+    const id = getDraftIdFromUrl();
+    if (!id) return false;
+    try {
+      const row = await fetchDraft(id);
+      if (!row) {
+        showError('This draft link could not be loaded. It may have already been submitted.');
+        return false;
+      }
+      draftId = id;
+      applyServerRowToForm(row);
+      showDraftLink();
+      return true;
+    } catch (err) {
+      console.error(err);
+      showError(`Could not load draft: ${err.message}`);
+      return false;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
     renderHours();
     renderUsers();
-    restoreDraft();
-    document.getElementById('intake-form').addEventListener('input', saveDraft);
+
+    const loadedFromServer = await initDraftFromUrl();
+    if (!loadedFromServer) restoreDraftLocal();
+
+    document.getElementById('intake-form').addEventListener('input', saveDraftLocal);
     document.getElementById('intake-form').addEventListener('change', (e) => {
       if (e.target.name === 'has_free_trial') toggleTrialURL();
       if (e.target.name === 'is_multi_location') toggleParentBrand();
       if (e.target.name === 'existing_twilio') toggleExistingTwilio();
-      saveDraft();
+      saveDraftLocal();
     });
     document.getElementById('intake-form').addEventListener('submit', handleSubmit);
+    document.getElementById('save-draft-btn').addEventListener('click', handleSaveDraft);
+
+    document.getElementById('copy-link-btn').addEventListener('click', async () => {
+      const linkEl = document.getElementById('draft-link');
+      try {
+        await navigator.clipboard.writeText(linkEl.value);
+        const btn = document.getElementById('copy-link-btn');
+        const prev = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = prev; }, 1200);
+      } catch (e) {
+        linkEl.select();
+      }
+    });
   });
 })();
