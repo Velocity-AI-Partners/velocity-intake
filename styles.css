@@ -641,6 +641,70 @@ fieldset.pill-group.field-error legend {
   font-weight: 600;
 }
 
+.examples-block {
+  margin: -8px 0 20px;
+  font-size: 14px;
+}
+
+.examples-block summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 500;
+  padding: 6px 0;
+  list-style: none;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.examples-block summary::-webkit-details-marker {
+  display: none;
+}
+
+.examples-block summary::before {
+  content: "▸";
+  font-size: 12px;
+  transition: transform 150ms ease;
+  display: inline-block;
+}
+
+.examples-block[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.examples-block .example-item {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+  align-items: start;
+}
+
+.examples-block .example-tag {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 13px;
+  padding-top: 2px;
+}
+
+.examples-block .example-item p {
+  margin: 0;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .examples-block .example-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
 label.attestation.field-error {
   border-color: var(--error);
   background: var(--error-soft);
