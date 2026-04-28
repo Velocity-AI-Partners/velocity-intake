@@ -787,10 +787,11 @@
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
-        draftId = (crypto.randomUUID && crypto.randomUUID()) || generateUuid();
-        payload.id = draftId;
+        const newId = (crypto.randomUUID && crypto.randomUUID()) || generateUuid();
+        payload.id = newId;
         await insertRow(payload);
-        setDraftIdInUrl(draftId);
+        draftId = newId;
+        setDraftIdInUrl(newId);
       }
       showDraftLink(true);
       btn.textContent = 'Saved \u2713';

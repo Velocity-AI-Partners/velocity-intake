@@ -4,7 +4,7 @@ This file provides guidance to Claude Code when working on this repo. Read this 
 
 ## What this is
 
-Client-facing intake form for new Velocity AI Partners locations. A prospective client fills it out; data lands in Supabase; the Velocity team reviews and provisions on the main app's `/new-location` page.
+Client-facing intake form for new Velocity AI Partners locations. A prospective client fills it out; data lands in Supabase; the Velocity team reviews and provisions on the main app's `/client-onboarding` page.
 
 ## Stack
 
@@ -31,7 +31,7 @@ Migrating to: `intake.velocityaipartners.app` (Vercel) — in progress.
 2. If logo attached, direct upload to Supabase storage bucket `intake-logos` (public read, anon insert)
 3. Form POSTs to `rest/v1/location_intake_submissions` with anon key
 4. Supabase Database Webhook fires on INSERT → Slack notification in `#all-velocity-ai-partners`
-5. Velocity admin reviews on main app's `/new-location` page, chooses slug/brand/short_slug, clicks Provision
+5. Velocity admin reviews on main app's `/client-onboarding` page, chooses slug/brand/short_slug, clicks Provision
 6. `provision-from-intake` edge function creates `locations`, `workflow_location_config`, `business_knowledge`, `ab_tests` rows
 
 ## Supabase
@@ -64,7 +64,7 @@ Migrating to: `intake.velocityaipartners.app` (Vercel) — in progress.
 - First "Save draft" click on a blank form inserts a new row with `status='draft'` and a fresh UUID, then rewrites the URL
 - Subsequent saves PATCH the same row
 - Submit flips `status` from `draft` to `pending`
-- Admins pre-fill drafts from the main app's `/new-location` Drafts in Progress card, then email the draft link to the client
+- Admins pre-fill drafts from the main app's `/client-onboarding` Drafts in Progress card, then email the draft link to the client
 
 ## Conventions for new code
 
@@ -96,6 +96,6 @@ Mirror the main app:
 
 Main app lives at `../Velocity-App-Migrated-Codebase`. Relevant files there:
 
-- `src/pages/NewLocation.tsx` — the admin review page
+- `src/pages/ClientOnboarding.tsx` — the admin review page
 - `supabase/functions/provision-from-intake/index.ts` — the function called when an admin approves a submission
 - Schema for `location_intake_submissions` is authored here (in `migrations/`) but lives in the same Supabase project as the main app
