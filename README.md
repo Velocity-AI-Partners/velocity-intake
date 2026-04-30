@@ -1,10 +1,10 @@
 # Velocity Intake Form
 
-Client-facing intake form for new Velocity AI Partners locations. Static HTML + JS, deployed to GitHub Pages, submits to a Supabase table on the VAP staging project.
+Client-facing intake form for new Velocity AI Partners locations. Static HTML + JS, deployed to Vercel, submits to a Supabase table on the VAP production project.
 
 ## Live URL
 
-https://velocity-ai-partners.github.io/velocity-intake/
+https://onboarding.velocityaipartners.app/
 
 ## Stack
 
@@ -18,8 +18,8 @@ https://velocity-ai-partners.github.io/velocity-intake/
 2. If logo attached, client-side upload to Supabase storage bucket `intake-logos`
 3. Form POSTs to `rest/v1/location_intake_submissions` with anon key
 4. Supabase Database Webhook fires on INSERT, notifies Slack `#all-velocity-ai-partners`
-5. Velocity reviews submission in Supabase Studio, flips `status` from `pending` to `reviewed` or `rejected`
-6. Approved submissions get manually transcribed into `workflow_location_config` by the admin (v1 scope)
+5. Velocity admin reviews on main app's `/client-onboarding` page, fills in Velocity-only fields (slug, brand, Twilio), clicks Provision
+6. `provision-from-intake` edge function creates `locations`, `workflow_location_config`, `business_knowledge`, and clones `ab_tests` rows
 
 ## Supabase config
 
@@ -47,10 +47,9 @@ RLS policies:
 ## Honest v1 limitations
 
 - CRM password stored in plain text. Only admins can SELECT; anon can only INSERT. Acceptable at current scale. Encrypt via `pgsodium` before enterprise rollout.
-- No admin review UI yet; use Supabase Studio table editor or the forthcoming `/new-location` page after PR #196 merges.
 - Logo upload is client-side direct to bucket. No server-side validation of file type or malware scan.
 - Honeypot-only bot defense. Upgrade to Cloudflare Turnstile if spam appears.
 
 ## Deploying
 
-Push to `main`. GitHub Action in `.github/workflows/deploy.yml` publishes to Pages.
+Push to `main`. Vercel auto-deploys to the live URL. PR branches get preview deployments automatically.

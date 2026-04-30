@@ -16,14 +16,11 @@ Client-facing intake form for new Velocity AI Partners locations. A prospective 
 
 ## Live URL
 
-Currently: `https://velocity-ai-partners.github.io/velocity-intake/` (GitHub Pages).
-
-Migrating to: `intake.velocityaipartners.app` (Vercel) — in progress.
+`https://onboarding.velocityaipartners.app/` (Vercel).
 
 ## Deploy
 
-- Push to `main` → `.github/workflows/deploy.yml` publishes to Pages.
-- After Vercel migration: push to `main` → Vercel auto-deploys. Preview deployments on PR branches.
+- Push to `main` → Vercel auto-deploys to the live URL. PR branches get preview deployments automatically.
 
 ## Data flow
 
@@ -45,7 +42,7 @@ Migrating to: `intake.velocityaipartners.app` (Vercel) — in progress.
 
 - `anon` can INSERT into `location_intake_submissions` — honeypot field enforces basic bot defense
 - `anon` can INSERT to `intake-logos` bucket — no size/type check server-side (2MB client-side)
-- `authenticated` admins can SELECT + UPDATE — used by main app's `/new-location` page
+- `authenticated` admins can SELECT + UPDATE — used by main app's `/client-onboarding` page
 
 ## Form sections (for orientation)
 
@@ -90,7 +87,6 @@ Mirror the main app:
 - Logo upload has no server-side validation (file type, malware scan)
 - Honeypot-only bot defense — upgrade to Cloudflare Turnstile if spam appears
 - Success-screen contact email hardcoded to `sirtobiaswade@gmail.com` — should be a shared inbox
-- README says "staging" but the form hits **production** Supabase
 
 ## Relationship to the main app
 
