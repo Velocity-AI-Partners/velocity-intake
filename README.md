@@ -54,7 +54,7 @@ On final submit, `form.js` fires a best-effort `POST { intake_id }` to the n8n *
 3. Renders an HTML receipt of everything submitted **except** credentials (`crm_username`/`crm_password`, Twilio SID/token) and internal fields.
 4. Emails it to the client's `contact_email` via the workflow's Gmail sender.
 
-The trigger is fire-and-forget (`.catch(() => {})`) so a webhook hiccup never blocks the success screen; the workflow logic itself is maintained in n8n.
+The trigger is fire-and-forget (`.catch(() => {})`) so a webhook hiccup never blocks the success screen; the workflow logic itself is maintained in n8n and mirrored in [`docs/intake-confirmation-email.md`](docs/intake-confirmation-email.md) for review.
 
 ## Honest v1 limitations
 
