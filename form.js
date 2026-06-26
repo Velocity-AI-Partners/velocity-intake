@@ -1126,6 +1126,15 @@
         await insertRow(payload);
       }
 
+      // Fire-and-forget confirmation email via the n8n "Intake Confirmation Email"
+      // workflow — it re-reads the row by id and emails contact_email (only when status='pending').
+      fetch('https://velocityaipartners.app.n8n.cloud/webhook/intake-confirmation', {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intake_id: draftId || payload.id }),
+      }).catch(() => {}); // best-effort; must never block or break the success screen
+
       closeSubmitConfirm();
       document.getElementById('intake-form').hidden = true;
       document.getElementById('draft-banner').hidden = true;

@@ -27,9 +27,10 @@ Client-facing intake form for new Velocity AI Partners locations. A prospective 
 1. Client fills form
 2. If logo attached, direct upload to Supabase storage bucket `intake-logos` (public read, anon insert)
 3. Form POSTs to `rest/v1/location_intake_submissions` with anon key
-4. Supabase Database Webhook fires on INSERT → Slack notification in `#all-velocity-ai-partners`
-5. Velocity admin reviews on main app's `/client-onboarding` page, chooses slug/brand/short_slug, clicks Provision
-6. `provision-from-intake` edge function creates `locations`, `workflow_location_config`, `business_knowledge`, `ab_tests` rows
+4. On final submit, the form also POSTs `{ intake_id }` to the n8n **Intake Confirmation Email** workflow (`v3ajDIEDjDmCwMvi`), which re-reads the row and emails the client's `contact_email` a receipt — guarded to `status='pending'`, credentials excluded
+5. Supabase Database Webhook fires on INSERT → Slack notification in `#all-velocity-ai-partners`
+6. Velocity admin reviews on main app's `/client-onboarding` page, chooses slug/brand/short_slug, clicks Provision
+7. `provision-from-intake` edge function creates `locations`, `workflow_location_config`, `business_knowledge`, `ab_tests` rows
 
 ## Supabase
 

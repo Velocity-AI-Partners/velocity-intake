@@ -17,9 +17,10 @@ https://onboarding.velocityaipartners.app/
 1. Client fills form at the live URL
 2. If logo attached, client-side upload to Supabase storage bucket `intake-logos`
 3. Form POSTs to `rest/v1/location_intake_submissions` with anon key
-4. Supabase Database Webhook fires on INSERT, notifies Slack `#all-velocity-ai-partners`
-5. Velocity admin reviews on main app's `/client-onboarding` page, fills in Velocity-only fields (slug, brand, Twilio), clicks Provision
-6. `provision-from-intake` edge function creates `locations`, `workflow_location_config`, `business_knowledge`, and clones `ab_tests` rows
+4. On final submit, the form also POSTs `{ intake_id }` to the n8n **Intake Confirmation Email** workflow, which re-reads the row and emails the client's `contact_email` a receipt. Guarded to `status='pending'` (draft saves never trigger it); CRM/Twilio credentials are excluded from the email.
+5. Supabase Database Webhook fires on INSERT, notifies Slack `#all-velocity-ai-partners`
+6. Velocity admin reviews on main app's `/client-onboarding` page, fills in Velocity-only fields (slug, brand, Twilio), clicks Provision
+7. `provision-from-intake` edge function creates `locations`, `workflow_location_config`, `business_knowledge`, and clones `ab_tests` rows
 
 ## Supabase config
 
@@ -43,6 +44,17 @@ RLS policies:
      "text": "New intake: {{ record.business_name }} ({{ record.city }}, {{ record.crm_platform }}) - <https://supabase.com/dashboard/project/jjckotsrhuxxftwmdlwc/editor/{{ record.id }}|review>"
    }
    ```
+
+## Confirmation email (n8n)
+
+On final submit, `form.js` fires a best-effort `POST { intake_id }` to the n8n **Intake Confirmation Email** workflow (`v3ajDIEDjDmCwMvi`, webhook path `/webhook/intake-confirmation`). The workflow:
+
+1. Re-reads the submission row from Supabase by `intake_id` (service-role, so it sees the full row).
+2. Guards on `status = 'pending'` — drafts and later admin states never send.
+3. Renders an HTML receipt of everything submitted **except** credentials (`crm_username`/`crm_password`, Twilio SID/token) and internal fields.
+4. Emails it to the client's `contact_email` via the workflow's Gmail sender.
+
+The trigger is fire-and-forget (`.catch(() => {})`) so a webhook hiccup never blocks the success screen; the workflow logic itself is maintained in n8n.
 
 ## Honest v1 limitations
 
