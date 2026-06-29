@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velocity AI Partners Client Onboarding · Trimmed (preview)</title>
+<meta name="description" content="Trimmed prototype of the Velocity AI client onboarding form for layout review.">
+<link rel="icon" type="image/jpeg" href="favicon.jpg">
+<script>
+  try { if (localStorage.getItem('velocity-intake-theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {}
+</script>
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="trimmed.css">
+<style>
+  /* Prototype-only: a slim strip so it's clear this is Example 2 and doesn't save. */
+  .proto-strip{background:#0a6ab6;color:#fff;text-align:center;padding:5px 14px;font-size:12px;font-weight:600;letter-spacing:.01em}
+  .proto-strip a{color:#fff;text-decoration:underline}
+  .req-count{font-variant-numeric:tabular-nums}
+
+  /* === "Accent headers + part tints" (task #9). Delete this whole block to revert to plain white cards. === */
+  :root { --brand-navy: #00142C; --part1-tint: #eef4fb; }
+  [data-theme="dark"] { --brand-navy: #8fbdea; --part1-tint: #112236; }
+  /* Section cards: brand-blue left accent rule + colored title */
+  #intake-form > section { border-left: 3px solid var(--accent); }
+  #intake-form > section > h2 { color: var(--accent); }
+  /* Part dividers become distinct tinted bands: Part 1 navy, Part 2 green */
+  #intake-form > .part-divider { border-bottom: none; border-radius: var(--radius-lg); padding: 20px 22px; border-left: 5px solid var(--accent); }
+  #intake-form > .part-divider.part-1 { background: var(--part1-tint); border-left-color: var(--brand-navy); }
+  #intake-form > .part-divider.part-1 .part-kicker { color: var(--brand-navy); }
+  #intake-form > .part-divider.part-2 { background: var(--ai-green-soft); border-left-color: var(--ai-green); }
+  #intake-form > .part-divider.part-2 .part-kicker { color: var(--ai-green); }
+</style>
+</head>
+<body>
+
+<div class="proto-strip">Trimmed onboarding form · preview only, nothing is saved · <a href="/">full form</a></div>
+
+<div class="progress-bar" role="progressbar" aria-label="Form completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
+
+<nav id="section-nav" class="section-nav" aria-label="Jump to a form section"></nav>
+
+<div class="site-header">
+  <header class="site-header__inner">
+    <img class="brand-logo" src="velocity-logo-white.png?v=1" alt="Velocity AI Partners" width="220" height="34">
+    <h1>Velocity AI Partners Client Onboarding</h1>
+    <p class="lead">Just the essentials to switch your AI team member on. Most of the rest pre-fills from your website, and we finish it together on your onboarding call. <strong>Auto-saves</strong> after your first save, so you can use the link we give you to resume or hand off.</p>
+    <div class="meta-row">
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ~5 minutes</span>
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Save &amp; resume</span>
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Encrypted transit</span>
+    </div>
+    <p class="required-note"><span class="req" aria-hidden="true">*</span> indicates a required field · <span class="req-count" id="req-count">required</span></p>
+  </header>
+</div>
+
+<main class="container">
+
+  <form id="intake-form" novalidate>
+
+    <div class="form-topbar">
+      <p class="form-topbar__note">Filling this out for someone else, or need to pause? Save a draft anytime for a link to resume or hand off. After your first save, changes save automatically.</p>
+      <div class="form-topbar__actions">
+        <span class="autosave-status" id="autosave-status" aria-live="polite"></span>
+        <button type="button" class="btn-secondary">Save as draft</button>
+      </div>
+    </div>
+
+    <div class="prefill-hero">
+      <span class="prefill-hero__kicker">Start faster with AI</span>
+      <p class="prefill-hero__lead">Paste the exact web page for this location and we'll pre-fill what we can find, so you just review and confirm. You can always skip this and fill everything in yourself.</p>
+      <div class="prefill-hero__row">
+        <input type="url" id="location-page-url" name="location_page_url" class="prefill-hero__input" placeholder="https://yourbrand.com/locations/your-city" aria-label="Your location page URL">
+        <button type="button" id="prefill-btn" class="btn-prefill">Pre-fill with AI</button>
+      </div>
+      <span class="prefill-status" id="prefill-status" aria-live="polite"></span>
+    </div>
+
+    <!-- ======================= PART 1 ======================= -->
+    <div class="part-divider part-1">
+      <span class="part-kicker">Section 1</span>
+      <h2 class="part-title">The essentials</h2>
+      <p class="part-desc">The few things we need to turn your AI team member on. This is the required part, about 5 minutes.</p>
+    </div>
+
+    <section>
+      <h2>Your details</h2>
+      <p class="section-hint">You're the primary contact for this setup. You'll get admin access to the dashboard.</p>
+      <div class="field-row">
+        <label>First Name <span class="req" aria-hidden="true">*</span>
+          <input type="text" name="contact_first_name" required placeholder="Jane"></label>
+        <label>Last Name <span class="req" aria-hidden="true">*</span>
+          <input type="text" name="contact_last_name" required placeholder="Doe"></label>
+      </div>
+      <label>Primary Contact Email <span class="req" aria-hidden="true">*</span>
+        <input type="email" name="contact_email" required placeholder="owner@business.com"></label>
+      <label>Primary Contact Phone <span class="req" aria-hidden="true">*</span>
+        <input type="tel" name="contact_phone" required placeholder="(555) 123-4567"></label>
+    </section>
+
+    <section>
+      <h2>Team access</h2>
+      <p class="section-hint">Who else on your team needs a dashboard login? Add each teammate and pick their role.</p>
+      <div id="users-list"></div>
+      <button type="button" id="add-user" class="btn-secondary">+ Add another user</button>
+    </section>
+
+    <section>
+      <h2>CRM access</h2>
+      <div class="trust-banner">Admin-level access lets us configure your AI in sync with your system. Credentials are stored securely within our team.</div>
+
+      <label>CRM Platform <span class="req" aria-hidden="true">*</span>
+        <select name="crm_platform" required>
+          <option value="">Select your CRM...</option>
+          <option value="clubready">ClubReady</option>
+          <option value="wellnessliving">WellnessLiving</option>
+          <option value="spark">Spark Membership</option>
+          <option value="mindbody">Mindbody</option>
+          <option value="arketa">Arketa</option>
+          <option value="other">Other (tell us below)</option>
+        </select></label>
+      <label id="crm-other-wrap" hidden>Which CRM do you use? <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="crm_platform_other" placeholder="e.g. Zen Planner, Glofox, Pike13"></label>
+
+      <label class="attestation">
+        <input type="checkbox" name="crm_account_confirmed" required>
+        <span>I confirm an admin-level account has been created in our CRM using <strong>admin@velocityaipartners.ai</strong>. <span class="req" aria-hidden="true">*</span></span>
+      </label>
+      <p class="section-hint">🔒 We'll set up your CRM password securely with you on your onboarding call, so it never sits in a web form.</p>
+
+      <label>API Key <span class="optional-tag">Optional</span>
+        <input type="text" name="crm_api_key" autocomplete="off" spellcheck="false" placeholder="Paste your CRM's API key or token, if you have one">
+        <small>Some CRMs let you generate an API key for integrations. Not sure? Leave it blank and we'll help you get one.</small></label>
+
+      <fieldset class="pill-group">
+        <legend>How should your AI Team Member text? <span class="req" aria-hidden="true">*</span></legend>
+        <label class="pill"><input type="radio" name="ai_phone_mode" value="own" checked> Use our existing number</label>
+        <label class="pill"><input type="radio" name="ai_phone_mode" value="dedicated"> Set us up with a new dedicated number</label>
+      </fieldset>
+      <label id="ai-phone-number-wrap">Number to text from
+        <input type="tel" name="ai_phone_number" placeholder="(555) 123-4567"></label>
+
+      <fieldset class="pill-group">
+        <legend>How should your AI Team Member email? <span class="req" aria-hidden="true">*</span></legend>
+        <label class="pill"><input type="radio" name="ai_email_mode" value="own" checked> Use our existing email</label>
+        <label class="pill"><input type="radio" name="ai_email_mode" value="dedicated"> Set us up with a new dedicated email</label>
+      </fieldset>
+      <label id="ai-email-address-wrap">Email to send from
+        <input type="email" name="ai_email_address" placeholder="hello@yourstudio.com"></label>
+    </section>
+
+    <section>
+      <h2>Business information</h2>
+      <label>Business Name <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="business_name" required placeholder="e.g. Stretch Zone Columbus"></label>
+      <label>Business Phone <span class="req" aria-hidden="true">*</span>
+        <input type="tel" name="business_phone" required placeholder="(555) 123-4567"></label>
+      <label>Street Address <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="address" required placeholder="123 Main St"></label>
+      <label>City <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="city" required placeholder="Columbus"></label>
+      <div class="field-row">
+        <label>State <span class="req" aria-hidden="true">*</span>
+          <input type="text" name="state" required placeholder="Ohio" autocomplete="address-level1"></label>
+        <label>Zip Code <span class="req" aria-hidden="true">*</span>
+          <input type="text" name="zip" required placeholder="43215" inputmode="numeric" autocomplete="postal-code"></label>
+      </div>
+      <label>Timezone <span class="req" aria-hidden="true">*</span>
+        <select name="timezone" required>
+          <option value="">Select...</option>
+          <optgroup label="United States">
+            <option value="America/New_York">Eastern (New York)</option>
+            <option value="America/Chicago">Central (Chicago)</option>
+            <option value="America/Denver">Mountain (Denver)</option>
+            <option value="America/Phoenix">Mountain, Arizona, no DST (Phoenix)</option>
+            <option value="America/Los_Angeles">Pacific (Los Angeles)</option>
+            <option value="America/Anchorage">Alaska (Anchorage)</option>
+            <option value="Pacific/Honolulu">Hawaii (Honolulu)</option>
+          </optgroup>
+        </select></label>
+
+      <label>Business Website URL
+        <input type="url" name="website_url" placeholder="https://"></label>
+
+      <fieldset class="pill-group">
+        <legend>Is this location part of a chain or franchise?</legend>
+        <label class="pill"><input type="radio" name="is_multi_location" value="no" checked> No, standalone</label>
+        <label class="pill"><input type="radio" name="is_multi_location" value="yes"> Yes, part of a chain or franchise</label>
+      </fieldset>
+      <label id="parent-brand-wrap" hidden>Parent Brand
+        <select name="parent_brand_name">
+          <option value="">Select your parent brand...</option>
+          <option value="Stretch Zone">Stretch Zone</option>
+          <option value="StretchLab">StretchLab</option>
+          <option value="Integrated Martial Arts">Integrated Martial Arts (IMA)</option>
+          <option value="Trybe Fytness">Trybe Fytness</option>
+          <option value="Title Boxing">Title Boxing</option>
+          <option value="other">Other (please specify)</option>
+        </select></label>
+      <label id="parent-brand-other-wrap" hidden>Which brand?
+        <input type="text" name="parent_brand_other" placeholder="e.g. OrangeTheory, F45"></label>
+    </section>
+
+    <section>
+      <h2>Messaging consent</h2>
+      <div class="trust-banner">⚠️ Carriers require this before your AI can text leads and members.</div>
+      <label class="attestation">
+        <input type="checkbox" name="sms_consent_confirmed" required>
+        <span>I confirm that the leads and members we share have agreed to be contacted by text, email, and/or phone calls. <span class="req" aria-hidden="true">*</span></span>
+      </label>
+    </section>
+
+    <!-- ======================= PART 2 ======================= -->
+    <div class="part-divider part-2">
+      <span class="part-kicker">Section 2</span>
+      <h2 class="part-title">Make it yours</h2>
+      <p class="part-desc">How your AI sounds and what it knows. Mostly optional. Your AI pre-fills this from your site, and we finish it together on your call.</p>
+    </div>
+
+    <section>
+      <h2>Who your AI works with <span class="req" aria-hidden="true">*</span></h2>
+      <p class="section-hint">The one thing we need here: who should your AI reach out to?</p>
+      <fieldset class="pill-group">
+        <legend>Your AI works with (check all that apply) <span class="req" aria-hidden="true">*</span></legend>
+        <label class="pill"><input type="checkbox" name="goal_new_leads"> New leads</label>
+        <label class="pill"><input type="checkbox" name="goal_old_leads"> Old leads</label>
+        <label class="pill"><input type="checkbox" name="goal_current_members"> Current members</label>
+        <label class="pill"><input type="checkbox" name="goal_former_members"> Former members</label>
+        <label class="pill"><input type="checkbox" name="goal_other"> Other (please specify)</label>
+      </fieldset>
+      <label id="goal-other-wrap" hidden>
+        <input type="text" name="goal_other_text" aria-label="Other audience" placeholder="Describe who else"></label>
+    </section>
+
+    <section>
+      <h2>Voice &amp; tone</h2>
+      <p class="section-hint">How your AI sounds to your clients over text. The example updates with your studio name.</p>
+      <fieldset class="voice-options">
+        <legend>AI Team Member voice <span class="req" aria-hidden="true">*</span></legend>
+        <label class="voice-option">
+          <span class="voice-option__choice">
+            <input type="radio" name="chatbot_voice" value="brand" checked>
+            <span class="voice-option__text"><strong>Brand persona</strong><small>A friendly named character we create for your brand, not a real person.</small></span>
+          </span>
+          <span class="voice-option__example" data-example="Hi! I'm Max from ({studio}) 👋 Let's get you booked for a free demo. What day works best?"></span>
+        </label>
+        <label class="voice-option">
+          <span class="voice-option__choice">
+            <input type="radio" name="chatbot_voice" value="team">
+            <span class="voice-option__text"><strong>Team</strong><small>Speaks as your whole team, "we" and "us."</small></span>
+          </span>
+          <span class="voice-option__example" data-example="Hey! Thanks for reaching out to ({studio}). We'd love to have you in for a free demo. What day works best?"></span>
+        </label>
+        <label class="voice-option">
+          <span class="voice-option__choice">
+            <input type="radio" name="chatbot_voice" value="owner">
+            <span class="voice-option__text"><strong>Owner</strong><small>Speaks as a real person, you or a named owner.</small></span>
+          </span>
+          <span class="voice-option__example" data-example="Hi, this is [your name] from ({studio})! I'd personally love to get you in for a free demo. What day works?"></span>
+        </label>
+        <label class="voice-option">
+          <span class="voice-option__choice">
+            <input type="radio" name="chatbot_voice" value="unsure">
+            <span class="voice-option__text"><strong>Unsure, recommend what works</strong><small>We'll pick the best-performing voice for a studio like yours.</small></span>
+          </span>
+          <span class="voice-option__example" data-example="We'll recommend the best fit for ({studio}). Team and Brand persona usually perform best."></span>
+        </label>
+      </fieldset>
+
+      <fieldset class="pill-group">
+        <legend>Tone &amp; style <span class="optional-tag">Optional</span></legend>
+        <p class="pill-group__hint">Default is friendly &amp; professional. Click any that fit.</p>
+        <label class="pill"><input type="checkbox" name="tone_friendly"> Friendly</label>
+        <label class="pill"><input type="checkbox" name="tone_professional"> Professional</label>
+        <label class="pill"><input type="checkbox" name="tone_warm"> Warm</label>
+        <label class="pill"><input type="checkbox" name="tone_upbeat"> Upbeat</label>
+        <label class="pill"><input type="checkbox" name="tone_motivational"> Motivational</label>
+        <label class="pill"><input type="checkbox" name="tone_calm"> Calm &amp; reassuring</label>
+        <label class="pill"><input type="checkbox" name="tone_direct"> Concise &amp; direct</label>
+        <label class="pill"><input type="checkbox" name="tone_premium"> Premium / upscale</label>
+      </fieldset>
+      <label>Words, phrases, or taglines to use <span class="optional-tag">Optional</span>
+        <div class="chips-input" data-chips>
+          <input type="text" class="chips-entry" autocomplete="off" aria-label="Add a word, phrase, or tagline to use" placeholder="Type a phrase, then press comma…">
+          <input type="hidden" name="preferred_words">
+        </div></label>
+      <label>Words, phrases, or claims to avoid <span class="optional-tag">Optional</span>
+        <div class="chips-input" data-chips>
+          <input type="text" class="chips-entry" autocomplete="off" aria-label="Add a word, phrase, or claim to avoid" placeholder="Type a phrase, then press comma…">
+          <input type="hidden" name="avoid_words">
+        </div>
+        <small>Anything medical, legal, or brand-sensitive we should never say.</small></label>
+    </section>
+
+    <section>
+      <h2>Sales process</h2>
+      <p class="section-hint">What your AI drives leads toward, and the offer it leads with.</p>
+
+      <label>What should the AI get leads to do? <span class="req" aria-hidden="true">*</span>
+        <select name="main_cta" required>
+          <option value="">Select...</option>
+          <option value="book_intro">Book a free intro class/session</option>
+          <option value="book_demo">Book a free demo</option>
+          <option value="schedule_call">Schedule a call</option>
+          <option value="start_trial">Start a free trial</option>
+          <option value="start_paid_trial">Start a paid trial</option>
+          <option value="buy_membership">Buy a membership</option>
+          <option value="other">Other (tell us below)</option>
+        </select></label>
+      <label id="main-cta-other-wrap" hidden>Your main call-to-action <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="main_cta_other" placeholder="e.g. Book a free assessment"></label>
+
+      <label>What is your core offer? <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="core_offer" placeholder="e.g. Free demo session, 2 classes for $29, first month free">
+        <small>The main thing the AI leads with.</small></label>
+
+      <label>Booking link <span class="optional-tag">Optional</span>
+        <input type="url" name="booking_link" placeholder="https://yourstudio.com/book">
+        <small>Where leads book the offer above. No link? Leave it blank and we'll set one up.</small></label>
+
+      <fieldset class="pill-group">
+        <legend>Do you have a sales script?</legend>
+        <label class="pill"><input type="radio" name="has_sales_script" value="yes"> Yes</label>
+        <label class="pill"><input type="radio" name="has_sales_script" value="no"> No</label>
+      </fieldset>
+      <label id="sales-script-paste-wrap" hidden>Great, please paste it here
+        <textarea name="sales_process_blob" rows="3" placeholder="Paste your script, talk track, or step-by-step. A link works too. Raw is fine, we'll parse it."></textarea></label>
+
+      <fieldset class="pill-group">
+        <legend>Can the AI offer discounts or special deals? <span class="optional-tag">Optional</span></legend>
+        <label class="pill"><input type="radio" name="sales_discount_policy" value="none" checked> No, always escalate to a human</label>
+        <label class="pill"><input type="radio" name="sales_discount_policy" value="within_limits"> Yes, within set limits</label>
+        <label class="pill"><input type="radio" name="sales_discount_policy" value="set_offers"> Yes, but only specific offers</label>
+      </fieldset>
+      <label id="sales-discount-notes-wrap" hidden>Which discounts, and what are the limits?
+        <textarea name="sales_discount_notes" rows="2" placeholder="e.g. AI can offer up to 10% off the intro or a free week. Anything bigger goes to a human."></textarea></label>
+    </section>
+
+    <section>
+      <h2>Services &amp; pricing</h2>
+      <p class="section-hint">We'll work through your services and pricing together on your onboarding call, so this is all optional. Add anything you'd like us to have a head start on.</p>
+      <label>Detailed service description <span class="optional-tag">Optional</span>
+        <textarea name="bk_service_description" rows="3" placeholder="What do you offer, in plain language? How long are sessions? What's the format?"></textarea></label>
+      <label>Single session / drop-in rate <span class="optional-tag">Optional</span>
+        <input type="text" name="bk_single_session_rate" placeholder="e.g. $65 for 25 min, $125 for 50 min"></label>
+      <label>Membership pricing (one tier per line) <span class="optional-tag">Optional</span>
+        <textarea name="bk_membership_pricing" rows="3" placeholder="Four 25-min sessions/mo: $209&#10;Four 50-min sessions/mo: $349"></textarea></label>
+      <label>Package pricing (for non-members) <span class="optional-tag">Optional</span>
+        <textarea name="bk_package_pricing" rows="2" placeholder="Three 25-min: $179. Five 25-min: $299."></textarea></label>
+      <label>Promotions or discounts <span class="optional-tag">Optional</span>
+        <textarea name="bk_promotions" rows="2" placeholder="e.g. 10% military discount, $50 referral credit, seasonal free demo days."></textarea></label>
+      <label>Cancellation, freeze, or refund policy <span class="optional-tag">Optional</span>
+        <textarea name="bk_cancellation_policy" rows="2" placeholder="e.g. 3-month commitment then month-to-month. 24-hour cancellation window."></textarea></label>
+      <label>Age or eligibility restrictions <span class="optional-tag">Optional</span>
+        <input type="text" name="bk_eligibility" placeholder="e.g. 18+, kids 5 and up, or no restrictions"></label>
+    </section>
+
+    <section>
+      <h2>About your business</h2>
+      <p class="section-hint">All optional. Your AI pre-fills this from your website, and we polish it together on your onboarding call. Add anything you want to get a head start.</p>
+      <label>Who is your ideal client? <span class="optional-tag">Optional</span>
+        <textarea name="bk_ideal_client" rows="2" placeholder="e.g. Professionals 35–65, active but tight from desk jobs, athletes, runners, golfers."></textarea></label>
+      <label>Client pain points or motivations <span class="optional-tag">Optional</span>
+        <textarea name="bk_pain_points" rows="2" placeholder="e.g. Stiffness, sciatica, desk-job back pain, mobility, recovery, fitness, confidence."></textarea></label>
+      <label>What makes you unique? <span class="optional-tag">Optional</span>
+        <textarea name="bk_unique_value" rows="2" placeholder="What sets you apart from competitors nearby? Space, team, method, anything."></textarea></label>
+      <label>What to bring &amp; expect on the first visit <span class="optional-tag">Optional</span>
+        <textarea name="bk_first_visit" rows="2" placeholder="e.g. Wear comfortable clothes. Arrive 10 min early. First session includes a full assessment."></textarea></label>
+      <label>Frequently asked questions <span class="optional-tag">Optional</span>
+        <textarea name="bk_faq" rows="3" placeholder="Anything clients ask repeatedly. Just dump them here, raw. We'll parse."></textarea></label>
+    </section>
+
+    <section>
+      <h2>Reviews &amp; testimonials</h2>
+      <p class="section-hint">Helps your AI echo how real customers talk about you.</p>
+      <label>Testimonials or reviews <span class="optional-tag">Optional</span>
+        <textarea name="bk_testimonials" rows="4" placeholder="Paste 2–5 reviews or testimonials, or drop a link. Raw dump is fine, we'll parse."></textarea>
+        <small>No need to track these down, we'll also pull what's public from Google and your site.</small></label>
+    </section>
+
+    <section>
+      <h2>Handoff &amp; escalations</h2>
+      <p class="section-hint">Sensible defaults are pre-set. Your AI loops in a human when someone's upset, wants to cancel, has a billing issue, or asks for a person, and live calls ring your studio phone. Adjust below if you like, or we'll confirm on your call.</p>
+      <fieldset class="pill-group">
+        <legend>Pull in a human the moment a lead or client… <span class="optional-tag">Optional</span></legend>
+        <label class="pill"><input type="checkbox" name="esc_asks_human" checked> Asks for a human or manager</label>
+        <label class="pill"><input type="checkbox" name="esc_upset" checked> Is upset or complaining</label>
+        <label class="pill"><input type="checkbox" name="esc_cancel" checked> Wants to cancel or freeze</label>
+        <label class="pill"><input type="checkbox" name="esc_billing" checked> Has a billing or refund issue</label>
+        <label class="pill"><input type="checkbox" name="esc_injury"> Mentions injury, pain, or a medical concern</label>
+        <label class="pill"><input type="checkbox" name="esc_pricing"> Wants to negotiate price</label>
+      </fieldset>
+      <fieldset class="pill-group">
+        <legend>When the AI transfers a live phone call, ring… <span class="optional-tag">Optional</span></legend>
+        <label class="pill"><input type="radio" name="call_transfer_primary" value="studio" checked> Studio phone</label>
+        <label class="pill"><input type="radio" name="call_transfer_primary" value="contact"> My direct phone</label>
+      </fieldset>
+    </section>
+
+    <section>
+      <h2>Anything else?</h2>
+      <p class="section-hint">Add any other thoughts. We'll review this together on your onboarding call.</p>
+      <label>Any other thoughts or comments <span class="optional-tag">Optional</span>
+        <textarea name="notes" rows="4" placeholder="Anything else we should know, or context for your onboarding call."></textarea></label>
+    </section>
+
+    <div class="submit-row">
+      <button type="submit" id="submit-btn">Review &amp; Submit</button>
+      <button type="button" class="btn-secondary">Save as draft</button>
+      <p class="submit-note">Save as draft if you need to come back later or hand this off. We'll reach out shortly with next steps.</p>
+    </div>
+
+  </form>
+</main>
+
+<button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark / light mode">
+  <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+</button>
+
+<script>
+/* ----- Prototype-only JS (self-contained; no Supabase, no autosave, no network). ----- */
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* Theme toggle — same storage key as the live form. */
+  $('#theme-toggle').addEventListener('click', function () {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (dark) { document.documentElement.removeAttribute('data-theme'); try { localStorage.setItem('velocity-intake-theme', 'light'); } catch (e) {} }
+    else { document.documentElement.setAttribute('data-theme', 'dark'); try { localStorage.setItem('velocity-intake-theme', 'dark'); } catch (e) {} }
+  });
+
+  /* Conditional reveals (mirrors the live form's applyConditionals). */
+  function show(el, on) { if (el) el.hidden = !on; }
+  function val(name) { var el = $('[name="' + name + '"]:checked') || $('[name="' + name + '"]'); return el ? el.value : ''; }
+  function applyConditionals() {
+    show($('#crm-other-wrap'), val('crm_platform') === 'other');
+    var multi = val('is_multi_location') === 'yes';
+    show($('#parent-brand-wrap'), multi);
+    show($('#parent-brand-other-wrap'), multi && val('parent_brand_name') === 'other');
+    show($('#ai-phone-number-wrap'), val('ai_phone_mode') === 'own');
+    show($('#ai-email-address-wrap'), val('ai_email_mode') === 'own');
+    show($('#main-cta-other-wrap'), val('main_cta') === 'other');
+    show($('#sales-discount-notes-wrap'), val('sales_discount_policy') !== 'none');
+    var ss = $('[name="has_sales_script"]:checked'); show($('#sales-script-paste-wrap'), !!ss && ss.value === 'yes');
+    var go = $('[name="goal_other"]'); show($('#goal-other-wrap'), go && go.checked);
+  }
+  document.addEventListener('change', applyConditionals);
+  document.addEventListener('input', applyConditionals);
+
+  /* Live voice examples with the studio name. */
+  function updateStudioExamples() {
+    var nameEl = $('[name="business_name"]');
+    var studio = (nameEl && nameEl.value.trim()) || 'your studio';
+    $$('.voice-option__example').forEach(function (el) {
+      el.textContent = (el.getAttribute('data-example') || '').replace(/\{studio\}/g, studio);
+    });
+  }
+
+  /* Chips inputs (mirrors the live form). */
+  function initChips(box) {
+    var entry = $('.chips-entry', box);
+    var hidden = $('input[type="hidden"]', box);
+    if (!entry || !hidden) return;
+    function values() { return hidden.value ? hidden.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean) : []; }
+    function render(vals) {
+      $$('.chip', box).forEach(function (c) { c.remove(); });
+      vals.forEach(function (v, i) {
+        var chip = document.createElement('span'); chip.className = 'chip';
+        var lbl = document.createElement('span'); lbl.className = 'chip__label'; lbl.textContent = v;
+        var rm = document.createElement('button'); rm.type = 'button'; rm.className = 'chip__remove';
+        rm.setAttribute('aria-label', 'Remove ' + v); rm.textContent = '×';
+        rm.addEventListener('click', function () { var n = values(); n.splice(i, 1); commit(n); entry.focus(); });
+        chip.appendChild(lbl); chip.appendChild(rm); box.insertBefore(chip, entry);
+      });
+    }
+    function commit(vals) {
+      var seen = {}, clean = [];
+      vals.forEach(function (v) { var t = String(v).trim(); if (!t) return; var k = t.toLowerCase(); if (seen[k]) return; seen[k] = 1; clean.push(t); });
+      hidden.value = clean.join('\n'); render(clean);
+    }
+    entry.addEventListener('keydown', function (e) {
+      if (e.key === ',' || e.key === 'Enter') { e.preventDefault(); commit(values().concat(entry.value.split(/[,\n]/))); entry.value = ''; }
+    });
+    entry.addEventListener('blur', function () { if (entry.value.trim()) { commit(values().concat(entry.value.split(/[,\n]/))); entry.value = ''; } });
+  }
+
+  /* Left "Quick view" section nav — ported verbatim from the live form (form.js initSectionNav). */
+  function initSectionNav() {
+    var form = document.getElementById('intake-form');
+    var nav = document.getElementById('section-nav');
+    if (!form || !nav) return;
+    var slug = function (s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); };
+    var sectionEls = [];
+    var html = '<div class="section-nav__title">Quick view</div>';
+    Array.prototype.forEach.call(form.children, function (el) {
+      if (el.classList && el.classList.contains('part-divider')) {
+        var t = el.querySelector('.part-title');
+        if (t) html += '<div class="section-nav__group">' + t.textContent.trim() + '</div>';
+      } else if (el.tagName === 'SECTION') {
+        var h2 = el.querySelector('h2');
+        if (!h2) return;
+        var clone = h2.cloneNode(true);
+        clone.querySelectorAll('.optional-tag, .req').forEach(function (o) { o.remove(); });
+        var label = clone.textContent.trim();
+        if (!el.id) el.id = 'sec-' + slug(label);
+        sectionEls.push(el);
+        html += '<a class="section-nav__link" href="#' + el.id + '" data-target="' + el.id + '">' + label + '</a>';
+      }
+    });
+    nav.innerHTML = html;
+    var linkFor = function (id) { return nav.querySelector('.section-nav__link[data-target="' + id + '"]'); };
+    nav.addEventListener('click', function (e) {
+      var a = e.target.closest('.section-nav__link');
+      if (!a) return;
+      e.preventDefault();
+      var target = document.getElementById(a.dataset.target);
+      if (!target) return;
+      var y = target.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+    if ('IntersectionObserver' in window) {
+      var visible = {};
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting) visible[en.target.id] = 1; else delete visible[en.target.id]; });
+        var activeId = sectionEls.map(function (s) { return s.id; }).filter(function (id) { return visible[id]; })[0];
+        nav.querySelectorAll('.section-nav__link.is-active').forEach(function (l) { l.classList.remove('is-active'); });
+        if (activeId) { var l = linkFor(activeId); if (l) l.classList.add('is-active'); }
+      }, { rootMargin: '-80px 0px -70% 0px', threshold: 0 });
+      sectionEls.forEach(function (s) { io.observe(s); });
+    }
+    var header = document.querySelector('.site-header');
+    function onScroll() {
+      var trigger = header ? header.offsetTop + header.offsetHeight - 8 : 200;
+      nav.classList.toggle('is-visible', window.scrollY > trigger);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    onScroll();
+  }
+
+  /* Required-progress for the top bar + header counter. */
+  function updateProgress() {
+    var reqs = $$('[required]').filter(function (el) { return el.offsetParent !== null; });
+    var done = reqs.filter(function (el) { return el.type === 'checkbox' ? el.checked : String(el.value || '').trim() !== ''; }).length;
+    var pct = reqs.length ? Math.round(done / reqs.length * 100) : 0;
+    var fill = $('#progress-fill'); if (fill) fill.style.width = pct + '%';
+    var rc = $('#req-count'); if (rc) rc.textContent = done + ' / ' + reqs.length + ' required';
+  }
+
+  /* Prefill + submit are stubbed in the prototype. */
+  $('#prefill-btn').addEventListener('click', function () {
+    var s = $('#prefill-status'); if (s) { s.textContent = 'Prototype preview: pre-fill runs on the live form.'; s.style.color = 'var(--ai-green)'; }
+  });
+  $('#intake-form').addEventListener('submit', function (e) { e.preventDefault(); alert('Trimmed prototype: this does not submit. It is for layout review only.'); });
+
+  /* Team access repeater (mirrors the live form's userRowHTML/renderUsers/addUser). */
+  var userCounter = 1;
+  function userRowHTML(i) {
+    return '<div class="user-row" data-i="' + i + '">' +
+      '<div class="input-with-req urow-name"><input type="text" name="user_' + i + '_name" placeholder="Name"></div>' +
+      '<div class="input-with-req urow-email"><input type="email" name="user_' + i + '_email" placeholder="Email"></div>' +
+      '<input class="urow-phone" type="tel" name="user_' + i + '_phone" placeholder="Phone" aria-label="Phone (optional, for SMS alerts)">' +
+      '<select class="urow-role" name="user_' + i + '_role" aria-label="Role"><option value="">Role…</option><option value="staff">Staff</option><option value="general_manager">General Manager</option></select>' +
+      '<button type="button" class="remove-user" aria-label="Remove user">&times;</button>' +
+      '</div>';
+  }
+  function renderUsers() {
+    var list = document.getElementById('users-list');
+    if (!list) return;
+    list.innerHTML = userRowHTML(0);
+    userCounter = 1;
+    var add = document.getElementById('add-user');
+    if (add) add.addEventListener('click', function () {
+      list.insertAdjacentHTML('beforeend', userRowHTML(userCounter)); userCounter++;
+      var last = list.lastElementChild, ni = last && last.querySelector('[name$="_name"]');
+      if (ni) ni.focus();
+    });
+    list.addEventListener('click', function (e) {
+      if (e.target.classList.contains('remove-user')) {
+        var row = e.target.closest('.user-row');
+        if (document.querySelectorAll('#users-list .user-row').length > 1) row.remove();
+      }
+    });
+  }
+
+  /* Init. */
+  renderUsers();
+  $$('[data-chips]').forEach(initChips);
+  applyConditionals();
+  updateStudioExamples();
+  initSectionNav();
+  updateProgress();
+  $('[name="business_name"]').addEventListener('input', updateStudioExamples);
+  document.addEventListener('input', updateProgress);
+  document.addEventListener('change', updateProgress);
+})();
+</script>
+</body>
+</html>

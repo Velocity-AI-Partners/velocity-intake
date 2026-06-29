@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  // Variant router: ?form=redesign and ?form=trimmed serve the preview variants.
+  // Default (no param) = this full live form, unchanged.
+  (function () {
+    try {
+      var f = new URLSearchParams(location.search).get('form');
+      if (f === 'redesign') location.replace('redesign.html' + location.hash);
+      else if (f === 'trimmed') location.replace('trimmed.html' + location.hash);
+    } catch (e) {}
+  })();
+</script>
 <title>Velocity AI Partners — Client Onboarding</title>
 <meta name="description" content="Share the details we need to configure your AI Agent on the Velocity AI platform.">
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
