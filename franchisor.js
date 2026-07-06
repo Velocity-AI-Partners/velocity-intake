@@ -48,10 +48,10 @@
       // link exists on their site, so that field stays empty.
       fields: [
         { name: 'brand_name', col: 'brand_name', label: 'Brand name', type: 'text', required: true, value: 'beem Light Sauna' },
-        { name: 'contact_first_name', virtual: true, label: 'Primary contact — first name', type: 'text', required: true, value: 'Veronica' },
-        { name: 'contact_last_name', virtual: true, label: 'Primary contact — last name', type: 'text', required: true, value: 'Stranc' },
+        { name: 'contact_first_name', virtual: true, label: 'Primary contact first name', type: 'text', required: true, value: 'Veronica' },
+        { name: 'contact_last_name', virtual: true, label: 'Primary contact last name', type: 'text', required: true, value: 'Stranc' },
         { name: 'contact_email', col: 'contact_email', label: 'Primary contact email', type: 'email', required: true, value: 'vstranc@beemlightsauna.com' },
-        { name: 'additional_contacts', col: 'additional_contacts', label: 'Additional contacts — who at corporate needs dashboard access?', type: 'users', help: 'Email is required for each person. These become your corporate logins with the franchise-wide view.' },
+        { name: 'additional_contacts', col: 'additional_contacts', label: 'Additional contacts: who at corporate needs dashboard access?', type: 'users', help: 'Email is required for each person. These become your corporate logins with the franchise-wide view.' },
         { name: 'website_url', col: 'website_url', label: 'Brand website', type: 'url', value: 'https://www.beemlightsauna.com/', placeholder: 'https://' },
         { name: 'instagram', label: 'Instagram', type: 'text', value: '@beemlightsauna', placeholder: '@handle' },
         { name: 'facebook', label: 'Facebook page', type: 'url', value: 'https://www.facebook.com/beemlightsauna/', placeholder: 'https://facebook.com/...' },
@@ -86,7 +86,7 @@
         { name: 'voice_tone', label: 'How should the AI sound when it speaks for your brand?', type: 'textarea', rows: 3, placeholder: 'e.g. warm and knowledgeable, energetic, calm and spa-like...' },
         { name: 'approved_phrases', label: 'Phrases you love (use these)', type: 'textarea', rows: 3 },
         { name: 'avoid_words', label: 'Words or claims to avoid', type: 'textarea', rows: 3, placeholder: 'Compliance rules, health claims to avoid, banned wording...' },
-        { name: 'faq', label: 'Top questions customers ask — and your answers', type: 'textarea', rows: 5 },
+        { name: 'faq', label: 'Top questions customers ask, and your answers', type: 'textarea', rows: 5 },
       ],
     },
     {
@@ -103,8 +103,8 @@
   ];
 
   const LOCATION_FIELDS = [
-    { name: 'page_url', label: 'This location’s web page — paste it and hit Pre-fill to go faster', type: 'prefill-url', placeholder: 'https://.../locations/your-city' },
-    { name: 'name', label: 'Location name', type: 'text', placeholder: 'e.g. beem Light Sauna — Scottsdale', required: true },
+    { name: 'page_url', label: 'This location’s web page. Paste it and hit Pre-fill to go faster.', type: 'prefill-url', placeholder: 'https://.../locations/your-city' },
+    { name: 'name', label: 'Location name', type: 'text', placeholder: 'e.g. beem Scottsdale', required: true },
     { name: 'address', label: 'Street address', type: 'text' },
     { name: 'city_state', label: 'City & state', type: 'text' },
     { name: 'zip', label: 'Zip code', type: 'text' },
@@ -532,7 +532,7 @@
     if (!input || !input.files || !input.files[0]) return existingLogoUrl;
     const file = input.files[0];
     if (file.size > 2 * 1024 * 1024) {
-      throw new Error('Logo file is over 2MB — please compress it and try again.');
+      throw new Error('Logo file is over 2MB. Please compress it and try again.');
     }
     status.hidden = false;
     status.textContent = 'Uploading logo…';
@@ -748,10 +748,10 @@
     const extra = Array.isArray(payload.additional_contacts) ? payload.additional_contacts : [];
     $('#submit-summary').innerHTML = `
       <ul class="summary-list">
-        <li><strong>Brand:</strong> ${esc(payload.brand_name || '—')}</li>
-        <li><strong>Primary contact:</strong> ${esc(payload.contact_name || '—')} (${esc(payload.contact_email || '—')})</li>
-        <li><strong>Additional contacts:</strong> ${extra.length ? esc(extra.map(u => `${u.first_name} ${u.last_name}`.trim()).filter(Boolean).join(', ')) : '—'}</li>
-        <li><strong>Locations:</strong> ${locs.length}${locs.length ? ' — ' + esc(locs.map(l => l.name).filter(Boolean).join(', ')) : ''}</li>
+        <li><strong>Brand:</strong> ${esc(payload.brand_name || 'none')}</li>
+        <li><strong>Primary contact:</strong> ${esc(payload.contact_name || 'none')} (${esc(payload.contact_email || 'none')})</li>
+        <li><strong>Additional contacts:</strong> ${extra.length ? esc(extra.map(u => `${u.first_name} ${u.last_name}`.trim()).filter(Boolean).join(', ')) : 'none'}</li>
+        <li><strong>Locations:</strong> ${locs.length}${locs.length ? ' (' + esc(locs.map(l => l.name).filter(Boolean).join(', ')) + ')' : ''}</li>
       </ul>`;
   }
 
@@ -783,7 +783,7 @@
       throw new Error(`Submit failed: ${resp.status} ${body}`);
     }
     const ok = await resp.json();
-    if (ok !== true) throw new Error('Submit failed — this draft may already have been submitted.');
+    if (ok !== true) throw new Error('Submit failed. This draft may already have been submitted.');
   }
 
   async function doFinalSubmit() {
@@ -811,7 +811,7 @@
       btn.disabled = false;
       btn.textContent = 'Submit onboarding';
       closeSubmitConfirm();
-      showError(err.message || 'Submit failed. Please try again — your draft is still saved.');
+      showError(err.message || 'Submit failed. Please try again. Your draft is still saved.');
     }
   }
 
@@ -902,7 +902,7 @@
         status,
         n
           ? `✓ Filled in ${n} field${n === 1 ? '' : 's'} from your site, each highlighted "AI suggested." Review and confirm them before you submit.`
-          : 'We could not pull much from that page — please fill the form in yourself.',
+          : 'We could not pull much from that page. Please fill the form in yourself.',
         n ? 'success' : 'error'
       );
     } catch (e) {
@@ -943,12 +943,12 @@
       setPrefillStatus(
         status,
         n
-          ? `✓ Filled in ${n} field${n === 1 ? '' : 's'} — review and confirm.`
-          : 'Could not pull much from that page — please fill this location in yourself.',
+          ? `✓ Filled in ${n} field${n === 1 ? '' : 's'}. Review and confirm.`
+          : 'Could not pull much from that page. Please fill this location in yourself.',
         n ? 'success' : 'error'
       );
     } catch (e) {
-      setPrefillStatus(status, 'Pre-fill is not available right now — please fill this location in yourself.', 'error');
+      setPrefillStatus(status, 'Pre-fill is not available right now. Please fill this location in yourself.', 'error');
     } finally {
       btn.disabled = false;
       btn.textContent = original;
