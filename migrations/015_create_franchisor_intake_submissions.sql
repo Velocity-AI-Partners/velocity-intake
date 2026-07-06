@@ -28,7 +28,7 @@ create table if not exists public.franchisor_intake_submissions (
 
   -- jsonb buckets, one per form section
   socials jsonb,                -- { instagram, facebook, linkedin, youtube, tiktok }
-  brand_colors jsonb,           -- { primary, secondary, notes }
+  brand_colors jsonb,           -- unused by the current form (brand-assets section removed 2026-07-06); kept nullable for future use, as are logo_url and corporate_address
   additional_contacts jsonb,    -- [ { first_name, last_name, email }, ... ]
   locations jsonb,              -- [ { page_url, name, address, city_state, zip, timezone, hours: {mon..sun: {open,close,closed}}, studio_phone, crm_platform, crm_store_id, gm: {first_name,last_name,email}, location_users: [person...], notes }, ... ]
   brand_knowledge jsonb,        -- { service_description, pricing_structure, intro_offer, cancellation_policy, ideal_client, unique_value, voice_tone, approved_phrases, avoid_words, faq }

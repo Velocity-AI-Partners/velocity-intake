@@ -42,8 +42,7 @@
   const FORM_SECTIONS = [
     {
       id: 'brand',
-      title: '1. Your brand',
-      lead: 'Who you are and who needs access.',
+      title: '1. Your franchise',
       // Contact + socials defaults verified 2026-07-06: contacts provided by
       // George; socials read from beemlightsauna.com's own footer. No TikTok
       // link exists on their site, so that field stays empty.
@@ -53,7 +52,6 @@
         { name: 'contact_last_name', virtual: true, label: 'Primary contact — last name', type: 'text', required: true, value: 'Stranc' },
         { name: 'contact_email', col: 'contact_email', label: 'Primary contact email', type: 'email', required: true, value: 'vstranc@beemlightsauna.com' },
         { name: 'additional_contacts', col: 'additional_contacts', label: 'Additional contacts — who at corporate needs dashboard access?', type: 'users', help: 'Email is required for each person. These become your corporate logins with the franchise-wide view.' },
-        { name: 'corporate_address', col: 'corporate_address', label: 'Corporate / HQ address', type: 'text' },
         { name: 'website_url', col: 'website_url', label: 'Brand website', type: 'url', value: 'https://www.beemlightsauna.com/', placeholder: 'https://' },
         { name: 'instagram', label: 'Instagram', type: 'text', value: '@beemlightsauna', placeholder: '@handle' },
         { name: 'facebook', label: 'Facebook page', type: 'url', value: 'https://www.facebook.com/beemlightsauna/', placeholder: 'https://facebook.com/...' },
@@ -65,20 +63,8 @@
       bucketFields: ['instagram', 'facebook', 'linkedin', 'youtube', 'tiktok'],
     },
     {
-      id: 'assets',
-      title: '2. Brand assets',
-      lead: 'The logo and colors we use to build your branded dashboard.',
-      bucket: 'brand_colors',
-      fields: [
-        { name: 'logo', col: 'logo_url', label: 'Brand logo (PNG/JPG/SVG, up to 2MB — highest resolution you have)', type: 'logo' },
-        { name: 'primary', label: 'Primary brand color', type: 'text', placeholder: 'Hex code (e.g. #E8442A) or a plain description' },
-        { name: 'secondary', label: 'Secondary brand color', type: 'text' },
-        { name: 'notes', label: 'Anything else about your brand look & feel', type: 'textarea', rows: 3, placeholder: 'Fonts, do/don’t rules, links to brand guidelines...' },
-      ],
-    },
-    {
       id: 'locations',
-      title: '3. Your locations',
+      title: '2. Your locations',
       lead: 'Add every location you’re onboarding. Each becomes its own sub-account under your brand. You can start with a few and send us the rest later.',
       bucket: 'locations',
       fields: [
@@ -87,7 +73,7 @@
     },
     {
       id: 'knowledge',
-      title: '4. Brand-wide knowledge base',
+      title: '3. Brand-wide knowledge base',
       lead: 'Answered once, applied across all locations. This is what your AI team members know about beem when they talk to your customers.',
       bucket: 'brand_knowledge',
       fields: [
@@ -105,7 +91,7 @@
     },
     {
       id: 'rollout',
-      title: '5. Rollout & anything else',
+      title: '4. Rollout & anything else',
       lead: 'Targets and timing.',
       bucket: 'franchise_rollout',
       fields: [
