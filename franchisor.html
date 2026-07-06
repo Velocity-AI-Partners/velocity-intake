@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beem Light Sauna — Franchisor Onboarding</title>
+<meta name="description" content="Franchisor onboarding for Beem Light Sauna — brand, locations, and knowledge base setup with Velocity AI Partners.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/jpeg" href="favicon.jpg">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="franchisor.css?v=1">
+</head>
+<body>
+<main class="container">
+  <header>
+    <div class="brand-row">
+      <img src="beem-light-sauna-logo.jpg" alt="Beem Light Sauna" class="brand-logo">
+    </div>
+    <span class="eyebrow">Franchisor Onboarding</span>
+    <h1>Welcome, Beem Light Sauna</h1>
+    <p class="lead">This is where we set up your brand on the Velocity platform: your branded dashboard, your locations, and your brand-wide knowledge base. Save a draft at any point and use the link we provide to resume or hand off to a teammate.</p>
+    <div class="meta-row">
+      <span>Save &amp; resume anytime</span>
+      <span>Encrypted in transit</span>
+    </div>
+    <p class="required-note"><span class="req" aria-hidden="true">*</span> indicates a required field</p>
+  </header>
+
+  <form id="franchisor-form" novalidate>
+    <!-- Sections render here from the FORM_SECTIONS config in franchisor.js -->
+    <div id="sections-root"></div>
+
+    <!-- Honeypot: bots fill this, humans never see it -->
+    <input type="text" name="honeypot" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <div class="error-banner" id="error-banner" role="alert" hidden></div>
+
+    <div class="draft-bar" id="draft-bar" hidden>
+      <p>Resume link (save this — anyone with it can continue this draft):</p>
+      <div class="draft-link-row">
+        <input type="text" id="draft-link" readonly>
+        <button type="button" class="btn-secondary" id="copy-draft-link">Copy</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn-secondary" id="save-draft">Save draft</button>
+      <button type="submit" class="btn-primary" id="submit-btn">Review &amp; submit</button>
+    </div>
+  </form>
+
+  <!-- Submit confirmation modal -->
+  <div class="modal-overlay" id="submit-modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Ready to submit?</h2>
+      <div id="submit-summary"></div>
+      <p class="modal-note">You won't be able to edit after submitting. The Velocity team will review everything and follow up with next steps.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="modal-cancel">Keep editing</button>
+        <button type="button" class="btn-primary" id="modal-confirm">Submit onboarding</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success screen (replaces form on submit) -->
+  <div id="success-screen" hidden>
+    <div class="success-card">
+      <h2>Thank you — we've got it.</h2>
+      <p>Your franchisor onboarding has been received. The Velocity AI Partners team will review your brand setup, locations, and knowledge base, and reach out with next steps.</p>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    <span>Powered by</span>
+    <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="footer-logo">
+  </footer>
+</main>
+<script src="franchisor.js?v=1"></script>
+</body>
+</html>
