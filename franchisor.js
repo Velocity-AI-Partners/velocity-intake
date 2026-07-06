@@ -959,6 +959,30 @@
     }
   }
 
+  // --- Top completion progress bar --------------------------------------------
+  // Fraction of visible free-text fields that are filled. Selects (times,
+  // timezone, roles) always carry a value, so they're excluded — counting them
+  // would inflate the number.
+  function updateProgressBar() {
+    const fill = document.getElementById('progress-fill');
+    if (!fill) return;
+    const els = document.querySelectorAll(
+      '#franchisor-form input[type="text"], #franchisor-form input[type="email"], ' +
+      '#franchisor-form input[type="tel"], #franchisor-form input[type="url"], #franchisor-form textarea'
+    );
+    let total = 0, filled = 0;
+    els.forEach(el => {
+      if (el.classList.contains('honeypot')) return;
+      if (el.disabled || el.offsetParent === null) return;
+      total++;
+      if ((el.value || '').trim() !== '') filled++;
+    });
+    const pct = total ? Math.round((filled / total) * 100) : 0;
+    fill.style.width = pct + '%';
+    const bar = fill.parentElement;
+    if (bar) bar.setAttribute('aria-valuenow', String(pct));
+  }
+
   // --- Sticky left section navigator ------------------------------------------
   function refreshLocationSubnav() {
     const sub = document.getElementById('section-nav-locations-sub');
@@ -1089,6 +1113,7 @@
       }
       if (e.target.id === 'modal-cancel') closeSubmitConfirm();
       if (e.target.id === 'modal-confirm') doFinalSubmit();
+      updateProgressBar(); // add/remove rows changes the field count
     });
     // Live phone mask on every tel field (existing and future rows).
     document.addEventListener('input', (e) => {
@@ -1099,6 +1124,7 @@
       }
       // Keep the nav's location sub-links in sync with the name fields.
       if (el.name && /^loc_\d+_name$/.test(el.name)) refreshLocationSubnav();
+      updateProgressBar();
     });
     // Hours grids: the "closed" toggle disables that day's time inputs.
     document.addEventListener('change', (e) => {
@@ -1113,7 +1139,7 @@
     $('#franchisor-form').addEventListener('submit', handleSubmit);
     $('#brand-prefill-btn').addEventListener('click', handleBrandPrefill);
     initSectionNav();
-    initDraftFromUrl();
+    Promise.resolve(initDraftFromUrl()).then(updateProgressBar);
   }
 
   document.addEventListener('DOMContentLoaded', init);

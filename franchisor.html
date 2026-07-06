@@ -9,16 +9,21 @@
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-<link rel="stylesheet" href="franchisor.css?v=6">
+<link rel="stylesheet" href="franchisor.css?v=7">
 </head>
 <body>
+<!-- Completion progress: fixed to the top, follows you as you scroll -->
+<div class="progress-bar" role="progressbar" aria-label="Form completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
+<!-- Full-bleed Velocity navy band across the top -->
+<div class="velocity-band">
+  <div class="velocity-band__inner">
+    <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="velocity-band__logo">
+  </div>
+</div>
 <!-- Sticky left-gutter section navigator (wide screens; populated by JS) -->
 <nav id="section-nav" class="section-nav" aria-label="Jump to a form section"></nav>
 <main class="container">
   <header>
-    <div class="velocity-band">
-      <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="velocity-band__logo">
-    </div>
     <div class="brand-row">
       <img src="beem-light-sauna-logo.jpg" alt="beem Light Sauna" class="brand-logo">
     </div>
@@ -93,6 +98,6 @@
     <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="footer-logo">
   </footer>
 </main>
-<script src="franchisor.js?v=6"></script>
+<script src="franchisor.js?v=7"></script>
 </body>
 </html>
