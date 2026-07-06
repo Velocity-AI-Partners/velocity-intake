@@ -45,6 +45,15 @@ Client-facing intake form for new Velocity AI Partners locations. A prospective 
 - `anon` can INSERT to `intake-logos` bucket — no size/type check server-side (2MB client-side)
 - `authenticated` admins can SELECT + UPDATE — used by main app's `/client-onboarding` page
 
+## Franchisor onboarding (standalone one-off — Beem Light Sauna)
+
+- `franchisor.html` + `franchisor.js` + `franchisor.css` — fully standalone page, deliberately decoupled from `form.js`/`styles.css`. Reached via `?form=franchisor` (variant router in `index.html`) or `/franchisor.html` directly.
+- **Collect-and-review only.** Rows land in `franchisor_intake_submissions` (migration `015`) — an isolated table with NO foreign keys, triggers, webhooks, or provisioning path. Admins review on the main app's `/client-onboarding` page (Franchisor Submissions card) and carry the data into the new system manually.
+- **Edit the questions in the `FORM_SECTIONS` config block at the top of `franchisor.js`** — section content stores into jsonb buckets, so question changes need no migration. Flat columns are only identity/meta (brand_name, contact_*, logo_url, status...).
+- Same draft pattern as the main form (`franchisor.html?draft=<uuid>`), same honeypot defense, same `intake-logos` bucket for the brand logo.
+- Multi-location: repeatable location cards; per-location fields defined in `LOCATION_FIELDS` in `franchisor.js`.
+- For a second franchisor brand later: new row value for `form_variant`, swap the logo/branding, adjust `FORM_SECTIONS` — same table.
+
 ## Form sections (for orientation)
 
 1. Business info — name, address, timezone, contact, website, multi-location, logo

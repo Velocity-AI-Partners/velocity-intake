@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
-  // Variant router: ?form=redesign and ?form=trimmed serve the preview variants.
-  // Default (no param) = this full live form, unchanged.
+  // Variant router: ?form=redesign, ?form=trimmed, and ?form=franchisor serve
+  // the variant pages. Default (no param) = this full live form, unchanged.
   (function () {
     try {
       var f = new URLSearchParams(location.search).get('form');
       if (f === 'redesign') location.replace('redesign.html' + location.hash);
       else if (f === 'trimmed') location.replace('trimmed.html' + location.hash);
+      else if (f === 'franchisor') location.replace('franchisor.html' + location.hash);
     } catch (e) {}
   })();
 </script>
