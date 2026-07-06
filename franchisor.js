@@ -240,6 +240,39 @@
     });
   }
 
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  // Combined time <select> (ported from the redesign form): every 15 min,
+  // value "HH:MM" (24h), label "h:mm AM/PM" so the time reads as one unit —
+  // no native time-picker popup, no clock icon.
+  function timeOptionsHTML(selectedHHMM) {
+    let opts = '';
+    for (let mins = 0; mins < 24 * 60; mins += 15) {
+      const h24 = Math.floor(mins / 60);
+      const m = mins % 60;
+      const val = `${pad2(h24)}:${pad2(m)}`;
+      const ap = h24 >= 12 ? 'PM' : 'AM';
+      let h12 = h24 % 12; if (h12 === 0) h12 = 12;
+      const label = `${h12}:${pad2(m)} ${ap}`;
+      opts += `<option value="${val}"${val === selectedHHMM ? ' selected' : ''}>${label}</option>`;
+    }
+    return opts;
+  }
+
+  function timePickerHTML(name, defaultHHMM) {
+    return `<select class="time-select" name="${name}" aria-label="Time">${timeOptionsHTML(defaultHHMM)}</select>`;
+  }
+
+  // Scraped hours can land on any minute; snap to the picker's 15-min grid.
+  function snapToQuarterHour(hhmm) {
+    const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || ''));
+    if (!m) return null;
+    let h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+    min = Math.round(min / 15) * 15;
+    if (min === 60) { min = 0; h = (h + 1) % 24; }
+    return `${pad2(h)}:${pad2(min)}`;
+  }
+
   // Progressive US phone mask: digits in -> "(555) 123-4567" out.
   function formatPhoneValue(raw) {
     let d = String(raw == null ? '' : raw).replace(/\D/g, '');
@@ -321,8 +354,9 @@
     } else if (f.type === 'hours') {
       control = `<div class="hours-grid" data-prefix="${name}">${DAYS.map(d => `
         <div class="day-label">${DAY_LABELS[d]}</div>
-        <input type="time" name="${name}_${d}_open" value="09:00">
-        <input type="time" name="${name}_${d}_close" value="17:00">
+        ${timePickerHTML(`${name}_${d}_open`, '09:00')}
+        <span class="hours-to">to</span>
+        ${timePickerHTML(`${name}_${d}_close`, '17:00')}
         <label class="closed-wrap"><input type="checkbox" name="${name}_${d}_closed"> closed</label>`).join('')}</div>`;
     } else if (f.type === 'locations') {
       control = `<div id="locations-rows"></div><button type="button" class="btn-add" id="add-location">+ Add location</button>`;
@@ -418,8 +452,10 @@
         closed.checked = false;
         open.disabled = false;
         close.disabled = false;
-        if (h.open) open.value = h.open;
-        if (h.close) close.value = h.close;
+        const o = snapToQuarterHour(h.open);
+        const c = snapToQuarterHour(h.close);
+        if (o) open.value = o;
+        if (c) close.value = c;
       }
     });
   }
