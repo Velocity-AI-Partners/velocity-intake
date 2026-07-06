@@ -27,12 +27,12 @@ create table if not exists public.franchisor_intake_submissions (
   logo_url text,
 
   -- jsonb buckets, one per form section
-  socials jsonb,                -- { instagram, facebook, tiktok, linkedin }
+  socials jsonb,                -- { instagram, facebook, linkedin, youtube, tiktok }
   brand_colors jsonb,           -- { primary, secondary, notes }
-  dashboard_preferences jsonb,  -- { modules[], kpis, experience_notes, corporate_users[] }
-  locations jsonb,              -- [ { name, address, city_state, timezone, hours_text, crm_platform, crm_store_id, gm_name, gm_email, gm_phone, location_users[], notes }, ... ]
+  additional_contacts jsonb,    -- [ { first_name, last_name, email, phone, role }, ... ]
+  locations jsonb,              -- [ { page_url, name, address, city_state, timezone, hours: {mon..sun: {open,close,closed}}, studio_phone, crm_platform, crm_store_id, gm: {first_name,last_name,email,phone}, location_users: [person...], notes }, ... ]
   brand_knowledge jsonb,        -- { service_description, pricing_structure, intro_offer, cancellation_policy, ideal_client, unique_value, voice_tone, approved_phrases, avoid_words, faq }
-  franchise_rollout jsonb,      -- { corporate_access, kpi_targets, launch_timeline }
+  franchise_rollout jsonb,      -- { kpi_targets, launch_timeline }
 
   notes text,
 

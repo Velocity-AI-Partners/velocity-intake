@@ -102,6 +102,29 @@ input[type="file"] { font-size: 14px; }
   margin-bottom: 8px;
   align-items: center;
 }
+/* Person rows: first / last / email / phone (+ optional remove) */
+.repeat-row--person { grid-template-columns: 1fr 1fr 1.3fr 1fr auto; }
+/* Corporate contact rows add a role select before the remove button */
+.repeat-row--role { grid-template-columns: 1fr 1fr 1.3fr 1fr 0.9fr auto; }
+
+/* Hours grid: day label + open + close + closed toggle */
+.hours-grid {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr auto;
+  gap: 8px 10px;
+  align-items: center;
+}
+.hours-grid .day-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.closed-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.closed-wrap input { accent-color: var(--accent); }
 .remove-row, .remove-location {
   background: none;
   border: 1px solid var(--line);
@@ -319,6 +342,23 @@ input[type="file"] { font-size: 14px; }
   border-left-color: var(--accent);
 }
 
+/* Locations sub-list: expands on hover or while you're inside that section */
+.section-nav__sub { display: none; }
+.section-nav__item:hover .section-nav__sub,
+.section-nav__item.has-active .section-nav__sub { display: block; }
+.section-nav__sublink {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 4px 10px 4px 24px;
+  border-left: 2px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.section-nav__sublink:hover { color: var(--accent); border-left-color: var(--accent); }
+
 /* Honeypot — visually gone, still in the DOM for bots */
 .honeypot {
   position: absolute !important;
@@ -330,7 +370,8 @@ input[type="file"] { font-size: 14px; }
 /* Mobile */
 @media (max-width: 560px) {
   h1 { font-size: 24px; }
-  .repeat-row { grid-template-columns: 1fr; }
+  .repeat-row, .repeat-row--person, .repeat-row--role { grid-template-columns: 1fr; }
+  .hours-grid { grid-template-columns: 70px 1fr 1fr auto; gap: 6px; }
   .actions { flex-direction: column; }
   .btn-primary, .btn-secondary { width: 100%; }
 }

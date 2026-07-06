@@ -1,4 +1,4 @@
-// Beem Light Sauna — Franchisor Onboarding (standalone one-off form).
+// beem Light Sauna — Franchisor Onboarding (standalone one-off form).
 // Collect-and-review only: rows land in franchisor_intake_submissions and are
 // viewed on the main app's /client-onboarding page. Nothing here provisions
 // anything.
@@ -13,6 +13,9 @@
   // "fill it in manually" message — the rest of the form is unaffected.
   const FUNCTIONS_BASE = SUPABASE_URL;
 
+  const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const DAY_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+
   // ===========================================================================
   // FORM CONTENT CONFIG — edit the questions here.
   //
@@ -21,12 +24,17 @@
   //   name        - key the answer is stored under
   //   label       - question text shown to the client
   //   type        - text | email | tel | url | date | textarea | select | checkboxes
-  //                 | logo (brand logo upload) | users (people repeater)
+  //                 | logo (brand logo upload) | users (people repeater w/ role)
+  //                 | person (single first/last/email/phone row)
+  //                 | people (first/last/email/phone repeater)
+  //                 | hours (7-day open/close grid)
   //                 | locations (location repeater)
+  //                 | prefill-url (page link + AI Pre-fill button)
   //   col         - store in this flat DB column (omit to store in the
   //                 section's jsonb bucket instead)
+  //   virtual     - collected specially in buildPayload (not a direct column)
   //   required    - true to require before submit
-  //   placeholder / help / options / rows - presentation details
+  //   placeholder / help / options / rows / value - presentation + defaults
   //
   // Sections with `bucket` store their answers as one jsonb object in that
   // column, so adding/removing questions here needs NO database change.
@@ -35,15 +43,17 @@
     {
       id: 'brand',
       title: '1. Your brand',
-      lead: 'Who you are and how we reach the corporate team.',
+      lead: 'Who you are and who needs access.',
       // Contact + socials defaults verified 2026-07-06: contacts provided by
       // George; socials read from beemlightsauna.com's own footer. No TikTok
       // link exists on their site, so that field stays empty.
       fields: [
         { name: 'brand_name', col: 'brand_name', label: 'Brand name', type: 'text', required: true, value: 'beem Light Sauna' },
-        { name: 'contact_name', col: 'contact_name', label: 'Primary contact name', type: 'text', required: true, value: 'Veronica Stranc' },
+        { name: 'contact_first_name', virtual: true, label: 'Primary contact — first name', type: 'text', required: true, value: 'Veronica' },
+        { name: 'contact_last_name', virtual: true, label: 'Primary contact — last name', type: 'text', required: true, value: 'Stranc' },
         { name: 'contact_email', col: 'contact_email', label: 'Primary contact email', type: 'email', required: true, value: 'vstranc@beemlightsauna.com' },
-        { name: 'contact_phone', col: 'contact_phone', label: 'Primary contact phone', type: 'tel' },
+        { name: 'contact_phone', col: 'contact_phone', label: 'Primary contact phone (optional)', type: 'tel' },
+        { name: 'additional_contacts', col: 'additional_contacts', label: 'Additional contacts — who at corporate needs dashboard access?', type: 'users', help: 'Email is required for each person; phone is optional. These become your corporate logins with the franchise-wide view.' },
         { name: 'corporate_address', col: 'corporate_address', label: 'Corporate / HQ address', type: 'text' },
         { name: 'website_url', col: 'website_url', label: 'Brand website', type: 'url', value: 'https://www.beemlightsauna.com/', placeholder: 'https://' },
         { name: 'instagram', label: 'Instagram', type: 'text', value: '@beemlightsauna', placeholder: '@handle' },
@@ -68,24 +78,8 @@
       ],
     },
     {
-      id: 'dashboard',
-      title: '3. Your dashboard',
-      lead: 'What you want to see and who at corporate gets access.',
-      bucket: 'dashboard_preferences',
-      fields: [
-        { name: 'modules', label: 'Which AI team members do you want running?', type: 'checkboxes', options: [
-          { value: 'lead_nurturing', label: 'Lead Nurturing — responds to new leads in under 60 seconds' },
-          { value: 'lead_reactivation', label: 'Lead Reactivation — re-engages old leads' },
-          { value: 'customer_retention', label: 'Customer Retention — keeps current members engaged' },
-        ]},
-        { name: 'kpis', label: 'Which numbers matter most to you?', type: 'textarea', rows: 3, placeholder: 'e.g. leads contacted, bookings, show rate, reactivated members, retention...' },
-        { name: 'experience_notes', label: 'Describe your ideal dashboard experience', type: 'textarea', rows: 4, placeholder: 'What do you want to see first when you log in? Brand-wide rollups? Per-location detail? Alerts?' },
-        { name: 'corporate_users', label: 'Who at corporate needs dashboard access?', type: 'users', help: 'These become your corporate logins with the franchise-wide view.' },
-      ],
-    },
-    {
       id: 'locations',
-      title: '4. Your locations',
+      title: '3. Your locations',
       lead: 'Add every location you’re onboarding. Each becomes its own sub-account under your brand. You can start with a few and send us the rest later.',
       bucket: 'locations',
       fields: [
@@ -94,8 +88,8 @@
     },
     {
       id: 'knowledge',
-      title: '5. Brand-wide knowledge base',
-      lead: 'Answered once, applied across all locations. This is what your AI team members know about Beem when they talk to your customers.',
+      title: '4. Brand-wide knowledge base',
+      lead: 'Answered once, applied across all locations. This is what your AI team members know about beem when they talk to your customers.',
       bucket: 'brand_knowledge',
       fields: [
         { name: 'service_description', label: 'Describe your services as you’d explain them to a brand-new customer', type: 'textarea', rows: 4, required: true },
@@ -103,7 +97,7 @@
         { name: 'intro_offer', label: 'Intro / first-visit offer', type: 'text' },
         { name: 'cancellation_policy', label: 'Cancellation & rescheduling policy', type: 'textarea', rows: 3 },
         { name: 'ideal_client', label: 'Who is your ideal client?', type: 'textarea', rows: 3 },
-        { name: 'unique_value', label: 'What makes Beem different?', type: 'textarea', rows: 3 },
+        { name: 'unique_value', label: 'What makes beem different?', type: 'textarea', rows: 3 },
         { name: 'voice_tone', label: 'How should the AI sound when it speaks for your brand?', type: 'textarea', rows: 3, placeholder: 'e.g. warm and knowledgeable, energetic, calm and spa-like...' },
         { name: 'approved_phrases', label: 'Phrases you love (use these)', type: 'textarea', rows: 3 },
         { name: 'avoid_words', label: 'Words or claims to avoid', type: 'textarea', rows: 3, placeholder: 'Compliance rules, health claims to avoid, banned wording...' },
@@ -112,7 +106,7 @@
     },
     {
       id: 'rollout',
-      title: '6. Rollout & anything else',
+      title: '5. Rollout & anything else',
       lead: 'Targets and timing.',
       bucket: 'franchise_rollout',
       fields: [
@@ -125,7 +119,7 @@
 
   const LOCATION_FIELDS = [
     { name: 'page_url', label: 'This location’s web page — paste it and hit Pre-fill to go faster', type: 'prefill-url', placeholder: 'https://.../locations/your-city' },
-    { name: 'name', label: 'Location name', type: 'text', placeholder: 'e.g. Beem Light Sauna — Scottsdale', required: true },
+    { name: 'name', label: 'Location name', type: 'text', placeholder: 'e.g. beem Light Sauna — Scottsdale', required: true },
     { name: 'address', label: 'Street address', type: 'text' },
     { name: 'city_state', label: 'City & state', type: 'text' },
     { name: 'timezone', label: 'Timezone', type: 'select', options: [
@@ -136,20 +130,20 @@
       { value: 'America/Phoenix', label: 'Arizona (no DST)' },
       { value: 'America/Los_Angeles', label: 'Pacific' },
     ]},
-    { name: 'hours_text', label: 'Operating hours', type: 'text', placeholder: 'e.g. Mon–Fri 9–7, Sat 9–5, Sun closed' },
+    { name: 'hours', label: 'Operating hours', type: 'hours' },
     { name: 'studio_phone', label: 'Studio phone (public)', type: 'tel' },
-    { name: 'crm_platform', label: 'Booking / CRM platform', type: 'text', placeholder: 'e.g. Zenoti, Mindbody, GoHighLevel' },
+    { name: 'crm_platform', label: 'Booking / CRM platform', type: 'text', placeholder: 'e.g. Mindbody, Zenoti, GoHighLevel' },
     { name: 'crm_store_id', label: 'CRM store / location ID (if known)', type: 'text' },
-    { name: 'gm_name', label: 'GM / manager name', type: 'text' },
-    { name: 'gm_email', label: 'GM / manager email', type: 'email' },
-    { name: 'gm_phone', label: 'GM / manager phone', type: 'tel' },
-    { name: 'location_users', label: 'Who at this location needs dashboard access?', type: 'textarea', rows: 2, placeholder: 'Names + emails' },
+    { name: 'gm', label: 'General manager', type: 'person' },
+    { name: 'location_users', label: 'Who at this location needs dashboard access?', type: 'people', help: 'Email required, phone optional.' },
     { name: 'notes', label: 'Notes for this location', type: 'textarea', rows: 2 },
   ];
+
   // --- Preset data (applied on a fresh form; skipped when resuming a draft) ---
   // Location details verified from each studio's own page on beemlightsauna.com
-  // (2026-07-06). Glenwood's hours are not published on its page, so that field
-  // is left for Beem to fill — never guessed. Timezones follow the studio's state.
+  // (2026-07-06). Glenwood's hours are not published on its page, so its grid
+  // keeps the neutral form defaults — never guessed. Timezones follow the
+  // studio's state. Booking platform is Mindbody across all four (George).
   const PRESET_LOCATIONS = [
     {
       page_url: 'https://www.beemlightsauna.com/location/glenwood',
@@ -158,6 +152,7 @@
       city_state: 'Atlanta, GA 30316',
       timezone: 'America/New_York',
       studio_phone: '(404) 973-2288',
+      crm_platform: 'Mindbody',
     },
     {
       page_url: 'https://www.beemlightsauna.com/location/nashville-green-hills',
@@ -165,8 +160,14 @@
       address: '3760 Hillsboro Pike',
       city_state: 'Nashville, TN 37215',
       timezone: 'America/Chicago',
-      hours_text: 'Mon–Thu 7am–7pm, Fri 8am–5pm, Sat 8am–4pm, Sun 10am–4pm',
       studio_phone: '(615) 600-4044',
+      crm_platform: 'Mindbody',
+      hours: {
+        mon: { open: '07:00', close: '19:00' }, tue: { open: '07:00', close: '19:00' },
+        wed: { open: '07:00', close: '19:00' }, thu: { open: '07:00', close: '19:00' },
+        fri: { open: '08:00', close: '17:00' }, sat: { open: '08:00', close: '16:00' },
+        sun: { open: '10:00', close: '16:00' },
+      },
     },
     {
       page_url: 'https://www.beemlightsauna.com/location/summerville',
@@ -174,8 +175,14 @@
       address: '100 Gosling Way, Suite B',
       city_state: 'Summerville, SC 29486',
       timezone: 'America/New_York',
-      hours_text: 'Mon–Fri 8am–8pm, Sat–Sun 11am–3pm',
       studio_phone: '(843) 788-9288',
+      crm_platform: 'Mindbody',
+      hours: {
+        mon: { open: '08:00', close: '20:00' }, tue: { open: '08:00', close: '20:00' },
+        wed: { open: '08:00', close: '20:00' }, thu: { open: '08:00', close: '20:00' },
+        fri: { open: '08:00', close: '20:00' }, sat: { open: '11:00', close: '15:00' },
+        sun: { open: '11:00', close: '15:00' },
+      },
     },
     {
       page_url: 'https://www.beemlightsauna.com/studio/west-mckinney',
@@ -183,14 +190,20 @@
       address: '4041 S Custer Rd, Unit 2150',
       city_state: 'McKinney, TX 75070',
       timezone: 'America/Chicago',
-      hours_text: 'Mon–Thu 8am–8pm, Fri 8am–5pm, Sat 9am–3pm, Sun 11am–4pm',
       studio_phone: '(469) 343-4991',
+      crm_platform: 'Mindbody',
+      hours: {
+        mon: { open: '08:00', close: '20:00' }, tue: { open: '08:00', close: '20:00' },
+        wed: { open: '08:00', close: '20:00' }, thu: { open: '08:00', close: '20:00' },
+        fri: { open: '08:00', close: '17:00' }, sat: { open: '09:00', close: '15:00' },
+        sun: { open: '11:00', close: '16:00' },
+      },
     },
   ];
 
-  // Corporate dashboard users preset (provided by George 2026-07-06).
-  const PRESET_USERS = [
-    { name: 'Jesse Kern', email: 'jkern@beemlightsauna.com', role: 'corporate_admin' },
+  // Additional corporate contacts preset (provided by George 2026-07-06).
+  const PRESET_CONTACTS = [
+    { first_name: 'Jesse', last_name: 'Kern', email: 'jkern@beemlightsauna.com', role: 'corporate_admin' },
   ];
   // ========================= end of content config ===========================
 
@@ -198,6 +211,7 @@
   let existingLogoUrl = null;
   let locationCounter = 0;
   let userCounter = 0;
+  let peopleCounter = 0;
 
   // --- Small helpers ---------------------------------------------------------
   const $ = (sel) => document.querySelector(sel);
@@ -222,6 +236,57 @@
     });
   }
 
+  // Progressive US phone mask: digits in -> "(555) 123-4567" out.
+  function formatPhoneValue(raw) {
+    let d = String(raw == null ? '' : raw).replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1); // drop a leading US country code
+    d = d.slice(0, 10);
+    if (!d) return '';
+    if (d.length < 4) return '(' + d;
+    if (d.length < 7) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+    return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+  }
+
+  // --- Person rows (first / last / email / phone) ------------------------------
+  function personInputsHTML(prefix, withRole) {
+    const role = withRole ? `
+        <select name="${prefix}_role">
+          <option value="corporate_admin">Corporate admin</option>
+          <option value="regional_manager">Regional manager</option>
+          <option value="viewer">Viewer</option>
+        </select>` : '';
+    return `
+        <input type="text" name="${prefix}_first_name" placeholder="First name">
+        <input type="text" name="${prefix}_last_name" placeholder="Last name">
+        <input type="email" name="${prefix}_email" placeholder="Email *">
+        <input type="tel" name="${prefix}_phone" placeholder="Phone (optional)">${role}`;
+  }
+
+  function collectPerson(prefix) {
+    const val = (n) => {
+      const el = document.querySelector(`[name="${prefix}_${n}"]`);
+      return el ? el.value.trim() : '';
+    };
+    const p = { first_name: val('first_name'), last_name: val('last_name'), email: val('email'), phone: val('phone') };
+    const roleEl = document.querySelector(`[name="${prefix}_role"]`);
+    if (roleEl) p.role = roleEl.value;
+    return p;
+  }
+
+  function personHasData(p) {
+    return !!(p.first_name || p.last_name || p.email || p.phone);
+  }
+
+  function applyPerson(prefix, p) {
+    if (!p || typeof p !== 'object') return;
+    ['first_name', 'last_name', 'email', 'phone'].forEach(n => {
+      const el = document.querySelector(`[name="${prefix}_${n}"]`);
+      if (el && p[n] != null) el.value = p[n];
+    });
+    const roleEl = document.querySelector(`[name="${prefix}_role"]`);
+    if (roleEl && p.role) roleEl.value = p.role;
+  }
+
   // --- Render engine ---------------------------------------------------------
   function fieldHTML(f, namePrefix) {
     const name = namePrefix ? `${namePrefix}_${f.name}` : f.name;
@@ -239,6 +304,20 @@
       control = `
         <input type="file" name="${name}" id="logo-input" accept="image/png,image/jpeg,image/svg+xml,image/webp">
         <p class="field-help" id="logo-status" hidden></p>`;
+    } else if (f.type === 'users') {
+      control = `<div id="users-rows"></div><button type="button" class="btn-add" id="add-user">+ Add person</button>`;
+    } else if (f.type === 'person') {
+      control = `<div class="repeat-row repeat-row--person">${personInputsHTML(name, false)}</div>`;
+    } else if (f.type === 'people') {
+      control = `<div class="people-rows" data-prefix="${name}"></div><button type="button" class="btn-add add-person-row" data-prefix="${name}">+ Add person</button>`;
+    } else if (f.type === 'hours') {
+      control = `<div class="hours-grid" data-prefix="${name}">${DAYS.map(d => `
+        <div class="day-label">${DAY_LABELS[d]}</div>
+        <input type="time" name="${name}_${d}_open" value="09:00">
+        <input type="time" name="${name}_${d}_close" value="17:00">
+        <label class="closed-wrap"><input type="checkbox" name="${name}_${d}_closed"> closed</label>`).join('')}</div>`;
+    } else if (f.type === 'locations') {
+      control = `<div id="locations-rows"></div><button type="button" class="btn-add" id="add-location">+ Add location</button>`;
     } else if (f.type === 'prefill-url') {
       control = `
         <div class="prefill-inline-row">
@@ -246,10 +325,6 @@
           <button type="button" class="btn-prefill btn-prefill--inline loc-prefill-btn" data-input="${name}">Pre-fill</button>
         </div>
         <span class="prefill-status loc-prefill-status" aria-live="polite"></span>`;
-    } else if (f.type === 'users') {
-      control = `<div id="users-rows"></div><button type="button" class="btn-add" id="add-user">+ Add person</button>`;
-    } else if (f.type === 'locations') {
-      control = `<div id="locations-rows"></div><button type="button" class="btn-add" id="add-location">+ Add location</button>`;
     } else {
       control = `<input type="${f.type}" name="${name}" placeholder="${esc(f.placeholder || '')}" value="${esc(f.value || '')}">`;
     }
@@ -267,38 +342,84 @@
       </section>`).join('');
   }
 
-  // --- Corporate users repeater ----------------------------------------------
-  function userRowHTML(i) {
-    return `
-      <div class="repeat-row" data-user="${i}">
-        <input type="text" name="corp_user_${i}_name" placeholder="Name">
-        <input type="email" name="corp_user_${i}_email" placeholder="Email">
-        <select name="corp_user_${i}_role">
-          <option value="corporate_admin">Corporate admin</option>
-          <option value="regional_manager">Regional manager</option>
-          <option value="viewer">Viewer</option>
-        </select>
-        <button type="button" class="remove-row" aria-label="Remove person">&times;</button>
-      </div>`;
-  }
-
+  // --- Corporate additional-contacts repeater (with role) ----------------------
   function addUser() {
     const rows = $('#users-rows');
-    rows.insertAdjacentHTML('beforeend', userRowHTML(userCounter++));
+    const i = userCounter++;
+    rows.insertAdjacentHTML('beforeend', `
+      <div class="repeat-row repeat-row--role" data-user="${i}">
+        ${personInputsHTML(`corp_user_${i}`, true)}
+        <button type="button" class="remove-row" aria-label="Remove person">&times;</button>
+      </div>`);
   }
 
   function collectUsers() {
-    return Array.from(document.querySelectorAll('#users-rows .repeat-row')).map(row => {
-      const i = row.dataset.user;
-      const val = (n) => (document.querySelector(`[name="corp_user_${i}_${n}"]`) || {}).value || '';
-      return { name: val('name').trim(), email: val('email').trim(), role: val('role') };
-    }).filter(u => u.name || u.email);
+    return Array.from(document.querySelectorAll('#users-rows .repeat-row')).map(row =>
+      collectPerson(`corp_user_${row.dataset.user}`)
+    ).filter(personHasData);
+  }
+
+  // --- Per-location people repeater --------------------------------------------
+  function addPersonRow(prefix) {
+    const container = document.querySelector(`.people-rows[data-prefix="${prefix}"]`);
+    if (!container) return null;
+    const j = peopleCounter++;
+    container.insertAdjacentHTML('beforeend', `
+      <div class="repeat-row repeat-row--person" data-person="${prefix}_${j}">
+        ${personInputsHTML(`${prefix}_${j}`, false)}
+        <button type="button" class="remove-row" aria-label="Remove person">&times;</button>
+      </div>`);
+    return `${prefix}_${j}`;
+  }
+
+  function collectPeople(prefix) {
+    const container = document.querySelector(`.people-rows[data-prefix="${prefix}"]`);
+    if (!container) return [];
+    return Array.from(container.querySelectorAll('.repeat-row')).map(row =>
+      collectPerson(row.dataset.person)
+    ).filter(personHasData);
+  }
+
+  // --- Hours grid ----------------------------------------------------------------
+  function collectHoursGrid(prefix) {
+    const out = {};
+    DAYS.forEach(d => {
+      const open = document.querySelector(`[name="${prefix}_${d}_open"]`);
+      const close = document.querySelector(`[name="${prefix}_${d}_close"]`);
+      const closed = document.querySelector(`[name="${prefix}_${d}_closed"]`);
+      if (!open || !close || !closed) return;
+      out[d] = closed.checked ? { closed: true } : { open: open.value, close: close.value };
+    });
+    return out;
+  }
+
+  function applyHoursGrid(prefix, hours) {
+    if (!hours || typeof hours !== 'object') return;
+    DAYS.forEach(d => {
+      const h = hours[d];
+      if (!h) return;
+      const open = document.querySelector(`[name="${prefix}_${d}_open"]`);
+      const close = document.querySelector(`[name="${prefix}_${d}_close"]`);
+      const closed = document.querySelector(`[name="${prefix}_${d}_closed"]`);
+      if (!open || !close || !closed) return;
+      if (h.closed) {
+        closed.checked = true;
+        open.disabled = true;
+        close.disabled = true;
+      } else {
+        closed.checked = false;
+        open.disabled = false;
+        close.disabled = false;
+        if (h.open) open.value = h.open;
+        if (h.close) close.value = h.close;
+      }
+    });
   }
 
   // --- Locations repeater ------------------------------------------------------
   function locationCardHTML(i) {
     return `
-      <div class="location-card" data-loc="${i}">
+      <div class="location-card" data-loc="${i}" id="loc-card-${i}">
         <div class="location-card-head">
           <h3>Location <span class="loc-num"></span></h3>
           <button type="button" class="remove-location" aria-label="Remove location">Remove</button>
@@ -313,6 +434,7 @@
     document.querySelectorAll('#locations-rows .location-card').forEach((card, idx) => {
       card.querySelector('.loc-num').textContent = idx + 1;
     });
+    refreshLocationSubnav();
   }
 
   function addLocation() {
@@ -326,11 +448,42 @@
       const i = card.dataset.loc;
       const out = {};
       LOCATION_FIELDS.forEach(f => {
-        const el = document.querySelector(`[name="loc_${i}_${f.name}"]`);
+        const key = `loc_${i}_${f.name}`;
+        if (f.type === 'hours') { out[f.name] = collectHoursGrid(key); return; }
+        if (f.type === 'person') {
+          const p = collectPerson(key);
+          if (personHasData(p)) out[f.name] = p;
+          return;
+        }
+        if (f.type === 'people') {
+          const people = collectPeople(key);
+          if (people.length) out[f.name] = people;
+          return;
+        }
+        const el = document.querySelector(`[name="${key}"]`);
         if (el) out[f.name] = el.value.trim();
       });
       return out;
-    }).filter(loc => Object.values(loc).some(v => v));
+    }).filter(loc => Object.entries(loc).some(([k, v]) => k !== 'hours' && v && (typeof v !== 'object' || Object.keys(v).length)));
+  }
+
+  function applyLocationData(i, loc) {
+    LOCATION_FIELDS.forEach(f => {
+      const key = `loc_${i}_${f.name}`;
+      if (loc[f.name] == null) return;
+      if (f.type === 'hours') { applyHoursGrid(key, loc[f.name]); return; }
+      if (f.type === 'person') { applyPerson(key, loc[f.name]); return; }
+      if (f.type === 'people') {
+        const people = Array.isArray(loc[f.name]) ? loc[f.name] : [];
+        people.forEach(p => {
+          const prefix = addPersonRow(key);
+          if (prefix) applyPerson(prefix, p);
+        });
+        return;
+      }
+      const el = document.querySelector(`[name="${key}"]`);
+      if (el) el.value = loc[f.name];
+    });
   }
 
   // --- Logo upload -------------------------------------------------------------
@@ -382,8 +535,8 @@
     FORM_SECTIONS.forEach(s => {
       const bucketObj = {};
       s.fields.forEach(f => {
-        if (f.type === 'logo') return; // handled by maybeUploadLogo
-        if (f.type === 'users') { bucketObj[f.name] = collectUsers(); return; }
+        if (f.type === 'logo' || f.virtual) return; // logo handled by maybeUploadLogo; virtual below
+        if (f.type === 'users') { payload[f.col] = collectUsers(); return; }
         if (f.type === 'locations') { payload[s.bucket] = collectLocations(); return; }
         if (f.type === 'checkboxes') {
           const vals = Array.from(document.querySelectorAll(`[name="${f.name}"]:checked`)).map(el => el.value);
@@ -400,6 +553,10 @@
         payload[s.bucket] = bucketObj;
       }
     });
+    // Primary contact first + last combine into the flat contact_name column.
+    const first = (document.querySelector('[name="contact_first_name"]') || {}).value || '';
+    const last = (document.querySelector('[name="contact_last_name"]') || {}).value || '';
+    payload.contact_name = `${first.trim()} ${last.trim()}`.trim() || null;
     return payload;
   }
 
@@ -409,18 +566,23 @@
       const status = $('#logo-status');
       if (status) { status.hidden = false; status.textContent = 'Logo already uploaded ✓ (choose a file to replace it)'; }
     }
+    // Split the flat contact_name back into first / last inputs.
+    if (row.contact_name) {
+      const parts = String(row.contact_name).trim().split(/\s+/);
+      const firstEl = document.querySelector('[name="contact_first_name"]');
+      const lastEl = document.querySelector('[name="contact_last_name"]');
+      if (firstEl) firstEl.value = parts[0] || '';
+      if (lastEl) lastEl.value = parts.slice(1).join(' ');
+    }
     FORM_SECTIONS.forEach(s => {
       const bucketObj = (s.bucket && row[s.bucket]) || {};
       s.fields.forEach(f => {
-        if (f.type === 'logo') return;
+        if (f.type === 'logo' || f.virtual) return;
         if (f.type === 'users') {
-          const users = Array.isArray(bucketObj[f.name]) ? bucketObj[f.name] : [];
+          const users = Array.isArray(row[f.col]) ? row[f.col] : [];
           users.forEach(u => {
             addUser();
-            const i = userCounter - 1;
-            document.querySelector(`[name="corp_user_${i}_name"]`).value = u.name || '';
-            document.querySelector(`[name="corp_user_${i}_email"]`).value = u.email || '';
-            if (u.role) document.querySelector(`[name="corp_user_${i}_role"]`).value = u.role;
+            applyPerson(`corp_user_${userCounter - 1}`, u);
           });
           return;
         }
@@ -428,12 +590,9 @@
           const locs = Array.isArray(row[s.bucket]) ? row[s.bucket] : [];
           locs.forEach(loc => {
             addLocation();
-            const i = locationCounter - 1;
-            LOCATION_FIELDS.forEach(lf => {
-              const el = document.querySelector(`[name="loc_${i}_${lf.name}"]`);
-              if (el && loc[lf.name] != null) el.value = loc[lf.name];
-            });
+            applyLocationData(locationCounter - 1, loc);
           });
+          refreshLocationSubnav();
           return;
         }
         if (f.type === 'checkboxes') {
@@ -518,7 +677,8 @@
     const problems = [];
     FORM_SECTIONS.forEach(s => {
       s.fields.forEach(f => {
-        if (!f.required || f.type === 'locations' || f.type === 'users' || f.type === 'logo') return;
+        if (!f.required) return;
+        if (['locations', 'users', 'people', 'person', 'hours', 'logo'].includes(f.type)) return;
         const el = document.querySelector(`[name="${f.name}"]`);
         if (el && !el.value.trim()) problems.push(f.label);
       });
@@ -568,13 +728,13 @@
   function renderSubmitSummary() {
     const payload = buildPayload('pending');
     const locs = Array.isArray(payload.locations) ? payload.locations : [];
-    const modules = ((payload.dashboard_preferences || {}).modules || []);
+    const extra = Array.isArray(payload.additional_contacts) ? payload.additional_contacts : [];
     $('#submit-summary').innerHTML = `
       <ul class="summary-list">
         <li><strong>Brand:</strong> ${esc(payload.brand_name || '—')}</li>
-        <li><strong>Contact:</strong> ${esc(payload.contact_name || '—')} (${esc(payload.contact_email || '—')})</li>
+        <li><strong>Primary contact:</strong> ${esc(payload.contact_name || '—')} (${esc(payload.contact_email || '—')})</li>
+        <li><strong>Additional contacts:</strong> ${extra.length ? esc(extra.map(u => `${u.first_name} ${u.last_name}`.trim()).filter(Boolean).join(', ')) : '—'}</li>
         <li><strong>Locations:</strong> ${locs.length}${locs.length ? ' — ' + esc(locs.map(l => l.name).filter(Boolean).join(', ')) : ''}</li>
-        <li><strong>AI team members:</strong> ${modules.length ? esc(modules.join(', ').replace(/_/g, ' ')) : '—'}</li>
       </ul>`;
   }
 
@@ -662,20 +822,6 @@
     return true;
   }
 
-  const HOUR_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-  const HOUR_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
-  function hoursToText(hours) {
-    if (!hours || typeof hours !== 'object') return '';
-    const parts = [];
-    HOUR_DAYS.forEach(d => {
-      const h = hours[d];
-      if (!h) return;
-      if (h.closed) parts.push(`${HOUR_LABELS[d]} closed`);
-      else if (h.open && h.close) parts.push(`${HOUR_LABELS[d]} ${h.open}–${h.close}`);
-    });
-    return parts.join(', ');
-  }
-
   // Scraper key → brand-level form field. Brand identity fields (brand_name,
   // contacts) are deliberately NOT mapped — those stay human-entered.
   const BRAND_SUGGESTION_MAP = {
@@ -748,7 +894,11 @@
       if (fillIfEmpty(`${prefix}_address`, s.address)) n++;
       const cityState = [s.city, s.state].filter(Boolean).join(', ');
       if (fillIfEmpty(`${prefix}_city_state`, cityState)) n++;
-      if (fillIfEmpty(`${prefix}_hours_text`, hoursToText(s.hours))) n++;
+      if (fillIfEmpty(`${prefix}_studio_phone`, s.business_phone ? formatPhoneValue(s.business_phone) : '')) n++;
+      if (s.hours && typeof s.hours === 'object' && Object.keys(s.hours).length) {
+        applyHoursGrid(`${prefix}_hours`, s.hours);
+        n++;
+      }
       setPrefillStatus(
         status,
         n
@@ -765,6 +915,17 @@
   }
 
   // --- Sticky left section navigator ------------------------------------------
+  function refreshLocationSubnav() {
+    const sub = document.getElementById('section-nav-locations-sub');
+    if (!sub) return;
+    const cards = Array.from(document.querySelectorAll('#locations-rows .location-card'));
+    sub.innerHTML = cards.map((card, idx) => {
+      const nameEl = card.querySelector(`[name="loc_${card.dataset.loc}_name"]`);
+      const label = (nameEl && nameEl.value.trim()) || `Location ${idx + 1}`;
+      return `<a class="section-nav__sublink" href="#${card.id}" data-target="${card.id}">${esc(label)}</a>`;
+    }).join('');
+  }
+
   function initSectionNav() {
     const nav = document.getElementById('section-nav');
     if (!nav) return;
@@ -775,12 +936,23 @@
     sectionEls.forEach(el => {
       const h2 = el.querySelector('h2');
       const label = h2 ? h2.textContent.trim() : el.id;
-      html += `<a class="section-nav__link" href="#${el.id}" data-target="${el.id}">${esc(label)}</a>`;
+      // The locations section gets an expandable sub-list of its location cards
+      // (visible on hover or while you're inside that section).
+      if (el.id === 'section-locations') {
+        html += `
+          <div class="section-nav__item" data-section="${el.id}">
+            <a class="section-nav__link" href="#${el.id}" data-target="${el.id}">${esc(label)}</a>
+            <div class="section-nav__sub" id="section-nav-locations-sub"></div>
+          </div>`;
+      } else {
+        html += `<a class="section-nav__link" href="#${el.id}" data-target="${el.id}">${esc(label)}</a>`;
+      }
     });
     nav.innerHTML = html;
+    refreshLocationSubnav();
 
     nav.addEventListener('click', (e) => {
-      const a = e.target.closest('.section-nav__link');
+      const a = e.target.closest('.section-nav__link, .section-nav__sublink');
       if (!a) return;
       e.preventDefault();
       const target = document.getElementById(a.dataset.target);
@@ -799,9 +971,12 @@
         });
         const activeId = sectionEls.map((s) => s.id).find((id) => visible.has(id));
         nav.querySelectorAll('.section-nav__link.is-active').forEach((l) => l.classList.remove('is-active'));
+        nav.querySelectorAll('.section-nav__item.has-active').forEach((l) => l.classList.remove('has-active'));
         if (activeId) {
           const l = nav.querySelector(`.section-nav__link[data-target="${activeId}"]`);
           if (l) l.classList.add('is-active');
+          const item = nav.querySelector(`.section-nav__item[data-section="${activeId}"]`);
+          if (item) item.classList.add('has-active');
         }
       }, { rootMargin: '-60px 0px -70% 0px', threshold: 0 });
       sectionEls.forEach((s) => io.observe(s));
@@ -812,24 +987,18 @@
 
   // --- Init ----------------------------------------------------------------------
   // Preset the fresh form with everything we already know (locations + corporate
-  // users). Only runs when NOT resuming a draft — a draft carries its own data.
+  // contacts). Only runs when NOT resuming a draft — a draft carries its own data.
   function applyPresets() {
     PRESET_LOCATIONS.forEach(loc => {
       addLocation();
-      const i = locationCounter - 1;
-      LOCATION_FIELDS.forEach(lf => {
-        const el = document.querySelector(`[name="loc_${i}_${lf.name}"]`);
-        if (el && loc[lf.name] != null) el.value = loc[lf.name];
-      });
+      applyLocationData(locationCounter - 1, loc);
     });
     if (!PRESET_LOCATIONS.length) addLocation();
-    PRESET_USERS.forEach(u => {
+    PRESET_CONTACTS.forEach(u => {
       addUser();
-      const i = userCounter - 1;
-      document.querySelector(`[name="corp_user_${i}_name"]`).value = u.name || '';
-      document.querySelector(`[name="corp_user_${i}_email"]`).value = u.email || '';
-      if (u.role) document.querySelector(`[name="corp_user_${i}_role"]`).value = u.role;
+      applyPerson(`corp_user_${userCounter - 1}`, u);
     });
+    refreshLocationSubnav();
   }
 
   async function initDraftFromUrl() {
@@ -861,6 +1030,7 @@
     document.addEventListener('click', (e) => {
       if (e.target.id === 'add-user') addUser();
       if (e.target.id === 'add-location') addLocation();
+      if (e.target.classList.contains('add-person-row')) addPersonRow(e.target.dataset.prefix);
       if (e.target.classList.contains('loc-prefill-btn')) handleLocationPrefill(e.target);
       if (e.target.classList.contains('remove-row')) e.target.closest('.repeat-row').remove();
       if (e.target.classList.contains('remove-location')) {
@@ -874,6 +1044,25 @@
       }
       if (e.target.id === 'modal-cancel') closeSubmitConfirm();
       if (e.target.id === 'modal-confirm') doFinalSubmit();
+    });
+    // Live phone mask on every tel field (existing and future rows).
+    document.addEventListener('input', (e) => {
+      const el = e.target;
+      if (el.matches && el.matches('input[type="tel"]')) {
+        const formatted = formatPhoneValue(el.value);
+        if (formatted !== el.value) el.value = formatted;
+      }
+      // Keep the nav's location sub-links in sync with the name fields.
+      if (el.name && /^loc_\d+_name$/.test(el.name)) refreshLocationSubnav();
+    });
+    // Hours grids: the "closed" toggle disables that day's time inputs.
+    document.addEventListener('change', (e) => {
+      const m = e.target.name && e.target.name.match(/^(.*_hours)_([a-z]{3})_closed$/);
+      if (!m) return;
+      const open = document.querySelector(`[name="${m[1]}_${m[2]}_open"]`);
+      const close = document.querySelector(`[name="${m[1]}_${m[2]}_close"]`);
+      if (open) open.disabled = e.target.checked;
+      if (close) close.disabled = e.target.checked;
     });
     $('#save-draft').addEventListener('click', handleSaveDraft);
     $('#franchisor-form').addEventListener('submit', handleSubmit);
