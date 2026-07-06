@@ -104,8 +104,8 @@ input[type="file"] { font-size: 14px; }
 }
 /* Person rows: first / last / email / phone (+ optional remove) */
 .repeat-row--person { grid-template-columns: 1fr 1fr 1.3fr 1fr auto; }
-/* Corporate contact rows add a role select before the remove button */
-.repeat-row--role { grid-template-columns: 1fr 1fr 1.3fr 1fr 0.9fr auto; }
+/* Corporate contact rows: first / last / email / role / remove (no phone) */
+.repeat-row--role { grid-template-columns: 1fr 1fr 1.3fr 0.9fr auto; }
 
 /* Hours grid: day label + open + close + closed toggle */
 .hours-grid {

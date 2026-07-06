@@ -52,8 +52,7 @@
         { name: 'contact_first_name', virtual: true, label: 'Primary contact — first name', type: 'text', required: true, value: 'Veronica' },
         { name: 'contact_last_name', virtual: true, label: 'Primary contact — last name', type: 'text', required: true, value: 'Stranc' },
         { name: 'contact_email', col: 'contact_email', label: 'Primary contact email', type: 'email', required: true, value: 'vstranc@beemlightsauna.com' },
-        { name: 'contact_phone', col: 'contact_phone', label: 'Primary contact phone (optional)', type: 'tel' },
-        { name: 'additional_contacts', col: 'additional_contacts', label: 'Additional contacts — who at corporate needs dashboard access?', type: 'users', help: 'Email is required for each person; phone is optional. These become your corporate logins with the franchise-wide view.' },
+        { name: 'additional_contacts', col: 'additional_contacts', label: 'Additional contacts — who at corporate needs dashboard access?', type: 'users', help: 'Email is required for each person. These become your corporate logins with the franchise-wide view.' },
         { name: 'corporate_address', col: 'corporate_address', label: 'Corporate / HQ address', type: 'text' },
         { name: 'website_url', col: 'website_url', label: 'Brand website', type: 'url', value: 'https://www.beemlightsauna.com/', placeholder: 'https://' },
         { name: 'instagram', label: 'Instagram', type: 'text', value: '@beemlightsauna', placeholder: '@handle' },
@@ -122,6 +121,7 @@
     { name: 'name', label: 'Location name', type: 'text', placeholder: 'e.g. beem Light Sauna — Scottsdale', required: true },
     { name: 'address', label: 'Street address', type: 'text' },
     { name: 'city_state', label: 'City & state', type: 'text' },
+    { name: 'zip', label: 'Zip code', type: 'text' },
     { name: 'timezone', label: 'Timezone', type: 'select', options: [
       { value: '', label: 'Select timezone' },
       { value: 'America/New_York', label: 'Eastern' },
@@ -135,7 +135,7 @@
     { name: 'crm_platform', label: 'Booking / CRM platform', type: 'text', placeholder: 'e.g. Mindbody, Zenoti, GoHighLevel' },
     { name: 'crm_store_id', label: 'CRM store / location ID (if known)', type: 'text' },
     { name: 'gm', label: 'General manager', type: 'person' },
-    { name: 'location_users', label: 'Who at this location needs dashboard access?', type: 'people', help: 'Email required, phone optional.' },
+    { name: 'location_users', label: 'Who else at this location needs access?', type: 'people', help: 'Email required, phone optional.' },
     { name: 'notes', label: 'Notes for this location', type: 'textarea', rows: 2 },
   ];
 
@@ -149,7 +149,8 @@
       page_url: 'https://www.beemlightsauna.com/location/glenwood',
       name: 'beem Atlanta Glenwood',
       address: '475 Bill Kennedy Wy Sta A',
-      city_state: 'Atlanta, GA 30316',
+      city_state: 'Atlanta, GA',
+      zip: '30316',
       timezone: 'America/New_York',
       studio_phone: '(404) 973-2288',
       crm_platform: 'Mindbody',
@@ -158,7 +159,8 @@
       page_url: 'https://www.beemlightsauna.com/location/nashville-green-hills',
       name: 'beem Nashville - Green Hills',
       address: '3760 Hillsboro Pike',
-      city_state: 'Nashville, TN 37215',
+      city_state: 'Nashville, TN',
+      zip: '37215',
       timezone: 'America/Chicago',
       studio_phone: '(615) 600-4044',
       crm_platform: 'Mindbody',
@@ -173,7 +175,8 @@
       page_url: 'https://www.beemlightsauna.com/location/summerville',
       name: 'beem Summerville',
       address: '100 Gosling Way, Suite B',
-      city_state: 'Summerville, SC 29486',
+      city_state: 'Summerville, SC',
+      zip: '29486',
       timezone: 'America/New_York',
       studio_phone: '(843) 788-9288',
       crm_platform: 'Mindbody',
@@ -188,7 +191,8 @@
       page_url: 'https://www.beemlightsauna.com/studio/west-mckinney',
       name: 'beem West McKinney',
       address: '4041 S Custer Rd, Unit 2150',
-      city_state: 'McKinney, TX 75070',
+      city_state: 'McKinney, TX',
+      zip: '75070',
       timezone: 'America/Chicago',
       studio_phone: '(469) 343-4991',
       crm_platform: 'Mindbody',
@@ -247,9 +251,14 @@
     return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
   }
 
-  // --- Person rows (first / last / email / phone) ------------------------------
-  function personInputsHTML(prefix, withRole) {
-    const role = withRole ? `
+  // --- Person rows (first / last / email, optional phone/role) -----------------
+  // Corporate contacts have no phone (George 2026-07-06); location-level people
+  // (GM, studio staff) keep it.
+  function personInputsHTML(prefix, opts) {
+    const o = opts || {};
+    const phone = o.phone ? `
+        <input type="tel" name="${prefix}_phone" placeholder="Phone (optional)">` : '';
+    const role = o.role ? `
         <select name="${prefix}_role">
           <option value="corporate_admin">Corporate admin</option>
           <option value="regional_manager">Regional manager</option>
@@ -258,8 +267,7 @@
     return `
         <input type="text" name="${prefix}_first_name" placeholder="First name">
         <input type="text" name="${prefix}_last_name" placeholder="Last name">
-        <input type="email" name="${prefix}_email" placeholder="Email *">
-        <input type="tel" name="${prefix}_phone" placeholder="Phone (optional)">${role}`;
+        <input type="email" name="${prefix}_email" placeholder="Email *">${phone}${role}`;
   }
 
   function collectPerson(prefix) {
@@ -307,7 +315,7 @@
     } else if (f.type === 'users') {
       control = `<div id="users-rows"></div><button type="button" class="btn-add" id="add-user">+ Add person</button>`;
     } else if (f.type === 'person') {
-      control = `<div class="repeat-row repeat-row--person">${personInputsHTML(name, false)}</div>`;
+      control = `<div class="repeat-row repeat-row--person">${personInputsHTML(name, { phone: true })}</div>`;
     } else if (f.type === 'people') {
       control = `<div class="people-rows" data-prefix="${name}"></div><button type="button" class="btn-add add-person-row" data-prefix="${name}">+ Add person</button>`;
     } else if (f.type === 'hours') {
@@ -348,7 +356,7 @@
     const i = userCounter++;
     rows.insertAdjacentHTML('beforeend', `
       <div class="repeat-row repeat-row--role" data-user="${i}">
-        ${personInputsHTML(`corp_user_${i}`, true)}
+        ${personInputsHTML(`corp_user_${i}`, { role: true })}
         <button type="button" class="remove-row" aria-label="Remove person">&times;</button>
       </div>`);
   }
@@ -366,7 +374,7 @@
     const j = peopleCounter++;
     container.insertAdjacentHTML('beforeend', `
       <div class="repeat-row repeat-row--person" data-person="${prefix}_${j}">
-        ${personInputsHTML(`${prefix}_${j}`, false)}
+        ${personInputsHTML(`${prefix}_${j}`, { phone: true })}
         <button type="button" class="remove-row" aria-label="Remove person">&times;</button>
       </div>`);
     return `${prefix}_${j}`;
@@ -894,6 +902,7 @@
       if (fillIfEmpty(`${prefix}_address`, s.address)) n++;
       const cityState = [s.city, s.state].filter(Boolean).join(', ');
       if (fillIfEmpty(`${prefix}_city_state`, cityState)) n++;
+      if (fillIfEmpty(`${prefix}_zip`, s.zip)) n++;
       if (fillIfEmpty(`${prefix}_studio_phone`, s.business_phone ? formatPhoneValue(s.business_phone) : '')) n++;
       if (s.hours && typeof s.hours === 'object' && Object.keys(s.hours).length) {
         applyHoursGrid(`${prefix}_hours`, s.hours);
