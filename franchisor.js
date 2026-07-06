@@ -764,15 +764,37 @@
     $('#submit-modal').hidden = true;
   }
 
+  // Flip a draft to pending via the submit_franchisor_intake RPC. Submitted
+  // rows are invisible to the anon key by design, so a direct PATCH to
+  // status='pending' would fail RLS — the SECURITY DEFINER function is the
+  // one sanctioned path, and it stamps submitted_at server-side.
+  async function submitIntake(id) {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_franchisor_intake`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_id: id })
+    });
+    if (!resp.ok) {
+      const body = await resp.text();
+      throw new Error(`Submit failed: ${resp.status} ${body}`);
+    }
+    const ok = await resp.json();
+    if (ok !== true) throw new Error('Submit failed — this draft may already have been submitted.');
+  }
+
   async function doFinalSubmit() {
     const btn = $('#modal-confirm');
     btn.disabled = true;
     btn.textContent = 'Submitting…';
     try {
       const logoUrl = await maybeUploadLogo();
-      const payload = buildPayload('pending');
+      // Final save lands as a draft, then the RPC flips it to pending.
+      const payload = buildPayload('draft');
       if (logoUrl) payload.logo_url = logoUrl;
-      payload.submitted_at = new Date().toISOString();
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
@@ -780,6 +802,7 @@
         payload.id = draftId;
         await insertRow(payload);
       }
+      await submitIntake(draftId);
       closeSubmitConfirm();
       $('#franchisor-form').hidden = true;
       $('#success-screen').hidden = false;

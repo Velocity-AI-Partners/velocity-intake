@@ -111,5 +111,27 @@ create policy "admin_update_franchisor_intake"
 create index if not exists idx_franchisor_intake_status_submitted
   on public.franchisor_intake_submissions (status, submitted_at desc);
 
+-- Submit = the only way a draft becomes pending. SECURITY DEFINER so the anon
+-- SELECT policy can stay draft-only: PostgREST UPDATEs use RETURNING
+-- internally, which requires SELECT on the NEW row — widening the SELECT
+-- policy to 'pending' (like location_intake_submissions did) would let anyone
+-- with the public anon key read submitted rows. This function avoids that.
+-- Server stamps submitted_at (more trustworthy than the client clock).
+create or replace function public.submit_franchisor_intake(p_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  update public.franchisor_intake_submissions
+     set status = 'pending', submitted_at = now()
+   where id = p_id and status = 'draft'
+   returning true;
+$$;
+
+revoke all on function public.submit_franchisor_intake(uuid) from public;
+grant execute on function public.submit_franchisor_intake(uuid) to anon;
+grant execute on function public.submit_franchisor_intake(uuid) to service_role;
+
 -- Logo uploads reuse the existing 'intake-logos' bucket and its policies
 -- (public read, anon insert) — no new storage objects needed.
