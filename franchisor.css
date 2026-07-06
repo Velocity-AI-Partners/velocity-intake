@@ -221,6 +221,94 @@ input[type="file"] { font-size: 14px; }
 }
 .footer-logo { height: 22px; width: auto; }
 
+/* AI pre-fill hero (brand-level) */
+.prefill-hero {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin: 22px 0 6px;
+}
+.prefill-hero__kicker {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.prefill-hero__lead { font-size: 14px; color: var(--ink-soft); margin: 0 0 12px; }
+.prefill-hero__row { display: flex; gap: 8px; }
+.prefill-hero__input { flex: 1; }
+.btn-prefill {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-prefill:hover { filter: brightness(0.94); }
+.btn-prefill:disabled { opacity: 0.6; cursor: default; }
+.btn-prefill--inline { padding: 9px 14px; }
+
+/* Per-location pre-fill row */
+.prefill-inline-row { display: flex; gap: 8px; }
+.prefill-inline-row input { flex: 1; }
+
+/* Pre-fill status line */
+.prefill-status { display: block; font-size: 13px; margin-top: 8px; min-height: 1em; }
+.prefill-status.is-loading { color: var(--ink-soft); }
+.prefill-status.is-success { color: #1a7a3c; }
+.prefill-status.is-error { color: #9e2c2c; }
+
+/* Fields filled by AI pre-fill — tint clears the moment the user edits */
+.ai-suggested { background: #fff8e8; border-color: #e8c96a; }
+
+/* Sticky left-gutter section navigator (wide screens only) */
+.section-nav {
+  display: none;
+  position: fixed;
+  top: 110px;
+  left: max(16px, calc(50vw - 380px - 210px));
+  width: 185px;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+@media (min-width: 1240px) {
+  .section-nav { display: block; }
+}
+.section-nav.is-visible { opacity: 1; }
+.section-nav__title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.section-nav__link {
+  display: block;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-left: 2px solid var(--line);
+}
+.section-nav__link:hover { color: var(--ink); border-left-color: var(--ink-soft); }
+.section-nav__link.is-active {
+  color: var(--accent);
+  font-weight: 600;
+  border-left-color: var(--accent);
+}
+
 /* Honeypot — visually gone, still in the DOM for bots */
 .honeypot {
   position: absolute !important;

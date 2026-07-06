@@ -8,6 +8,12 @@
   const TABLE = 'franchisor_intake_submissions';
   const BUCKET = 'intake-logos';
   const FORM_VARIANT = 'beem';
+  // AI pre-fill calls the scrape-location-page edge function (shared with the
+  // redesign form). If it isn't deployed yet, pre-fill degrades to a friendly
+  // "fill it in manually" message — the rest of the form is unaffected.
+  const FUNCTIONS_BASE = SUPABASE_URL;
+  // Beem is onboarding four locations, so the form starts with four cards.
+  const INITIAL_LOCATION_CARDS = 4;
 
   // ===========================================================================
   // FORM CONTENT CONFIG — edit the questions here.
@@ -116,6 +122,7 @@
   ];
 
   const LOCATION_FIELDS = [
+    { name: 'page_url', label: 'This location’s web page — paste it and hit Pre-fill to go faster', type: 'prefill-url', placeholder: 'https://.../locations/your-city' },
     { name: 'name', label: 'Location name', type: 'text', placeholder: 'e.g. Beem Light Sauna — Scottsdale', required: true },
     { name: 'address', label: 'Street address', type: 'text' },
     { name: 'city_state', label: 'City & state', type: 'text' },
@@ -183,6 +190,13 @@
       control = `
         <input type="file" name="${name}" id="logo-input" accept="image/png,image/jpeg,image/svg+xml,image/webp">
         <p class="field-help" id="logo-status" hidden></p>`;
+    } else if (f.type === 'prefill-url') {
+      control = `
+        <div class="prefill-inline-row">
+          <input type="url" name="${name}" placeholder="${esc(f.placeholder || '')}">
+          <button type="button" class="btn-prefill btn-prefill--inline loc-prefill-btn" data-input="${name}">Pre-fill</button>
+        </div>
+        <span class="prefill-status loc-prefill-status" aria-live="polite"></span>`;
     } else if (f.type === 'users') {
       control = `<div id="users-rows"></div><button type="button" class="btn-add" id="add-user">+ Add person</button>`;
     } else if (f.type === 'locations') {
@@ -563,6 +577,190 @@
     openSubmitConfirm();
   }
 
+  // --- AI pre-fill -----------------------------------------------------------
+  // Shared scrape-location-page edge function (same engine as the redesigned
+  // location form). Fill-only-if-empty: pre-fill NEVER overwrites anything a
+  // human already typed. Filled fields get an "AI suggested" tint until edited.
+  async function runScrape(url) {
+    const resp = await fetch(`${FUNCTIONS_BASE}/functions/v1/scrape-location-page`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ url })
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    return (data && data.suggested && typeof data.suggested === 'object') ? data.suggested : {};
+  }
+
+  function setPrefillStatus(el, msg, kind) {
+    if (!el) return;
+    el.textContent = msg;
+    el.className = el.className.replace(/\bis-(loading|success|error)\b/g, '').trim();
+    if (kind) el.classList.add(`is-${kind}`);
+  }
+
+  function fillIfEmpty(name, value) {
+    if (value == null || String(value).trim() === '') return false;
+    const el = document.querySelector(`[name="${name}"]`);
+    if (!el || el.value.trim()) return false;
+    el.value = String(value).trim();
+    el.classList.add('ai-suggested');
+    el.addEventListener('input', () => el.classList.remove('ai-suggested'), { once: true });
+    return true;
+  }
+
+  const HOUR_DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const HOUR_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+  function hoursToText(hours) {
+    if (!hours || typeof hours !== 'object') return '';
+    const parts = [];
+    HOUR_DAYS.forEach(d => {
+      const h = hours[d];
+      if (!h) return;
+      if (h.closed) parts.push(`${HOUR_LABELS[d]} closed`);
+      else if (h.open && h.close) parts.push(`${HOUR_LABELS[d]} ${h.open}–${h.close}`);
+    });
+    return parts.join(', ');
+  }
+
+  // Scraper key → brand-level form field. Brand identity fields (brand_name,
+  // contacts) are deliberately NOT mapped — those stay human-entered.
+  const BRAND_SUGGESTION_MAP = {
+    website_url: 'website_url',
+    instagram_handle: 'instagram',
+    facebook_page_url: 'facebook',
+    tiktok_handle: 'tiktok',
+    bk_service_description: 'service_description',
+    intro_offer: 'intro_offer',
+    bk_unique_value: 'unique_value',
+    bk_ideal_client: 'ideal_client',
+    bk_faq: 'faq',
+  };
+
+  function isValidHttpUrl(u) {
+    return /^https?:\/\/.+\..+/i.test((u || '').trim());
+  }
+
+  async function handleBrandPrefill() {
+    const btn = $('#brand-prefill-btn');
+    const status = $('#brand-prefill-status');
+    const url = ($('#brand-page-url') || {}).value || '';
+    if (!isValidHttpUrl(url)) {
+      setPrefillStatus(status, 'Add your brand website URL (starting with https://) first.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Reading your site…';
+    setPrefillStatus(status, 'Scanning your site and pulling in what we can find. This takes a few seconds…', 'loading');
+    try {
+      const suggested = await runScrape(url.trim());
+      let n = 0;
+      Object.entries(BRAND_SUGGESTION_MAP).forEach(([from, to]) => {
+        if (fillIfEmpty(to, suggested[from])) n++;
+      });
+      setPrefillStatus(
+        status,
+        n
+          ? `✓ Filled in ${n} field${n === 1 ? '' : 's'} from your site, each highlighted "AI suggested." Review and confirm them before you submit.`
+          : 'We could not pull much from that page — please fill the form in yourself.',
+        n ? 'success' : 'error'
+      );
+    } catch (e) {
+      setPrefillStatus(status, 'Pre-fill is not available right now. Please fill the form in yourself, or try again later.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  async function handleLocationPrefill(btn) {
+    const inputName = btn.dataset.input; // e.g. loc_3_page_url
+    const prefix = inputName.replace(/_page_url$/, ''); // loc_3
+    const card = btn.closest('.location-card');
+    const status = card ? card.querySelector('.loc-prefill-status') : null;
+    const url = (document.querySelector(`[name="${inputName}"]`) || {}).value || '';
+    if (!isValidHttpUrl(url)) {
+      setPrefillStatus(status, 'Paste this location’s page URL (starting with https://) first.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Reading…';
+    setPrefillStatus(status, 'Scanning this location’s page…', 'loading');
+    try {
+      const s = await runScrape(url.trim());
+      let n = 0;
+      if (fillIfEmpty(`${prefix}_name`, s.business_name)) n++;
+      if (fillIfEmpty(`${prefix}_address`, s.address)) n++;
+      const cityState = [s.city, s.state].filter(Boolean).join(', ');
+      if (fillIfEmpty(`${prefix}_city_state`, cityState)) n++;
+      if (fillIfEmpty(`${prefix}_hours_text`, hoursToText(s.hours))) n++;
+      setPrefillStatus(
+        status,
+        n
+          ? `✓ Filled in ${n} field${n === 1 ? '' : 's'} — review and confirm.`
+          : 'Could not pull much from that page — please fill this location in yourself.',
+        n ? 'success' : 'error'
+      );
+    } catch (e) {
+      setPrefillStatus(status, 'Pre-fill is not available right now — please fill this location in yourself.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  }
+
+  // --- Sticky left section navigator ------------------------------------------
+  function initSectionNav() {
+    const nav = document.getElementById('section-nav');
+    if (!nav) return;
+    const sectionEls = Array.from(document.querySelectorAll('#sections-root .form-section'));
+    if (!sectionEls.length) return;
+
+    let html = '<div class="section-nav__title">Quick view</div>';
+    sectionEls.forEach(el => {
+      const h2 = el.querySelector('h2');
+      const label = h2 ? h2.textContent.trim() : el.id;
+      html += `<a class="section-nav__link" href="#${el.id}" data-target="${el.id}">${esc(label)}</a>`;
+    });
+    nav.innerHTML = html;
+
+    nav.addEventListener('click', (e) => {
+      const a = e.target.closest('.section-nav__link');
+      if (!a) return;
+      e.preventDefault();
+      const target = document.getElementById(a.dataset.target);
+      if (!target) return;
+      const y = target.getBoundingClientRect().top + window.scrollY - 24;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    });
+
+    // Scrollspy: highlight the topmost section in the upper band of the viewport.
+    if ('IntersectionObserver' in window) {
+      const visible = new Set();
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) visible.add(en.target.id);
+          else visible.delete(en.target.id);
+        });
+        const activeId = sectionEls.map((s) => s.id).find((id) => visible.has(id));
+        nav.querySelectorAll('.section-nav__link.is-active').forEach((l) => l.classList.remove('is-active'));
+        if (activeId) {
+          const l = nav.querySelector(`.section-nav__link[data-target="${activeId}"]`);
+          if (l) l.classList.add('is-active');
+        }
+      }, { rootMargin: '-60px 0px -70% 0px', threshold: 0 });
+      sectionEls.forEach((s) => io.observe(s));
+    }
+
+    nav.classList.add('is-visible');
+  }
+
   // --- Init ----------------------------------------------------------------------
   async function initDraftFromUrl() {
     const id = getDraftIdFromUrl();
@@ -583,10 +781,11 @@
 
   function init() {
     renderSections();
-    addLocation(); // start with one empty location card
+    for (let i = 0; i < INITIAL_LOCATION_CARDS; i++) addLocation();
     document.addEventListener('click', (e) => {
       if (e.target.id === 'add-user') addUser();
       if (e.target.id === 'add-location') addLocation();
+      if (e.target.classList.contains('loc-prefill-btn')) handleLocationPrefill(e.target);
       if (e.target.classList.contains('remove-row')) e.target.closest('.repeat-row').remove();
       if (e.target.classList.contains('remove-location')) {
         e.target.closest('.location-card').remove();
@@ -602,6 +801,8 @@
     });
     $('#save-draft').addEventListener('click', handleSaveDraft);
     $('#franchisor-form').addEventListener('submit', handleSubmit);
+    $('#brand-prefill-btn').addEventListener('click', handleBrandPrefill);
+    initSectionNav();
     initDraftFromUrl();
   }
 
