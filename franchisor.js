@@ -12,8 +12,6 @@
   // redesign form). If it isn't deployed yet, pre-fill degrades to a friendly
   // "fill it in manually" message — the rest of the form is unaffected.
   const FUNCTIONS_BASE = SUPABASE_URL;
-  // Beem is onboarding four locations, so the form starts with four cards.
-  const INITIAL_LOCATION_CARDS = 4;
 
   // ===========================================================================
   // FORM CONTENT CONFIG — edit the questions here.
@@ -38,20 +36,24 @@
       id: 'brand',
       title: '1. Your brand',
       lead: 'Who you are and how we reach the corporate team.',
+      // Contact + socials defaults verified 2026-07-06: contacts provided by
+      // George; socials read from beemlightsauna.com's own footer. No TikTok
+      // link exists on their site, so that field stays empty.
       fields: [
-        { name: 'brand_name', col: 'brand_name', label: 'Brand name', type: 'text', required: true, value: 'Beem Light Sauna' },
-        { name: 'contact_name', col: 'contact_name', label: 'Primary contact name', type: 'text', required: true, placeholder: 'Who owns this onboarding on your side?' },
-        { name: 'contact_email', col: 'contact_email', label: 'Primary contact email', type: 'email', required: true },
+        { name: 'brand_name', col: 'brand_name', label: 'Brand name', type: 'text', required: true, value: 'beem Light Sauna' },
+        { name: 'contact_name', col: 'contact_name', label: 'Primary contact name', type: 'text', required: true, value: 'Veronica Stranc' },
+        { name: 'contact_email', col: 'contact_email', label: 'Primary contact email', type: 'email', required: true, value: 'vstranc@beemlightsauna.com' },
         { name: 'contact_phone', col: 'contact_phone', label: 'Primary contact phone', type: 'tel' },
         { name: 'corporate_address', col: 'corporate_address', label: 'Corporate / HQ address', type: 'text' },
-        { name: 'website_url', col: 'website_url', label: 'Brand website', type: 'url', placeholder: 'https://' },
-        { name: 'instagram', label: 'Instagram', type: 'text', placeholder: '@handle' },
-        { name: 'facebook', label: 'Facebook page', type: 'url', placeholder: 'https://facebook.com/...' },
+        { name: 'website_url', col: 'website_url', label: 'Brand website', type: 'url', value: 'https://www.beemlightsauna.com/', placeholder: 'https://' },
+        { name: 'instagram', label: 'Instagram', type: 'text', value: '@beemlightsauna', placeholder: '@handle' },
+        { name: 'facebook', label: 'Facebook page', type: 'url', value: 'https://www.facebook.com/beemlightsauna/', placeholder: 'https://facebook.com/...' },
+        { name: 'linkedin', label: 'LinkedIn', type: 'url', value: 'https://www.linkedin.com/company/beemlightsauna', placeholder: 'https://linkedin.com/company/...' },
+        { name: 'youtube', label: 'YouTube', type: 'url', value: 'https://youtube.com/@beemlightsauna', placeholder: 'https://youtube.com/@...' },
         { name: 'tiktok', label: 'TikTok', type: 'text', placeholder: '@handle' },
-        { name: 'linkedin', label: 'LinkedIn', type: 'url', placeholder: 'https://linkedin.com/company/...' },
       ],
       bucket: 'socials',
-      bucketFields: ['instagram', 'facebook', 'tiktok', 'linkedin'],
+      bucketFields: ['instagram', 'facebook', 'linkedin', 'youtube', 'tiktok'],
     },
     {
       id: 'assets',
@@ -135,6 +137,7 @@
       { value: 'America/Los_Angeles', label: 'Pacific' },
     ]},
     { name: 'hours_text', label: 'Operating hours', type: 'text', placeholder: 'e.g. Mon–Fri 9–7, Sat 9–5, Sun closed' },
+    { name: 'studio_phone', label: 'Studio phone (public)', type: 'tel' },
     { name: 'crm_platform', label: 'Booking / CRM platform', type: 'text', placeholder: 'e.g. Zenoti, Mindbody, GoHighLevel' },
     { name: 'crm_store_id', label: 'CRM store / location ID (if known)', type: 'text' },
     { name: 'gm_name', label: 'GM / manager name', type: 'text' },
@@ -142,6 +145,52 @@
     { name: 'gm_phone', label: 'GM / manager phone', type: 'tel' },
     { name: 'location_users', label: 'Who at this location needs dashboard access?', type: 'textarea', rows: 2, placeholder: 'Names + emails' },
     { name: 'notes', label: 'Notes for this location', type: 'textarea', rows: 2 },
+  ];
+  // --- Preset data (applied on a fresh form; skipped when resuming a draft) ---
+  // Location details verified from each studio's own page on beemlightsauna.com
+  // (2026-07-06). Glenwood's hours are not published on its page, so that field
+  // is left for Beem to fill — never guessed. Timezones follow the studio's state.
+  const PRESET_LOCATIONS = [
+    {
+      page_url: 'https://www.beemlightsauna.com/location/glenwood',
+      name: 'beem Atlanta Glenwood',
+      address: '475 Bill Kennedy Wy Sta A',
+      city_state: 'Atlanta, GA 30316',
+      timezone: 'America/New_York',
+      studio_phone: '(404) 973-2288',
+    },
+    {
+      page_url: 'https://www.beemlightsauna.com/location/nashville-green-hills',
+      name: 'beem Nashville - Green Hills',
+      address: '3760 Hillsboro Pike',
+      city_state: 'Nashville, TN 37215',
+      timezone: 'America/Chicago',
+      hours_text: 'Mon–Thu 7am–7pm, Fri 8am–5pm, Sat 8am–4pm, Sun 10am–4pm',
+      studio_phone: '(615) 600-4044',
+    },
+    {
+      page_url: 'https://www.beemlightsauna.com/location/summerville',
+      name: 'beem Summerville',
+      address: '100 Gosling Way, Suite B',
+      city_state: 'Summerville, SC 29486',
+      timezone: 'America/New_York',
+      hours_text: 'Mon–Fri 8am–8pm, Sat–Sun 11am–3pm',
+      studio_phone: '(843) 788-9288',
+    },
+    {
+      page_url: 'https://www.beemlightsauna.com/studio/west-mckinney',
+      name: 'beem West McKinney',
+      address: '4041 S Custer Rd, Unit 2150',
+      city_state: 'McKinney, TX 75070',
+      timezone: 'America/Chicago',
+      hours_text: 'Mon–Thu 8am–8pm, Fri 8am–5pm, Sat 9am–3pm, Sun 11am–4pm',
+      studio_phone: '(469) 343-4991',
+    },
+  ];
+
+  // Corporate dashboard users preset (provided by George 2026-07-06).
+  const PRESET_USERS = [
+    { name: 'Jesse Kern', email: 'jkern@beemlightsauna.com', role: 'corporate_admin' },
   ];
   // ========================= end of content config ===========================
 
@@ -180,7 +229,7 @@
     const help = f.help ? `<p class="field-help">${esc(f.help)}</p>` : '';
     let control = '';
     if (f.type === 'textarea') {
-      control = `<textarea name="${name}" rows="${f.rows || 3}" placeholder="${esc(f.placeholder || '')}"></textarea>`;
+      control = `<textarea name="${name}" rows="${f.rows || 3}" placeholder="${esc(f.placeholder || '')}">${esc(f.value || '')}</textarea>`;
     } else if (f.type === 'select') {
       control = `<select name="${name}">${(f.options || []).map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('')}</select>`;
     } else if (f.type === 'checkboxes') {
@@ -762,26 +811,53 @@
   }
 
   // --- Init ----------------------------------------------------------------------
+  // Preset the fresh form with everything we already know (locations + corporate
+  // users). Only runs when NOT resuming a draft — a draft carries its own data.
+  function applyPresets() {
+    PRESET_LOCATIONS.forEach(loc => {
+      addLocation();
+      const i = locationCounter - 1;
+      LOCATION_FIELDS.forEach(lf => {
+        const el = document.querySelector(`[name="loc_${i}_${lf.name}"]`);
+        if (el && loc[lf.name] != null) el.value = loc[lf.name];
+      });
+    });
+    if (!PRESET_LOCATIONS.length) addLocation();
+    PRESET_USERS.forEach(u => {
+      addUser();
+      const i = userCounter - 1;
+      document.querySelector(`[name="corp_user_${i}_name"]`).value = u.name || '';
+      document.querySelector(`[name="corp_user_${i}_email"]`).value = u.email || '';
+      if (u.role) document.querySelector(`[name="corp_user_${i}_role"]`).value = u.role;
+    });
+  }
+
   async function initDraftFromUrl() {
     const id = getDraftIdFromUrl();
-    if (!id) return;
+    if (!id) {
+      applyPresets();
+      return;
+    }
     try {
       const row = await fetchDraft(id);
       if (!row) {
-        showError('This draft link is no longer valid (it may have already been submitted).');
+        showError('This draft link is no longer valid (it may have already been submitted). Starting a fresh form below.');
+        applyPresets();
         return;
       }
       draftId = id;
       applyServerRowToForm(row);
+      // A draft saved before any location was added still needs one card to edit.
+      if (!document.querySelector('#locations-rows .location-card')) addLocation();
       showDraftLink();
     } catch (err) {
       showError('Could not load your draft. Check your connection and refresh.');
+      applyPresets();
     }
   }
 
   function init() {
     renderSections();
-    for (let i = 0; i < INITIAL_LOCATION_CARDS; i++) addLocation();
     document.addEventListener('click', (e) => {
       if (e.target.id === 'add-user') addUser();
       if (e.target.id === 'add-location') addLocation();

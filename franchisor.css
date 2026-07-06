@@ -29,6 +29,16 @@ body {
 .container { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
 
 /* Header */
+.velocity-band {
+  display: flex;
+  align-items: center;
+  background: #2b2825;
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  margin-bottom: 24px;
+}
+.velocity-band__logo { height: 24px; width: auto; display: block; }
+
 .brand-row { margin-bottom: 20px; }
 .brand-logo { max-width: 220px; height: auto; display: block; }
 .eyebrow {
