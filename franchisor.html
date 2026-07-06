@@ -9,11 +9,17 @@
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-<link rel="stylesheet" href="franchisor.css?v=7">
+<link rel="stylesheet" href="franchisor.css?v=9">
 </head>
 <body>
-<!-- Completion progress: fixed to the top, follows you as you scroll -->
-<div class="progress-bar" role="progressbar" aria-label="Form completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
+<!-- Compact navy toolbar: slides in once you scroll past the header, with the
+     completion progress across the middle -->
+<div class="scroll-progress" id="scroll-progress">
+  <div class="scroll-progress__inner">
+    <div class="scroll-progress__bar" role="progressbar" aria-label="Form completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="scroll-progress__fill" id="scroll-progress-fill"></div></div>
+    <span class="scroll-progress__label"><span id="scroll-progress-text">0%</span> complete</span>
+  </div>
+</div>
 <!-- Full-bleed Velocity navy band across the top -->
 <div class="velocity-band">
   <div class="velocity-band__inner">
@@ -35,6 +41,10 @@
       <span>Encrypted in transit</span>
     </div>
     <p class="required-note"><span class="req" aria-hidden="true">*</span> indicates a required field</p>
+    <div class="progress-inline">
+      <div class="progress-inline__bar" role="progressbar" aria-label="Form completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-inline__fill" id="progress-fill"></div></div>
+      <span class="progress-inline__label" id="progress-text">0% complete</span>
+    </div>
   </header>
 
   <!-- Brand-level AI pre-fill: paste the brand site, we fill what we can find.
@@ -98,6 +108,6 @@
     <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="footer-logo">
   </footer>
 </main>
-<script src="franchisor.js?v=7"></script>
+<script src="franchisor.js?v=9"></script>
 </body>
 </html>

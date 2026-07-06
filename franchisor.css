@@ -28,29 +28,72 @@ body {
 
 .container { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
 
-/* Completion progress bar — fixed to the very top, above everything */
-.progress-bar {
+/* In-flow completion progress — sits under the required-field note */
+.progress-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.progress-inline__bar {
+  flex: 1;
+  height: 8px;
+  background: #ece7e2;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-inline__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.25s ease;
+}
+.progress-inline__label { font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+
+/* Compact navy toolbar — slides in once the header scrolls away; the progress
+   bar runs across the middle column */
+.scroll-progress {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: rgba(0, 20, 44, 0.12);
   z-index: 60;
+  background: #00142C;
+  background: linear-gradient(160deg, #001b3c 0%, #00142C 70%);
+  transform: translateY(-100%);
+  transition: transform 0.25s ease;
 }
-.progress-bar__fill {
+.scroll-progress.is-visible { transform: translateY(0); }
+.scroll-progress__inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.scroll-progress__bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.scroll-progress__fill {
   height: 100%;
   width: 0%;
   background: var(--accent);
+  border-radius: 99px;
   transition: width 0.25s ease;
 }
+.scroll-progress__label { font-size: 13px; color: #fff; white-space: nowrap; }
 
 /* Full-bleed Velocity navy band (brand navy #00142C) */
 .velocity-band {
   background: #00142C;
   background: linear-gradient(160deg, #001b3c 0%, #00142C 70%);
   padding: 20px 0;
-  margin-top: 5px; /* clear the fixed progress bar */
 }
 .velocity-band__inner {
   max-width: 760px;
@@ -124,10 +167,10 @@ input[type="file"] { font-size: 14px; }
   margin-bottom: 8px;
   align-items: center;
 }
-/* Person rows: first / last / email / phone (+ optional remove) */
-.repeat-row--person { grid-template-columns: 1fr 1fr 1.3fr 1fr auto; }
-/* Corporate contact rows: first / last / email / role / remove (no phone) */
-.repeat-row--role { grid-template-columns: 1fr 1fr 1.3fr 0.9fr auto; }
+/* Person rows: first / last / email (+ optional remove) */
+.repeat-row--person { grid-template-columns: 1fr 1fr 1.3fr auto; }
+/* Corporate contact rows: first / last / email / remove (no phone, no role) */
+.repeat-row--contact { grid-template-columns: 1fr 1fr 1.3fr auto; }
 
 /* Hours grid: day label + open "to" close + closed toggle */
 .hours-grid {

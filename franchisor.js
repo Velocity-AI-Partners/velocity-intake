@@ -135,7 +135,7 @@
     { name: 'crm_platform', label: 'Booking / CRM platform', type: 'text', placeholder: 'e.g. Mindbody, Zenoti, GoHighLevel' },
     { name: 'crm_store_id', label: 'CRM store / location ID (if known)', type: 'text' },
     { name: 'gm', label: 'General manager', type: 'person' },
-    { name: 'location_users', label: 'Who else at this location needs access?', type: 'people', help: 'Email required, phone optional.' },
+    { name: 'location_users', label: 'Who else at this location needs access?', type: 'people', help: 'Email required for each person.' },
     { name: 'notes', label: 'Notes for this location', type: 'textarea', rows: 2 },
   ];
 
@@ -207,7 +207,7 @@
 
   // Additional corporate contacts preset (provided by George 2026-07-06).
   const PRESET_CONTACTS = [
-    { first_name: 'Jesse', last_name: 'Kern', email: 'jkern@beemlightsauna.com', role: 'corporate_admin' },
+    { first_name: 'Jesse', last_name: 'Kern', email: 'jkern@beemlightsauna.com' },
   ];
   // ========================= end of content config ===========================
 
@@ -284,23 +284,15 @@
     return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
   }
 
-  // --- Person rows (first / last / email, optional phone/role) -----------------
-  // Corporate contacts have no phone (George 2026-07-06); location-level people
-  // (GM, studio staff) keep it.
-  function personInputsHTML(prefix, opts) {
-    const o = opts || {};
-    const phone = o.phone ? `
-        <input type="tel" name="${prefix}_phone" placeholder="Phone (optional)">` : '';
-    const role = o.role ? `
-        <select name="${prefix}_role">
-          <option value="corporate_admin">Corporate admin</option>
-          <option value="regional_manager">Regional manager</option>
-          <option value="viewer">Viewer</option>
-        </select>` : '';
+  // --- Person rows -------------------------------------------------------------
+  // Every person on this form is first name / last name / email — no phone, no
+  // role, for anyone (George 2026-07-06). Location phone lives on the location
+  // itself (studio_phone), not on people.
+  function personInputsHTML(prefix) {
     return `
         <input type="text" name="${prefix}_first_name" placeholder="First name">
         <input type="text" name="${prefix}_last_name" placeholder="Last name">
-        <input type="email" name="${prefix}_email" placeholder="Email *">${phone}${role}`;
+        <input type="email" name="${prefix}_email" placeholder="Email *">`;
   }
 
   function collectPerson(prefix) {
@@ -308,24 +300,19 @@
       const el = document.querySelector(`[name="${prefix}_${n}"]`);
       return el ? el.value.trim() : '';
     };
-    const p = { first_name: val('first_name'), last_name: val('last_name'), email: val('email'), phone: val('phone') };
-    const roleEl = document.querySelector(`[name="${prefix}_role"]`);
-    if (roleEl) p.role = roleEl.value;
-    return p;
+    return { first_name: val('first_name'), last_name: val('last_name'), email: val('email') };
   }
 
   function personHasData(p) {
-    return !!(p.first_name || p.last_name || p.email || p.phone);
+    return !!(p.first_name || p.last_name || p.email);
   }
 
   function applyPerson(prefix, p) {
     if (!p || typeof p !== 'object') return;
-    ['first_name', 'last_name', 'email', 'phone'].forEach(n => {
+    ['first_name', 'last_name', 'email'].forEach(n => {
       const el = document.querySelector(`[name="${prefix}_${n}"]`);
       if (el && p[n] != null) el.value = p[n];
     });
-    const roleEl = document.querySelector(`[name="${prefix}_role"]`);
-    if (roleEl && p.role) roleEl.value = p.role;
   }
 
   // --- Render engine ---------------------------------------------------------
@@ -348,7 +335,7 @@
     } else if (f.type === 'users') {
       control = `<div id="users-rows"></div><button type="button" class="btn-add" id="add-user">+ Add person</button>`;
     } else if (f.type === 'person') {
-      control = `<div class="repeat-row repeat-row--person">${personInputsHTML(name, { phone: true })}</div>`;
+      control = `<div class="repeat-row repeat-row--person">${personInputsHTML(name)}</div>`;
     } else if (f.type === 'people') {
       control = `<div class="people-rows" data-prefix="${name}"></div><button type="button" class="btn-add add-person-row" data-prefix="${name}">+ Add person</button>`;
     } else if (f.type === 'hours') {
@@ -389,8 +376,8 @@
     const rows = $('#users-rows');
     const i = userCounter++;
     rows.insertAdjacentHTML('beforeend', `
-      <div class="repeat-row repeat-row--role" data-user="${i}">
-        ${personInputsHTML(`corp_user_${i}`, { role: true })}
+      <div class="repeat-row repeat-row--contact" data-user="${i}">
+        ${personInputsHTML(`corp_user_${i}`)}
         <button type="button" class="remove-row" aria-label="Remove person">&times;</button>
       </div>`);
   }
@@ -408,7 +395,7 @@
     const j = peopleCounter++;
     container.insertAdjacentHTML('beforeend', `
       <div class="repeat-row repeat-row--person" data-person="${prefix}_${j}">
-        ${personInputsHTML(`${prefix}_${j}`, { phone: true })}
+        ${personInputsHTML(`${prefix}_${j}`)}
         <button type="button" class="remove-row" aria-label="Remove person">&times;</button>
       </div>`);
     return `${prefix}_${j}`;
@@ -964,8 +951,6 @@
   // timezone, roles) always carry a value, so they're excluded — counting them
   // would inflate the number.
   function updateProgressBar() {
-    const fill = document.getElementById('progress-fill');
-    if (!fill) return;
     const els = document.querySelectorAll(
       '#franchisor-form input[type="text"], #franchisor-form input[type="email"], ' +
       '#franchisor-form input[type="tel"], #franchisor-form input[type="url"], #franchisor-form textarea'
@@ -978,9 +963,35 @@
       if ((el.value || '').trim() !== '') filled++;
     });
     const pct = total ? Math.round((filled / total) * 100) : 0;
-    fill.style.width = pct + '%';
-    const bar = fill.parentElement;
-    if (bar) bar.setAttribute('aria-valuenow', String(pct));
+    // Both surfaces: the in-flow bar in the header and the sticky navy toolbar.
+    const fill = document.getElementById('progress-fill');
+    if (fill) {
+      fill.style.width = pct + '%';
+      fill.parentElement.setAttribute('aria-valuenow', String(pct));
+    }
+    const text = document.getElementById('progress-text');
+    if (text) text.textContent = pct + '% complete';
+    const sFill = document.getElementById('scroll-progress-fill');
+    if (sFill) {
+      sFill.style.width = pct + '%';
+      sFill.parentElement.setAttribute('aria-valuenow', String(pct));
+    }
+    const sText = document.getElementById('scroll-progress-text');
+    if (sText) sText.textContent = pct + '%';
+  }
+
+  // Slide the navy toolbar in once the page header has scrolled away.
+  function initScrollProgress() {
+    const bar = document.getElementById('scroll-progress');
+    const header = document.querySelector('main.container header');
+    if (!bar) return;
+    function onScroll() {
+      const trigger = header ? header.offsetTop + header.offsetHeight - 8 : 300;
+      bar.classList.toggle('is-visible', window.scrollY > trigger);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    onScroll();
   }
 
   // --- Sticky left section navigator ------------------------------------------
@@ -1139,6 +1150,7 @@
     $('#franchisor-form').addEventListener('submit', handleSubmit);
     $('#brand-prefill-btn').addEventListener('click', handleBrandPrefill);
     initSectionNav();
+    initScrollProgress();
     Promise.resolve(initDraftFromUrl()).then(updateProgressBar);
   }
 
