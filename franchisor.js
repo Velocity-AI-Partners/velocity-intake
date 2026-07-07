@@ -63,8 +63,16 @@
       bucketFields: ['instagram', 'facebook', 'linkedin', 'youtube', 'tiktok'],
     },
     {
+      id: 'goals',
+      title: '2. What are your goals',
+      bucket: 'franchise_rollout',
+      fields: [
+        { name: 'pilot_success', label: 'What needs to happen in this pilot for it to be successful?', type: 'textarea', rows: 4 },
+      ],
+    },
+    {
       id: 'locations',
-      title: '2. Your locations',
+      title: '3. Your locations',
       lead: 'Add every location you’re onboarding. Each becomes its own sub-account under your brand. You can start with a few and send us the rest later.',
       bucket: 'locations',
       fields: [
@@ -73,7 +81,7 @@
     },
     {
       id: 'knowledge',
-      title: '3. Brand-wide knowledge base',
+      title: '4. Brand-wide knowledge base',
       lead: 'Answered once, applied across all locations. This is what your AI team members know about beem when they talk to your customers.',
       bucket: 'brand_knowledge',
       fields: [
@@ -91,12 +99,8 @@
     },
     {
       id: 'rollout',
-      title: '4. Rollout & anything else',
-      lead: 'Targets and timing.',
-      bucket: 'franchise_rollout',
+      title: '5. Anything else',
       fields: [
-        { name: 'kpi_targets', label: 'Brand KPI targets', type: 'textarea', rows: 3, placeholder: 'e.g. show-rate goals, membership targets, reactivation goals...' },
-        { name: 'launch_timeline', label: 'Target launch timeline', type: 'text', placeholder: 'e.g. first 3 locations by September' },
         { name: 'notes', col: 'notes', label: 'Anything else we should know?', type: 'textarea', rows: 4 },
       ],
     },

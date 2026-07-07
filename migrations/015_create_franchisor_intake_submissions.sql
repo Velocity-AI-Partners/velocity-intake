@@ -32,7 +32,7 @@ create table if not exists public.franchisor_intake_submissions (
   additional_contacts jsonb,    -- [ { first_name, last_name, email }, ... ]
   locations jsonb,              -- [ { page_url, name, address, city_state, zip, timezone, hours: {mon..sun: {open,close,closed}}, studio_phone, crm_platform, crm_store_id, gm: {first_name,last_name,email}, location_users: [person...], notes }, ... ]
   brand_knowledge jsonb,        -- { service_description, pricing_structure, intro_offer, cancellation_policy, ideal_client, unique_value, voice_tone, approved_phrases, avoid_words, faq }
-  franchise_rollout jsonb,      -- { kpi_targets, launch_timeline }
+  franchise_rollout jsonb,      -- { pilot_success } (goals section)
 
   notes text,
 
