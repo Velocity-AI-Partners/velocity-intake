@@ -67,14 +67,7 @@
       title: '2. What are your goals',
       bucket: 'franchise_rollout',
       fields: [
-        { name: 'pilot_success', label: 'What needs to happen in this pilot for it to be successful?', type: 'textarea', rows: 4 },
-        { name: 'priority_metric', label: 'If we could only improve one metric, what would it be?', type: 'select', options: [
-          { value: '', label: 'Choose one' },
-          { value: 'speed_to_lead', label: 'Speed to lead' },
-          { value: 'lead_response_rate', label: 'Lead response rate' },
-          { value: 'lead_to_demo', label: 'Lead to demo' },
-          { value: 'show_rate', label: 'Show rate' },
-        ]},
+        { name: 'pilot_success', label: 'What needs to happen in this pilot for it to be successful for you?', type: 'textarea', rows: 4 },
       ],
     },
     {
@@ -91,8 +84,7 @@
         { name: 'pain_points', label: 'Their pain points and motivations', type: 'textarea', rows: 3, value: 'Stress and burnout; wanting private self care time without gym intimidation; muscle and joint aches seeking temporary relief; athletic recovery; skin health; better sleep.' },
         { name: 'service_description', label: 'Describe your services as you’d explain them to a brand-new customer', type: 'textarea', rows: 5, required: true, value: 'beem offers private light therapy sessions in your own suite: a 40 minute full spectrum infrared sauna session (near, mid, and far infrared) with complimentary chromotherapy, a 15 minute red light therapy session, or both back to back. Suites are Solo (1 person) or Social (up to 2 people), with built in entertainment and fresh towels provided. Blue and green light therapy round out the menu, plus a corporate wellness program. Maximum 1 session per day. HSA and FSA accepted.' },
         { name: 'first_visit', label: 'What should someone expect on their first visit?', type: 'textarea', rows: 4, value: 'A private suite (Solo, or Social for up to 2 people). Choose a 40 minute infrared sauna session, a 15 minute red light therapy session, or both. Towels and water are provided; wear loose breathable clothing and remove oils and lotions before the session. Built in entertainment in every suite. Maximum 1 session per day.' },
-        { name: 'single_session_membership_pricing', label: 'Single session & membership pricing', type: 'textarea', rows: 3, help: 'Exact prices per studio live on each location card in section 9. Describe the brand-wide structure here.', value: 'Three membership tiers, billed monthly: 4 sessions, 8 sessions (most popular), and Unlimited. Session packs of 6, 10, and 20. Single session drop-in prices are not published online. Prices vary by studio. Pack expiration and rollover terms are not published anywhere; please add them.' },
-        { name: 'promotions', label: 'Promotions and discounts', type: 'textarea', rows: 3, value: 'Live now: $25 infrared or red light sessions (limited time anniversary promo); promo code comeback50 for $50 off the first 3 months of Unlimited; intro offers vary by studio (BOGO or 50% off first session); founding member discounts at presale studios.' },
+        { name: 'promotions', label: 'Brand-wide promotions and discounts', type: 'textarea', rows: 3, value: 'Live now: $25 infrared or red light sessions (limited time anniversary promo); promo code comeback50 for $50 off the first 3 months of Unlimited; intro offers vary by studio (BOGO or 50% off first session); founding member discounts at presale studios.' },
         { name: 'cancellation_policy', label: 'Cancellation, freeze & refund policy', type: 'textarea', rows: 4, value: 'Cancel or reschedule with at least 4 hours notice for a full refund. Under 4 hours: $25 fee per person. More than 10 minutes late or a no show: session canceled plus a $25 fee per person. These apply to memberships and packages too. Memberships can be canceled anytime but fees are non refundable; access continues through the end of the paid period; membership auto renews monthly until canceled. No freeze or hold policy is published on your site; if one exists, add it here.' },
         { name: 'age_policy', label: 'Age eligibility or restrictions', type: 'text', value: 'Ages 16 and up; under 18 requires a parent or guardian signed consent form.' },
         { name: 'accepts_insurance', label: 'Do you accept health insurance?', type: 'yesno' },
@@ -111,22 +103,26 @@
           { value: 'email', label: 'Email' },
           { value: 'calls', label: 'Phone calls' },
         ]},
-        { name: 'sender_identity', label: 'Who should messages come from?', type: 'select', help: 'Texts and emails both follow this choice. If the local studio, emails also send under that studio\'s own identity (e.g. beem Atlanta Glenwood); if corporate, everything sends as the one brand.', options: [
-          { value: '', label: 'Choose one' },
-          { value: 'local_studio', label: 'The local studio (e.g. beem Atlanta Glenwood)' },
-          { value: 'brand', label: 'The corporate brand' },
+        { name: 'ai_voice', label: 'AI Team Member voice', type: 'radiocards', value: 'brand_persona', options: [
+          { value: 'brand_persona', title: 'Brand persona', desc: 'A friendly named character we create for your brand, not a real person.', example: 'Hi! I\'m Max from (your studio) \u{1F44B} Let\'s get you booked for a free demo. What day works best?' },
+          { value: 'team', title: 'Team', desc: 'Speaks as your whole team, "we" and "us."', example: 'Hey! Thanks for reaching out to (your studio). We\'d love to have you in for a free demo. What day works best?' },
+          { value: 'owner', title: 'Owner', desc: 'Speaks as a real person, you or a named owner.', example: 'Hi, this is [your name] from (your studio)! I\'d personally love to get you in for a free demo. What day works?' },
+          { value: 'unsure', title: 'Unsure, recommend what works', desc: 'We\'ll pick the best-performing voice for a studio like yours.', example: 'We\'ll recommend the best fit for (your studio). Team and Brand persona usually perform best.' },
         ]},
-        { name: 'ai_naming', label: 'Should your AI team member use one name everywhere, or a different name per location?', type: 'select', showIf: { field: 'sender_identity', values: ['local_studio'] }, options: [
-          { value: '', label: 'Choose one' },
-          { value: 'same', label: 'One name, used at every location' },
-          { value: 'per_location', label: 'A different name per location' },
-        ], help: 'If per location, set each name in the personalization block on that location card in section 9.' },
-        { name: 'ai_name', label: 'What should the name be?', type: 'text', showIf: [{ field: 'ai_naming', values: ['same'] }, { field: 'sender_identity', values: ['brand'] }], help: 'You already have luumi in your studios. The assistant can use the luumi name, a human first name, or something else.' },
-        { name: 'assistant_signoff', label: 'For emails, how should the AI sign off?', type: 'text', placeholder: 'e.g. Jess at beem Summerville' },
+        { name: 'ai_name', label: 'What should the name be?', type: 'text', showIf: { field: 'ai_voice', values: ['brand_persona', 'owner'] }, help: 'You already have luumi in your studios. The assistant can use the luumi name, a human first name, or something else. Want a different name per studio? Set it in the personalization block on that location card in section 9.' },
         { name: 'quiet_hours', label: 'Any quiet hours or contact time rules, outside of following applicable laws?', type: 'text', placeholder: 'e.g. no texts before 9am or after 8pm local time' },
-        { name: 'voice_tone', label: 'Describe your brand voice', type: 'textarea', rows: 4, value: 'Warm, permission giving self care voice backed by simple science. Talk to the customer like someone who deserves a break (This time is for YOU), then explain benefits at the cellular level without hype. Never pushy, never clinical. The brand name is always lowercase: beem.' },
-        { name: 'approved_phrases', label: 'Phrases you love (use these)', type: 'textarea', rows: 4, value: 'restore, reset, and recharge · This time is for YOU · light session · private suite · make space for yourself · a 15 minute glow that works at the cellular level · walk out renewed, not just restored · detox from the inside out · zero gym intimidation' },
-        { name: 'avoid_words', label: 'Words or claims to avoid', type: 'textarea', rows: 5, value: 'Never say cure, heal a condition, diagnose, or prevent disease, and never name diseases as treatment targets. Pain and inflammation claims are always temporary. Hedge benefit claims: supports, may help, linked to, some studies suggest. Use the 600 calorie claim only hedged (some studies suggest up to 600 calories). Route medical questions (pregnancy, pacemakers, implants, medications, epilepsy, photosensitivity) to consult your physician.' },
+        { name: 'tone_style', label: 'Tone & style', type: 'checkboxes', boxed: true, help: 'Default is friendly & professional. Click any that fit — we pre-checked what matches the beem voice.', value: ['warm', 'calm_reassuring'], options: [
+          { value: 'friendly', label: 'Friendly' },
+          { value: 'professional', label: 'Professional' },
+          { value: 'warm', label: 'Warm' },
+          { value: 'upbeat', label: 'Upbeat' },
+          { value: 'motivational', label: 'Motivational' },
+          { value: 'calm_reassuring', label: 'Calm & reassuring' },
+          { value: 'concise_direct', label: 'Concise & direct' },
+          { value: 'premium_upscale', label: 'Premium / upscale' },
+        ]},
+        { name: 'approved_phrases', label: 'Words, phrases, or taglines to use', type: 'tags', value: ['restore, reset, and recharge', 'This time is for YOU', 'light session', 'private suite', 'make space for yourself', 'a 15 minute glow that works at the cellular level', 'walk out renewed, not just restored', 'detox from the inside out', 'zero gym intimidation'] },
+        { name: 'avoid_words', label: 'Words, phrases, or claims to avoid', type: 'tags', help: 'Anything medical, legal, or brand-sensitive we should never say.', value: ['cure', 'heal a condition', 'diagnose', 'prevent disease', 'naming diseases as treatment targets', 'unhedged pain or inflammation claims', 'unhedged 600-calorie claim'] },
         { name: 'unique_value', label: 'What makes beem different?', type: 'textarea', rows: 4, value: 'Full spectrum infrared (near, mid, and far) combined with targeted LED chromotherapy in one private session; private Solo and Social suites instead of communal saunas; dedicated red light therapy alongside sauna; evidence led positioning, never hype; HSA and FSA eligible.' },
         { name: 'nurture_head', label: 'Lead nurturing and reactivation', type: 'subheading' },
         { name: 'sales_style', label: 'How assertive should follow-up be?', type: 'select', options: [
@@ -174,16 +170,21 @@
     },
     {
       id: 'rules',
-      title: '6. Brand rules & consistency',
+      title: '6. Franchisee permissions, brand rules, and consistency',
       bucket: 'franchise_rollout',
       fields: [
-        { name: 'offer_authority', label: 'Who can create campaigns?', type: 'select', options: [
+        { name: 'offer_authority', label: 'Who can create & edit campaigns?', type: 'select', options: [
           { value: '', label: 'Choose one' },
           { value: 'corporate_only', label: 'Corporate only' },
           { value: 'propose_approve', label: 'Studio teams propose, corporate approves' },
           { value: 'guardrails', label: 'Studio teams run their own within guardrails' },
         ]},
-        { name: 'local_customization', label: 'What may an individual studio customize?', type: 'textarea', rows: 3, placeholder: 'Offers, local events, tone, community partnerships...' },
+        { name: 'kb_authority', label: 'Who can create & edit the knowledge base?', type: 'select', options: [
+          { value: '', label: 'Choose one' },
+          { value: 'corporate_only', label: 'Corporate only' },
+          { value: 'propose_approve', label: 'Studio teams propose, corporate approves' },
+          { value: 'guardrails', label: 'Studio teams edit their own within guardrails' },
+        ]},
         { name: 'template_approval', label: 'Message templates: who approves what the AI sends?', type: 'select', options: [
           { value: '', label: 'Choose one' },
           { value: 'corporate_once', label: 'Corporate approves once, for everyone' },
@@ -246,7 +247,7 @@
   ];
 
   const LOCATION_FIELDS = [
-    { name: 'page_url', label: 'This location’s web page. Paste it and hit Pre-fill to go faster.', type: 'prefill-url', placeholder: 'https://.../locations/your-city' },
+    { name: 'page_url', label: 'Your studio’s web page. Paste it and hit Pre-fill to go faster.', type: 'prefill-url', placeholder: 'https://.../locations/your-city' },
     { name: 'name', label: 'Location name', type: 'text', placeholder: 'e.g. beem Scottsdale', required: true },
     { name: 'address', label: 'Street address', type: 'text' },
     { name: 'city_state', label: 'City & state', type: 'text' },
@@ -268,23 +269,20 @@
     { name: 'crm_store_id', label: 'CRM store / location ID (if known)', type: 'text' },
     { name: 'crm_username', label: 'CRM username (optional here)', type: 'text', help: 'Enter here, or share credentials with us separately if you prefer.' },
     { name: 'crm_password', label: 'CRM password (optional here)', type: 'text' },
-    { name: 'booking_link', label: 'Where should we send people to book at this studio?', type: 'url', placeholder: 'https://' },
-    { name: 'texting_number', label: 'Existing texting number for this studio (if any)', type: 'tel' },
+    { name: 'booking_link', label: 'If someone asks for a link, where should we send people to book?', type: 'url', placeholder: 'https://' },
     { name: 'studio_email', label: 'Studio email', type: 'email', placeholder: 'e.g. yourcity@beemlightsauna.com' },
-    { name: 'intro_offer', label: 'This location’s intro / first-visit offer', type: 'text', placeholder: 'e.g. BOGO first experience, 50% off first session' },
-    { name: 'membership_pricing', label: 'This location’s membership pricing (per month)', type: 'textarea', rows: 2, placeholder: 'e.g. 4 sessions $109 / 8 sessions $149 / Unlimited $179' },
-    { name: 'pack_pricing', label: 'This location’s session pack pricing', type: 'textarea', rows: 2, placeholder: 'e.g. 6 pack $209 / 10 pack $369 / 20 pack $609' },
-    { name: 'dropin_price', label: 'Drop-in / single session price', type: 'text', placeholder: 'Not published online anywhere, please fill in' },
-    { name: 'winback_offer', label: 'Reactivation / winback offer for this studio', type: 'textarea', rows: 2, placeholder: 'What should we offer old leads and ex-members to come back?' },
+    { name: 'intro_offer', label: 'What is your intro / first-visit offer?', type: 'text', placeholder: 'e.g. BOGO first experience, 50% off first session' },
+    { name: 'membership_pricing', label: 'What is your membership pricing (per month)?', type: 'textarea', rows: 2, placeholder: 'e.g. 4 sessions $109 / 8 sessions $149 / Unlimited $179' },
+    { name: 'pack_pricing', label: 'What is your session pack pricing?', type: 'textarea', rows: 2, placeholder: 'e.g. 6 pack $209 / 10 pack $369 / 20 pack $609' },
+    { name: 'dropin_price', label: 'What is your drop-in / single session price?', type: 'text', placeholder: 'Not published online anywhere, please fill in' },
     { name: 'gm', label: 'General manager', type: 'person' },
     { name: 'location_users', label: 'Who else at this location needs access?', type: 'people', help: 'Email required for each person.' },
     { name: 'personalization_head', label: 'Personalization for this studio', type: 'subheading', help: 'All optional. Leave anything blank to use the brand-wide answer from sections 4 and 5.' },
     { name: 'ai_name_override', label: 'AI team member name for this studio', type: 'text' },
-    { name: 'ai_signoff_override', label: 'Message sign-off for this studio', type: 'text' },
-    { name: 'voice_override', label: 'Voice or tone notes for this studio', type: 'textarea', rows: 2 },
-    { name: 'phrases_override', label: 'Phrases to use at this studio', type: 'textarea', rows: 2 },
-    { name: 'avoid_override', label: 'Words or claims to avoid at this studio', type: 'textarea', rows: 2 },
-    { name: 'different_override', label: 'What makes this studio different', type: 'textarea', rows: 2 },
+    { name: 'ai_signoff_override', label: 'Email sign-off for this studio', type: 'text' },
+    { name: 'voice_override', label: 'Anything different from corporate with: voice or tone', type: 'textarea', rows: 2 },
+    { name: 'phrases_override', label: 'Anything different from corporate with: phrases to use', type: 'textarea', rows: 2 },
+    { name: 'avoid_override', label: 'Anything different from corporate with: words or claims to avoid', type: 'textarea', rows: 2 },
     { name: 'assertiveness_override', label: 'Follow-up style for this studio', type: 'select', options: [
       { value: '', label: 'Use the brand-wide setting' },
       { value: 'gentle', label: 'Gentle and consultative' },
@@ -512,13 +510,27 @@
     } else if (f.type === 'select') {
       control = `<select name="${name}">${(f.options || []).map(o => `<option value="${esc(o.value)}"${f.value === o.value ? ' selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
     } else if (f.type === 'checkboxes') {
-      control = `<div class="checkbox-group">${(f.options || []).map(o => `
-        <label class="checkbox-row"><input type="checkbox" name="${name}" value="${esc(o.value)}"> <span>${esc(o.label)}</span></label>`).join('')}</div>`;
+      const pre = Array.isArray(f.value) ? f.value : [];
+      control = `<div class="checkbox-group${f.boxed ? ' checkbox-group--boxed' : ''}">${(f.options || []).map(o => `
+        <label class="checkbox-row"><input type="checkbox" name="${name}" value="${esc(o.value)}"${pre.includes(o.value) ? ' checked' : ''}> <span>${esc(o.label)}</span></label>`).join('')}</div>`;
+    } else if (f.type === 'tags') {
+      const chips = (Array.isArray(f.value) ? f.value : []).map(t => `<span class="tag-chip" data-value="${esc(t)}">${esc(t)}<button type="button" class="tag-remove" aria-label="Remove ${esc(t)}">&times;</button></span>`).join('');
+      control = `<div class="tags-input" data-name="${name}">${chips}<input type="text" class="tags-entry" placeholder="${esc(f.placeholder || 'Type a phrase, then press comma...')}"></div>`;
     } else if (f.type === 'yesno') {
       control = `<div class="yesno-group">
         <label class="yesno-option"><input type="radio" name="${name}" value="yes"${f.value === 'yes' ? ' checked' : ''}><span>Yes</span></label>
         <label class="yesno-option"><input type="radio" name="${name}" value="no"${f.value === 'no' ? ' checked' : ''}><span>No</span></label>
       </div>`;
+    } else if (f.type === 'radiocards') {
+      control = `<div class="radio-cards">${(f.options || []).map(o => `
+        <label class="radio-card">
+          <input type="radio" name="${name}" value="${esc(o.value)}"${f.value === o.value ? ' checked' : ''}>
+          <span class="radio-card__body">
+            <span class="radio-card__title">${esc(o.title)}</span>
+            <span class="radio-card__desc">${esc(o.desc)}</span>
+          </span>
+          <span class="radio-card__example">${esc(o.example)}</span>
+        </label>`).join('')}</div>`;
     } else if (f.type === 'subheading') {
       // Visual divider inside a card; renders no input and saves nothing.
       return `<div class="loc-subhead"><h4>${esc(f.label)}</h4>${f.help ? `<p class="field-help">${esc(f.help)}</p>` : ''}</div>`;
@@ -571,6 +583,42 @@
     }
     const labelHTML = f.label ? `<label>${esc(f.label)}${req}</label>` : '';
     return `<div class="field" data-field="${name}">${labelHTML}${help}${control}</div>`;
+  }
+
+  // --- Tag inputs ---------------------------------------------------------
+  function tagsWrap(name) { return document.querySelector(`.tags-input[data-name="${name}"]`); }
+
+  function addTagChip(name, value) {
+    const wrap = tagsWrap(name);
+    const entry = wrap && wrap.querySelector('.tags-entry');
+    if (!wrap || !entry) return;
+    const span = document.createElement('span');
+    span.className = 'tag-chip';
+    span.dataset.value = value;
+    span.textContent = value;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tag-remove';
+    btn.setAttribute('aria-label', `Remove ${value}`);
+    btn.innerHTML = '&times;';
+    span.appendChild(btn);
+    wrap.insertBefore(span, entry);
+  }
+
+  function clearTags(name) {
+    const wrap = tagsWrap(name);
+    if (wrap) wrap.querySelectorAll('.tag-chip').forEach(c => c.remove());
+  }
+
+  function collectTags(name) {
+    const wrap = tagsWrap(name);
+    if (!wrap) return [];
+    const vals = Array.from(wrap.querySelectorAll('.tag-chip')).map(c => c.dataset.value);
+    // Text typed but not yet committed with a comma still counts.
+    const entry = wrap.querySelector('.tags-entry');
+    const pending = entry ? entry.value.trim() : '';
+    if (pending) vals.push(pending);
+    return vals;
   }
 
   function renderSections() {
@@ -786,7 +834,11 @@
           bucketObj[f.name] = vals;
           return;
         }
-        if (f.type === 'yesno') {
+        if (f.type === 'tags') {
+          bucketObj[f.name] = collectTags(f.name);
+          return;
+        }
+        if (f.type === 'yesno' || f.type === 'radiocards') {
           const sel = document.querySelector(`[name="${f.name}"]:checked`);
           bucketObj[f.name] = sel ? sel.value : '';
           return;
@@ -864,14 +916,26 @@
           return;
         }
         if (f.type === 'checkboxes') {
-          const vals = Array.isArray(bucketObj[f.name]) ? bucketObj[f.name] : [];
-          vals.forEach(v => {
+          // A draft's saved set replaces any preset-checked defaults entirely.
+          if (!Array.isArray(bucketObj[f.name])) return;
+          document.querySelectorAll(`[name="${f.name}"]`).forEach(el => { el.checked = false; });
+          bucketObj[f.name].forEach(v => {
             const el = document.querySelector(`[name="${f.name}"][value="${v}"]`);
             if (el) el.checked = true;
           });
           return;
         }
-        if (f.type === 'yesno') {
+        if (f.type === 'tags') {
+          let vals = bucketObj[f.name];
+          if (vals === undefined) return; // draft predates this field: keep preset chips
+          // Old drafts saved these as textarea prose: '·'-separated phrase
+          // lists split cleanly; otherwise fall back to commas.
+          if (typeof vals === 'string') vals = vals.includes('·') ? vals.split('·') : vals.split(',');
+          clearTags(f.name);
+          (Array.isArray(vals) ? vals : []).map(v => String(v).trim()).filter(Boolean).forEach(v => addTagChip(f.name, v));
+          return;
+        }
+        if (f.type === 'yesno' || f.type === 'radiocards') {
           const v = bucketObj[f.name];
           if (v) {
             const el = document.querySelector(`[name="${f.name}"][value="${v}"]`);
@@ -993,9 +1057,10 @@
 
   async function handleSaveDraft() {
     hideError();
-    const btn = $('#save-draft');
-    btn.disabled = true;
-    btn.textContent = 'Saving…';
+    // Two save buttons (form footer + sticky top toolbar) stay in lockstep.
+    const btns = [$('#save-draft'), $('#save-draft-top')].filter(Boolean);
+    const setAll = (text, disabled) => btns.forEach(b => { b.textContent = text; b.disabled = disabled; });
+    setAll('Saving…', true);
     try {
       const logoUrl = await maybeUploadLogo();
       const payload = buildPayload('draft');
@@ -1009,11 +1074,10 @@
         setDraftIdInUrl(draftId);
       }
       showDraftLink();
-      btn.textContent = 'Draft saved ✓';
-      setTimeout(() => { btn.textContent = 'Save draft'; btn.disabled = false; }, 1500);
+      setAll('Draft saved ✓', true);
+      setTimeout(() => setAll('Save draft', false), 1500);
     } catch (err) {
-      btn.textContent = 'Save draft';
-      btn.disabled = false;
+      setAll('Save draft', false);
       showError(err.message || 'Could not save draft. Please try again.');
     }
   }
@@ -1443,7 +1507,29 @@
       }
       if (e.target.id === 'modal-cancel') closeSubmitConfirm();
       if (e.target.id === 'modal-confirm') doFinalSubmit();
+      if (e.target.classList.contains('tag-remove')) {
+        e.target.closest('.tag-chip').remove();
+        queueAutosave();
+      }
+      if (e.target.classList.contains('tags-input')) {
+        const entry = e.target.querySelector('.tags-entry');
+        if (entry) entry.focus();
+      }
       updateProgressBar(); // add/remove rows changes the field count
+    });
+    // Tag inputs: comma or Enter commits a chip; Backspace on empty removes the last.
+    document.addEventListener('keydown', (e) => {
+      const el = e.target;
+      if (!el.classList || !el.classList.contains('tags-entry')) return;
+      const wrap = el.closest('.tags-input');
+      if (e.key === ',' || e.key === 'Enter') {
+        e.preventDefault(); // Enter must not submit the form
+        const v = el.value.trim();
+        if (v) { addTagChip(wrap.dataset.name, v); el.value = ''; queueAutosave(); updateProgressBar(); }
+      } else if (e.key === 'Backspace' && !el.value) {
+        const chips = wrap.querySelectorAll('.tag-chip');
+        if (chips.length) { chips[chips.length - 1].remove(); queueAutosave(); updateProgressBar(); }
+      }
     });
     // Live phone mask on every tel field (existing and future rows).
     document.addEventListener('input', (e) => {
@@ -1451,6 +1537,12 @@
       if (el.matches && el.matches('input[type="tel"]')) {
         const formatted = formatPhoneValue(el.value);
         if (formatted !== el.value) el.value = formatted;
+      }
+      // Pasting comma-separated text into a tag input commits every segment.
+      if (el.classList && el.classList.contains('tags-entry') && el.value.includes(',')) {
+        const wrap = el.closest('.tags-input');
+        el.value.split(',').map(v => v.trim()).filter(Boolean).forEach(v => addTagChip(wrap.dataset.name, v));
+        el.value = '';
       }
       // Keep the nav's location sub-links in sync with the name fields.
       if (el.name && /^loc_\d+_name$/.test(el.name)) refreshLocationSubnav();
@@ -1468,6 +1560,7 @@
       if (close) close.disabled = e.target.checked;
     });
     $('#save-draft').addEventListener('click', handleSaveDraft);
+    $('#save-draft-top').addEventListener('click', handleSaveDraft);
     $('#franchisor-form').addEventListener('submit', handleSubmit);
     $('#brand-prefill-btn').addEventListener('click', handleBrandPrefill);
     initSectionNav();
@@ -1490,7 +1583,12 @@
         const conds = Array.isArray(f.showIf) ? f.showIf : [f.showIf];
         wrap.hidden = !conds.some(c => {
           const ctrl = document.querySelector(`[name="${c.field}"]`);
-          return ctrl && c.values.includes(ctrl.value);
+          if (!ctrl) return false;
+          // Radio groups: the group's value is the checked member's, not the first's.
+          const v = ctrl.type === 'radio'
+            ? ((document.querySelector(`[name="${c.field}"]:checked`) || {}).value || '')
+            : ctrl.value;
+          return c.values.includes(v);
         });
       });
     });
@@ -1501,8 +1599,7 @@
       s.fields.forEach(f => {
         if (!f.showIf) return;
         (Array.isArray(f.showIf) ? f.showIf : [f.showIf]).forEach(c => {
-          const ctrl = document.querySelector(`[name="${c.field}"]`);
-          if (ctrl) ctrl.addEventListener('change', refreshConditionalFields);
+          document.querySelectorAll(`[name="${c.field}"]`).forEach(ctrl => ctrl.addEventListener('change', refreshConditionalFields));
         });
       });
     });
