@@ -9,7 +9,7 @@
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-<link rel="stylesheet" href="franchisor.css?v=10">
+<link rel="stylesheet" href="franchisor.css?v=15">
 </head>
 <body>
 <!-- Compact navy toolbar: slides in once you scroll past the header, with the
@@ -79,6 +79,7 @@
     <div class="actions">
       <button type="button" class="btn-secondary" id="save-draft">Save draft</button>
       <button type="submit" class="btn-primary" id="submit-btn">Review &amp; submit</button>
+      <span class="autosave-status" id="autosave-status" aria-live="polite"></span>
     </div>
   </form>
 
@@ -108,6 +109,7 @@
     <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="footer-logo">
   </footer>
 </main>
-<script src="franchisor.js?v=13"></script>
+<button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch between light and dark mode" aria-pressed="false">🌙</button>
+<script src="franchisor.js?v=42"></script>
 </body>
 </html>
