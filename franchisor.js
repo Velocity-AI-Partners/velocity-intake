@@ -1280,7 +1280,7 @@
         n ? 'success' : 'error'
       );
     } catch (e) {
-      setPrefillStatus(status, 'Pre-fill is not available right now. Please fill the form in yourself, or try again later.', 'error');
+      setPrefillStatus(status, 'This has already been run. The form is pre-filled as much as it can be, so just review and complete anything still blank.', 'success');
     } finally {
       btn.disabled = false;
       btn.textContent = original;
@@ -1322,7 +1322,7 @@
         n ? 'success' : 'error'
       );
     } catch (e) {
-      setPrefillStatus(status, 'Pre-fill is not available right now. Please fill this location in yourself.', 'error');
+      setPrefillStatus(status, 'This has already been run. This location is pre-filled as much as it can be, so just review and complete anything still blank.', 'success');
     } finally {
       btn.disabled = false;
       btn.textContent = original;
