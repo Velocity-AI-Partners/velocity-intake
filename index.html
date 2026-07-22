@@ -20,7 +20,7 @@
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-<link rel="stylesheet" href="styles.css?v=15">
+<link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
 <div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
@@ -38,6 +38,16 @@
   </header>
 
   <form id="intake-form" novalidate>
+
+    <div class="prefill-hero">
+      <span class="prefill-hero__kicker">Start faster with AI</span>
+      <p class="prefill-hero__lead">Paste the web page for this specific location and we'll pre-fill what we can find, so you just review and confirm. You can always skip this and fill everything in yourself.</p>
+      <div class="prefill-hero__row">
+        <input type="url" id="location-page-url" name="location_page_url" class="prefill-hero__input" placeholder="https://yourbrand.com/locations/your-city" aria-label="Your location page URL">
+        <button type="button" id="prefill-btn" class="btn-prefill">Pre-fill with AI</button>
+      </div>
+      <span class="prefill-status" id="prefill-status" aria-live="polite"></span>
+    </div>
 
     <section>
       <h2>Business Information</h2>
@@ -696,6 +706,6 @@
   </div>
 </main>
 
-<script src="form.js?v=20"></script>
+<script src="form.js?v=21"></script>
 </body>
 </html>

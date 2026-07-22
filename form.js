@@ -1235,6 +1235,239 @@
     form.addEventListener('change', updateProgressBar);
   }
 
+  // ---- AI prefill: scrape the location page and fill what we can find ------
+  // Same engine as the redesign/franchisor forms: POST the pasted URL to the
+  // scrape-location-page edge function, then apply the returned
+  // (form-field-keyed) subset to ONLY the fields present in the response. It
+  // deliberately never touches automation/handoff/users/notify sections, and
+  // nothing is auto-submitted: the hours and CRM attestations stay unchecked so
+  // the client is forced to review. Every filled field gets an "AI suggested"
+  // chip that clears on their first edit.
+
+  function formatPhoneValue(raw) {
+    let d = String(raw == null ? '' : raw).replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1); // drop a leading US country code
+    d = d.slice(0, 10);
+    if (!d) return '';
+    if (d.length < 4) return '(' + d;
+    if (d.length < 7) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+    return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+  }
+
+  function setPrefillStatus(msg, kind) {
+    const el = document.getElementById('prefill-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.remove('is-error', 'is-success', 'is-loading');
+    if (kind) el.classList.add('is-' + kind); // is-error | is-success | is-loading
+  }
+
+  function applyScrapedSuggestions(s) {
+    const form = document.getElementById('intake-form');
+    if (!form || !s || typeof s !== 'object') return [];
+    const filled = [];
+    const setField = (name, value) => {
+      if (value == null || value === '') return false;
+      const el = form.elements[name];
+      if (!el) return false;
+      if (el.type === 'checkbox') { el.checked = !!value; return true; }
+      if (el.tagName === 'SELECT') {
+        // Only set if the scraped value matches an option (by value or label);
+        // otherwise leave the default so we never show an invalid selection.
+        const want = String(value).trim().toLowerCase();
+        const opt = [].slice.call(el.options).find((o) =>
+          (o.value && o.value.toLowerCase() === want) || (o.text && o.text.trim().toLowerCase() === want));
+        if (!opt) return false;
+        el.value = opt.value;
+        return true;
+      }
+      try { el.value = value; } catch (_) { return false; } // RadioNodeList.value = x checks that radio
+      return true;
+    };
+    Object.keys(s).forEach((key) => {
+      if (key === 'hours' || key === 'is_multi_location' || key === 'address' || key === 'state' || key === 'zip') return; // handled below
+      if (setField(key, s[key])) filled.push(key);
+    });
+    // This form has a single street-address line and no state/zip fields, so
+    // fold any scraped state/zip into it ("123 Main St" -> "123 Main St, OH 43215").
+    if (s.address) {
+      let line = String(s.address).trim();
+      const tail = [s.state, s.zip].filter(Boolean).join(' ').trim();
+      if (tail && !(s.zip && line.indexOf(s.zip) >= 0)) line += ', ' + tail;
+      if (setField('address', line)) filled.push('address');
+    }
+    // A recognized parent brand implies a chain/franchise even when the model
+    // omitted the boolean; both stay client-reviewable ("AI suggested" chips).
+    const multi = s.is_multi_location != null ? s.is_multi_location : (s.parent_brand_name ? true : null);
+    if (multi != null) {
+      if (setField('is_multi_location', multi ? 'yes' : 'no')) filled.push('is_multi_location');
+    }
+    // Format any scraped phone to the form's (555) 123-4567 style.
+    ['business_phone', 'contact_phone'].forEach((n) => {
+      const el = form.elements[n];
+      if (el && el.value) el.value = formatPhoneValue(el.value);
+    });
+    // Hours grid (the edge function already snapped times to 15-min increments).
+    // Mirrors applyServerRowToForm: keep the open/close inputs' disabled state
+    // in sync with the closed checkbox.
+    if (s.hours && typeof s.hours === 'object') {
+      let any = false;
+      DAYS.forEach((d) => {
+        const h = s.hours[d];
+        if (!h) return;
+        const closedEl = form.elements[`hours_${d}_closed`];
+        const openEl = form.elements[`hours_${d}_open`];
+        const closeEl = form.elements[`hours_${d}_close`];
+        const isClosed = !!h.closed;
+        if (closedEl) closedEl.checked = isClosed;
+        if (openEl) openEl.disabled = isClosed;
+        if (closeEl) closeEl.disabled = isClosed;
+        if (!isClosed) {
+          if (openEl && h.open) openEl.value = h.open;
+          if (closeEl && h.close) closeEl.value = h.close;
+        }
+        any = true;
+      });
+      if (any) filled.push('hours');
+    }
+    // Parent brand: a recognized franchise that isn't in the dropdown (e.g. a
+    // brand we don't serve yet) -> pick "Other" and drop the name in free text.
+    // Independent businesses return no brand, so they stay blank.
+    if (s.parent_brand_name) {
+      const sel = form.elements['parent_brand_name'];
+      if (sel && sel.tagName === 'SELECT' && !sel.value) {
+        const hasOther = [].slice.call(sel.options).some((o) => o.value === 'other');
+        if (hasOther) {
+          sel.value = 'other';
+          const otherEl = form.elements['parent_brand_other'];
+          if (otherEl) { otherEl.value = s.parent_brand_name; if (filled.indexOf('parent_brand_other') < 0) filled.push('parent_brand_other'); }
+          if (filled.indexOf('parent_brand_name') < 0) filled.push('parent_brand_name');
+        }
+      }
+    }
+    // Main CTA: a call-to-action phrase that isn't one of the options -> "Other"
+    // + free text (the matching case is handled by setField in the loop above).
+    if (s.main_cta) {
+      const sel = form.elements['main_cta'];
+      if (sel && sel.tagName === 'SELECT' && !sel.value) {
+        const hasOther = [].slice.call(sel.options).some((o) => o.value === 'other');
+        if (hasOther) {
+          sel.value = 'other';
+          const otherEl = form.elements['main_cta_other'];
+          if (otherEl) { otherEl.value = s.main_cta; if (filled.indexOf('main_cta_other') < 0) filled.push('main_cta_other'); }
+          if (filled.indexOf('main_cta') < 0) filled.push('main_cta');
+        }
+      }
+    }
+    return filled;
+  }
+
+  function markAiSuggested(names) {
+    const form = document.getElementById('intake-form');
+    if (!form) return;
+    const makeChip = (cls) => {
+      const c = document.createElement('span');
+      c.className = cls;
+      c.textContent = 'AI suggested';
+      return c;
+    };
+    (names || []).forEach((name) => {
+      // The hours grid has no per-field labels: badge the section heading.
+      if (name === 'hours') {
+        const ref = form.elements['hours_mon_closed'];
+        const section = ref && ref.closest ? ref.closest('section') : null;
+        const h2 = section ? section.querySelector('h2') : null;
+        if (h2 && !h2.querySelector('.ai-suggested-badge')) h2.appendChild(makeChip('ai-suggested-badge'));
+        return;
+      }
+      const el = form.elements[name];
+      if (!el) return;
+      const isGroup = (typeof el.length === 'number' && el.tagName === undefined);
+      const node = isGroup ? el[0] : el;
+      if (!node || !node.closest) return;
+      // Radio group (e.g. is_multi_location): chip after the fieldset legend.
+      if (isGroup) {
+        const fs = node.closest('fieldset');
+        const legend = fs ? fs.querySelector('legend') : null;
+        if (legend && !legend.querySelector('.ai-suggested-chip')) {
+          legend.appendChild(makeChip('ai-suggested-chip'));
+          const clearG = () => { const c = legend.querySelector('.ai-suggested-chip'); if (c) c.remove(); };
+          [].slice.call(el).forEach((t) => t.addEventListener('change', clearG, { once: true }));
+        }
+        return;
+      }
+      // Single control: inline chip right before the control inside its label.
+      const label = node.closest('label');
+      if (label && !label.querySelector('.ai-suggested-chip')) {
+        let anchor = null;
+        for (const child of label.children) {
+          if (/^(INPUT|SELECT|TEXTAREA)$/.test(child.tagName)) { anchor = child; break; }
+        }
+        label.insertBefore(makeChip('ai-suggested-chip'), anchor);
+        const clear = () => { const c = label.querySelector('.ai-suggested-chip'); if (c) c.remove(); };
+        node.addEventListener('input', clear, { once: true });
+        node.addEventListener('change', clear, { once: true });
+      }
+    });
+  }
+
+  async function runPrefill(url, btn) {
+    const cleanUrl = (url || '').trim();
+    if (!/^https?:\/\/.+\..+/i.test(cleanUrl)) {
+      setPrefillStatus('Add your location page URL (starting with https://) first.', 'error');
+      const input = document.getElementById('location-page-url');
+      if (input) input.focus();
+      return;
+    }
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    btn.textContent = 'Reading your page...';
+    setPrefillStatus('Scanning your page and pulling in everything we can find. This takes a few seconds...', 'loading');
+    try {
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/scrape-location-page`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url: cleanUrl })
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      const suggested = (data && data.suggested && typeof data.suggested === 'object') ? data.suggested : {};
+      const filled = applyScrapedSuggestions(suggested);
+      // Refresh dependent UI the same way the draft-restore path does.
+      applyConditionals();
+      updateProgressBar();
+      markAiSuggested(filled);
+      const n = filled.length;
+      setPrefillStatus(
+        n
+          ? `✓ Done. Filled in ${n} field${n === 1 ? '' : 's'} from your page, each marked "AI suggested." Review and confirm them before you submit.`
+          : 'We could not pull much from that page. Please fill the form in yourself.',
+        n ? 'success' : 'error'
+      );
+    } catch (e) {
+      console.error(e);
+      setPrefillStatus('We could not read that page right now. Please fill the form in yourself, or try again in a moment.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('is-loading');
+      btn.textContent = original;
+    }
+  }
+
+  function initPrefillButton() {
+    const btn = document.getElementById('prefill-btn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const input = document.getElementById('location-page-url');
+      runPrefill(input ? input.value : '', btn);
+    });
+  }
+
   function initMinLaunchDate() {
     const el = document.querySelector('[name="target_launch_date"]');
     if (!el) return;
@@ -1248,6 +1481,7 @@
     renderUsers();
     initMinLaunchDate();
     initProgressBar();
+    initPrefillButton();
 
     await initDraftFromUrl();
     updateProgressBar();

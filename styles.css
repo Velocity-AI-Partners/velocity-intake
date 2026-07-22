@@ -978,3 +978,120 @@ label.attestation.field-error {
     width: 100%;
   }
 }
+
+/* AI prefill hero (top of form) — ported from the redesign. The button and the
+   "AI suggested" markers use the success green so AI fills read as suggestions
+   to review, not confirmed data. */
+.prefill-hero {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  margin-bottom: 26px;
+  box-shadow: var(--shadow-sm);
+}
+
+.prefill-hero__kicker {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.prefill-hero__lead {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--text);
+  max-width: 64ch;
+}
+
+.prefill-hero__row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.prefill-hero__input {
+  flex: 1 1 320px;
+  width: auto;
+  margin-top: 0;
+}
+
+.btn-prefill {
+  flex: 0 0 auto;
+  background: var(--success);
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: background 150ms ease, transform 150ms ease;
+  white-space: nowrap;
+}
+
+.btn-prefill:hover:not(:disabled) {
+  background: #0e6841;
+  transform: translateY(-1px);
+}
+
+.btn-prefill:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+/* Spinner shown on the button while the scrape runs (.is-loading). */
+.btn-prefill.is-loading::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+}
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+.prefill-status {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 1em;
+}
+
+.prefill-status.is-loading { color: var(--muted); }
+.prefill-status.is-error { color: var(--error); }
+.prefill-status.is-success {
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* "AI suggested" markers: an inline chip next to a field label, and a section
+   badge next to an h2 (hours). The inline chip clears on the client's first edit. */
+.ai-suggested-chip,
+.ai-suggested-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--success);
+  background: var(--success-soft);
+  border: 1px solid var(--success);
+  border-radius: 999px;
+  padding: 1px 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.ai-suggested-chip { margin: 0 0 0 8px; }
+.ai-suggested-badge { margin-left: 10px; font-size: 12px; font-weight: 600; }
