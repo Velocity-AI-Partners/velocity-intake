@@ -1,0 +1,14 @@
+# Supabase config for the velocity-intake edge functions.
+# Pins per-function JWT verification so `supabase functions deploy` preserves it.
+project_id = "jjckotsrhuxxftwmdlwc"
+
+# Public, anon-callable scrape endpoint (clients call it from the form).
+# Auth is intentionally OFF — the function is read-only, exposes no secrets,
+# and is guarded in-code (http(s)-only + SSRF host block, per-IP rate limit).
+[functions.scrape-location-page]
+verify_jwt = false
+
+# Admin-only provisioning endpoint — keep JWT verification ON (it checks for a
+# user_roles.role = 'admin' inside the function).
+[functions.provision-from-intake]
+verify_jwt = true
