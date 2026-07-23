@@ -759,6 +759,30 @@
     document.getElementById('error-box').hidden = true;
   }
 
+  // Two buttons now trigger the same save -- the one at the foot of the form and
+  // the one in the sticky bar -- so their label and disabled state move together.
+  function draftButtons() {
+    return [
+      document.getElementById('save-draft-btn'),
+      document.getElementById('sticky-save-draft-btn'),
+    ].filter(Boolean);
+  }
+
+  function setDraftButtonState(label, disabled) {
+    draftButtons().forEach((btn) => {
+      btn.textContent = label;
+      btn.disabled = disabled;
+    });
+  }
+
+  function setStickyPanelOpen(open) {
+    const panel = document.getElementById('sticky-draft-panel');
+    const btn = document.getElementById('sticky-save-draft-btn');
+    if (!panel || !btn) return;
+    panel.classList.toggle('is-open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
   function showDraftLink(scroll) {
     if (!draftId) return;
     const banner = document.getElementById('draft-banner');
@@ -766,20 +790,22 @@
     const url = `${window.location.origin}${window.location.pathname}?draft=${draftId}`;
     linkEl.value = url;
     banner.hidden = false;
+    const stickyLink = document.getElementById('sticky-draft-link');
+    if (stickyLink) stickyLink.value = url;
     if (scroll) banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  async function handleSaveDraft() {
+  async function handleSaveDraft(source) {
     hideError();
-    const btn = document.getElementById('save-draft-btn');
-    btn.disabled = true;
-    btn.textContent = 'Saving...';
+    const fromSticky = source === 'sticky';
+    setDraftButtonState('Saving...', true);
     try {
       const logoFile = document.getElementById('logo-input').files[0];
       const payload = buildPayload('draft');
       if (logoFile) {
         if (logoFile.size > 2 * 1024 * 1024) {
           showError('Logo is over 2MB. Please use a smaller image.');
+          setDraftButtonState('Save as draft', false);
           return;
         }
         payload.logo_url = await uploadLogo(logoFile);
@@ -793,15 +819,73 @@
         draftId = newId;
         setDraftIdInUrl(newId);
       }
-      showDraftLink(true);
-      btn.textContent = 'Saved \u2713';
-      setTimeout(() => { btn.textContent = 'Save as draft'; btn.disabled = false; }, 1500);
+      // Reveal the link where the click came from: the sticky panel drops down in
+      // place, while the footer button scrolls to the banner as it always has.
+      showDraftLink(!fromSticky);
+      if (fromSticky) setStickyPanelOpen(true);
+      setDraftButtonState('Saved \u2713', true);
+      setTimeout(() => setDraftButtonState('Save as draft', false), 1500);
     } catch (err) {
       console.error(err);
       showError(`Draft save failed: ${err.message}`);
-      btn.textContent = 'Save as draft';
-      btn.disabled = false;
+      setDraftButtonState('Save as draft', false);
     }
+  }
+
+  // The bar is fixed to the top and always on screen, so the body needs padding
+  // equal to its height or the bar would sit over the header. Measured rather
+  // than hard-coded, so it stays correct if the bar's contents ever change.
+  // Only the bar itself counts -- the drop-down panel is an overlay.
+  function syncStickyOffset() {
+    const bar = document.querySelector('.sticky-draft__bar');
+    const track = document.querySelector('.sticky-draft__track');
+    if (!bar) return;
+    const h = bar.offsetHeight + (track ? track.offsetHeight : 0);
+    document.body.style.paddingTop = h + 'px';
+  }
+
+  function initStickyDraftBar() {
+    const bar = document.getElementById('sticky-draft');
+    const form = document.getElementById('intake-form');
+    if (!bar || !form) return;
+    // initDraftFromUrl() runs before this and hides the form on an
+    // already-submitted link. Bail out rather than float a Save draft button
+    // over a form nobody can edit.
+    if (form.hidden) {
+      bar.hidden = true;
+      return;
+    }
+
+    syncStickyOffset();
+    window.addEventListener('resize', syncStickyOffset);
+
+    document.getElementById('sticky-save-draft-btn')
+      .addEventListener('click', () => handleSaveDraft('sticky'));
+
+    document.getElementById('sticky-copy-link-btn').addEventListener('click', async () => {
+      const linkEl = document.getElementById('sticky-draft-link');
+      const btn = document.getElementById('sticky-copy-link-btn');
+      try {
+        await navigator.clipboard.writeText(linkEl.value);
+        const prev = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = prev; }, 1200);
+      } catch (e) {
+        // clipboard API needs a secure context / permission; fall back to select
+        linkEl.select();
+      }
+    });
+  }
+
+  // Called once the form is gone (submitted, or already-submitted link) -- at
+  // that point there is nothing left to save, so the bar comes off entirely and
+  // the body padding it reserved is released.
+  function disableStickyDraftBar() {
+    const bar = document.getElementById('sticky-draft');
+    if (!bar) return;
+    setStickyPanelOpen(false);
+    bar.hidden = true;
+    document.body.style.paddingTop = '';
   }
 
   function generateUuid() {
@@ -1138,6 +1222,7 @@
       closeSubmitConfirm();
       document.getElementById('intake-form').hidden = true;
       document.getElementById('draft-banner').hidden = true;
+      disableStickyDraftBar();
       document.getElementById('success-screen').hidden = false;
       document.getElementById('success-screen').scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
@@ -1161,6 +1246,7 @@
       if (row.status && row.status !== 'draft') {
         document.getElementById('intake-form').hidden = true;
         document.getElementById('already-submitted').hidden = false;
+        disableStickyDraftBar();
         return false;
       }
       draftId = id;
@@ -1225,6 +1311,10 @@
     if (bar) bar.setAttribute('aria-valuenow', String(pct));
     const text = document.getElementById('progress-text');
     if (text) text.textContent = `${pct}% complete`;
+    const stickyText = document.getElementById('sticky-progress-text');
+    if (stickyText) stickyText.textContent = `${pct}% complete`;
+    const stickyFill = document.getElementById('sticky-progress-fill');
+    if (stickyFill) stickyFill.style.width = pct + '%';
   }
 
   function initProgressBar() {
@@ -1497,7 +1587,8 @@
       if (e.target.name === 'lead_source_other') toggleLeadSourceOther();
     });
     document.getElementById('intake-form').addEventListener('submit', handleSubmit);
-    document.getElementById('save-draft-btn').addEventListener('click', handleSaveDraft);
+    document.getElementById('save-draft-btn').addEventListener('click', () => handleSaveDraft('footer'));
+    initStickyDraftBar();
 
     document.getElementById('modal-cancel').addEventListener('click', closeSubmitConfirm);
     document.getElementById('modal-close').addEventListener('click', closeSubmitConfirm);

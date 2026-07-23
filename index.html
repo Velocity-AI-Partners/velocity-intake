@@ -20,10 +20,37 @@
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-<link rel="stylesheet" href="styles.css?v=16">
+<link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
 <div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
+
+<!-- Sticky save-draft bar. Always on screen at every scroll position so the save
+     action is never out of reach; mirrors #save-draft-btn at the foot of the form. -->
+<div class="sticky-draft" id="sticky-draft">
+  <div class="sticky-draft__bar">
+    <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="sticky-draft__logo">
+    <div class="sticky-draft__meta">
+      <span class="sticky-draft__title">Client Onboarding</span>
+      <span class="sticky-draft__progress" id="sticky-progress-text">0% complete</span>
+    </div>
+    <button type="button" id="sticky-save-draft-btn" class="btn-secondary sticky-draft__btn" aria-expanded="false" aria-controls="sticky-draft-panel">Save as draft</button>
+  </div>
+  <!-- Mirrors #progress-fill. The page's 3px accent bar is invisible against the
+       blue bar, so the same percentage is redrawn here in white. -->
+  <div class="sticky-draft__track"><div class="sticky-draft__track-fill" id="sticky-progress-fill"></div></div>
+  <div class="sticky-draft__panel" id="sticky-draft-panel">
+    <div class="sticky-draft__panel-inner">
+      <div class="draft-banner-title">Draft saved</div>
+      <p class="draft-banner-note">Share this link to continue on any device, or send it to the client to let them finish filling in the rest.</p>
+      <div class="draft-link-row">
+        <input type="text" id="sticky-draft-link" readonly aria-label="Draft link">
+        <button type="button" id="sticky-copy-link-btn" class="btn-secondary">Copy link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <main class="container">
   <header>
     <span class="eyebrow">Velocity AI Partners</span>
@@ -706,6 +733,6 @@
   </div>
 </main>
 
-<script src="form.js?v=21"></script>
+<script src="form.js?v=23"></script>
 </body>
 </html>
