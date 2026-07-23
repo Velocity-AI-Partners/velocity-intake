@@ -1112,7 +1112,11 @@ label.attestation.field-error {
   left: 0;
   right: 0;
   z-index: 110;
-  background: var(--accent);
+  /* Velocity navy. #0f172a is the canonical live-site navy (velocityaipartners.ai);
+     the gentle lift toward #16203f gives the same depth as the navy hero band in
+     the house one-pager template. Deliberately NOT a new hex -- three competing
+     "Velocity blues" have circulated before, so this stays anchored to the site. */
+  background: linear-gradient(100deg, #0b1020 0%, #0f172a 45%, #16203f 100%);
   box-shadow: var(--shadow-md);
 }
 
@@ -1177,7 +1181,7 @@ label.attestation.field-error {
 
 .sticky-draft__track {
   height: 3px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .sticky-draft__track-fill {
