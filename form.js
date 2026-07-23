@@ -777,10 +777,19 @@
 
   function setStickyPanelOpen(open) {
     const panel = document.getElementById('sticky-draft-panel');
-    const btn = document.getElementById('sticky-save-draft-btn');
-    if (!panel || !btn) return;
+    const toggle = document.getElementById('sticky-link-toggle');
+    if (!panel || !toggle) return;
     panel.classList.toggle('is-open', open);
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    const label = open ? 'Hide draft link' : 'Show draft link';
+    toggle.setAttribute('aria-label', label);
+    toggle.title = label;
+  }
+
+  function isStickyPanelOpen() {
+    const panel = document.getElementById('sticky-draft-panel');
+    return !!panel && panel.classList.contains('is-open');
   }
 
   function showDraftLink(scroll) {
@@ -792,6 +801,9 @@
     banner.hidden = false;
     const stickyLink = document.getElementById('sticky-draft-link');
     if (stickyLink) stickyLink.value = url;
+    // There is a link to show now, so the chevron becomes available.
+    const toggle = document.getElementById('sticky-link-toggle');
+    if (toggle) toggle.hidden = false;
     if (scroll) banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -861,6 +873,9 @@
 
     document.getElementById('sticky-save-draft-btn')
       .addEventListener('click', () => handleSaveDraft('sticky'));
+
+    document.getElementById('sticky-link-toggle')
+      .addEventListener('click', () => setStickyPanelOpen(!isStickyPanelOpen()));
 
     document.getElementById('sticky-copy-link-btn').addEventListener('click', async () => {
       const linkEl = document.getElementById('sticky-draft-link');
@@ -995,9 +1010,9 @@
       {
         heading: 'Branding & Messaging',
         items: [
-          ['AI Agent voice', voiceDisplay],
+          ['AI Team Member voice', voiceDisplay],
           ['Voice specifics', dash(fd.get('chatbot_voice_notes'))],
-          ['AI Agent tone', tonesDisplay],
+          ['AI Team Member tone', tonesDisplay],
           ['Tone specifics', dash(fd.get('chatbot_tone_notes'))],
           ['Main CTA', ctaDisplay],
           ['Main CTA details', dash(fd.get('intro_offer'))],
@@ -1056,7 +1071,6 @@
         heading: 'Anything Else?',
         items: [
           ['KPI targets', dash(fd.get('kpi_targets'))],
-          ['Target launch date', dash(fd.get('target_launch_date'))],
           ['Notes', dash(fd.get('notes'))]
         ]
       },
