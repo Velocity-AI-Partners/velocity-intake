@@ -1179,6 +1179,39 @@ label.attestation.field-error {
   cursor: default;
 }
 
+/* Chevron that shows/hides the draft link. Quiet outline treatment so it reads
+   as secondary to Save as draft rather than a second competing action. */
+.sticky-draft__toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--accent-text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.sticky-draft__toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.sticky-draft__toggle svg {
+  display: block;
+  transition: transform 220ms ease;
+}
+
+.sticky-draft__toggle.is-open svg {
+  transform: rotate(180deg);
+}
+
 .sticky-draft__track {
   height: 3px;
   background: rgba(255, 255, 255, 0.14);
