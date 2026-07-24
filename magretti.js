@@ -21,6 +21,7 @@
       address: '1633 Crofton Center, Crofton, MD 21114',
       phone: '(443) 292-4507',
       website: 'https://www.stretchzone.com/locations/crofton-md',
+      gbp: 'https://www.google.com/maps/search/?api=1&query=Stretch%20Zone%201633%20Crofton%20Center%20Crofton%20MD%2021114',
       hours: { mon: ['07:00', '19:00'], tue: ['07:00', '19:00'], wed: ['07:00', '19:00'], thu: ['07:00', '19:00'], fri: ['07:00', '19:00'], sat: ['07:00', '19:00'], sun: ['07:00', '17:00'] }
     },
     {
@@ -28,6 +29,7 @@
       address: '2315 Forest Drive, Unit A, Annapolis, MD 21401',
       phone: '(443) 458-5171',
       website: 'https://www.stretchzone.com/locations/annapolis-md',
+      gbp: 'https://www.google.com/maps/search/?api=1&query=Stretch%20Zone%202315%20Forest%20Drive%20Annapolis%20MD%2021401',
       hours: { mon: ['07:00', '19:00'], tue: ['07:00', '19:00'], wed: ['07:00', '19:00'], thu: ['07:00', '19:00'], fri: ['07:00', '19:00'], sat: ['07:00', '19:00'], sun: ['07:00', '17:00'] }
     },
     {
@@ -35,6 +37,7 @@
       address: '550 Governor Ritchie Highway, Unit M, Severna Park, MD 21146',
       phone: '(240) 749-8269',
       website: 'https://www.stretchzone.com/locations/severna-park-md',
+      gbp: 'https://www.google.com/maps/search/?api=1&query=Stretch%20Zone%20550%20Governor%20Ritchie%20Highway%20Severna%20Park%20MD%2021146',
       hours: { mon: ['08:00', '20:00'], tue: ['08:00', '20:00'], wed: ['08:00', '20:00'], thu: ['08:00', '20:00'], fri: ['08:00', '20:00'], sat: ['09:00', '17:00'], sun: ['10:00', '14:00'] }
     }
   ];
@@ -91,8 +94,9 @@
         <input type="text" name="loc${i}_crm_store_id" placeholder="e.g. 12345">
       </label>
       <label>
-        Google Business Profile URL
-        <input type="url" name="loc${i}_google_business_profile_url" placeholder="https://g.page/...">
+        Google Business Profile URL ${knownChip('Google Maps link')}
+        <input type="url" name="loc${i}_google_business_profile_url" value="${loc.gbp}" data-known>
+        <small>This opens your studio on Google Maps. If you have your own g.page link, paste it here instead.</small>
       </label>
       <h3 class="mg-hours-title">Business Hours ${knownChip('From stretchzone.com')}</h3>
       <div class="hours-grid" id="hours-grid-${i}">${hoursGridHTML(i, loc)}</div>
@@ -144,7 +148,7 @@
     });
 
     addUser('Joe Magretti', 'jmagretti@yahoo.com', 'all');
-    addUser('Devon Magretti', '', 'all');
+    addUser('Devon Magretti', 'devonmagretti@yahoo.com', 'all');
     LOCATIONS.forEach((_, i) => addUser('', '', `loc${i}`));
 
     document.getElementById('users-list').addEventListener('click', (e) => {
@@ -162,6 +166,28 @@
       const input = lab.querySelector('input, textarea');
       if (chip && input) input.addEventListener('input', () => chip.remove(), { once: true });
     });
+  }
+
+  /* --------------------------- edit tracking ----------------------------- */
+
+  // Snapshot of the form exactly as we pre-filled it. Diffed at submit so the
+  // submission records which fields the client changed.
+  let prefillSnapshot = {};
+
+  function formState() {
+    const fd = new FormData(document.getElementById('intake-form'));
+    const state = {};
+    for (const [k, v] of fd.entries()) {
+      if (k === 'honeypot' || typeof v !== 'string') continue;
+      state[k] = k in state ? state[k] + ',' + v : v;
+    }
+    return state;
+  }
+
+  function changedFieldNames() {
+    const now = formState();
+    const keys = new Set([...Object.keys(prefillSnapshot), ...Object.keys(now)]);
+    return [...keys].filter(k => (prefillSnapshot[k] || '') !== (now[k] || ''));
   }
 
   /* ------------------------------ autosave ------------------------------- */
@@ -309,12 +335,20 @@
       user_agent: navigator.userAgent
     };
 
+    const changed = changedFieldNames();
+    const sharedChanged = changed.filter(k => !/^loc\d+_/.test(k));
+
     return LOCATIONS.map((loc, i) => {
       const locNotes = (fd.get(`loc${i}_notes`) || '').trim();
+      const locChanged = changed
+        .filter(k => k.startsWith(`loc${i}_`))
+        .map(k => k.replace(`loc${i}_`, ''));
       const noteParts = [
-        `Magretti multi-location intake (${i + 1} of ${LOCATIONS.length}). Primary contact: ${contactName || 'Joe Magretti'}.`,
+        `Magretti multi-location intake (${i + 1} of ${LOCATIONS.length}). Primary contact: ${contactName || 'Devon Magretti'}.`,
         locNotes && `Studio notes: ${locNotes}`,
-        sharedNotes && `Shared notes: ${sharedNotes}`
+        sharedNotes && `Shared notes: ${sharedNotes}`,
+        sharedChanged.length && `Client updated (shared): ${sharedChanged.join(', ')}`,
+        locChanged.length && `Client updated (this studio): ${locChanged.join(', ')}`
       ].filter(Boolean);
       return Object.assign({}, shared, {
         id: crypto.randomUUID(),
@@ -456,6 +490,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     renderAll();
+    prefillSnapshot = formState();
     restoreDraft();
 
     if (PREVIEW) document.getElementById('preview-banner').hidden = false;
