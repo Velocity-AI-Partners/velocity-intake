@@ -412,6 +412,48 @@
     }
   }
 
+  /* ------------------------------ progress ------------------------------- */
+
+  function computeProgress() {
+    const fd = new FormData(document.getElementById('intake-form'));
+    const val = (n) => (fd.get(n) || '').trim();
+    const checks = [
+      !!val('contact_name'),
+      EMAIL_RX.test(val('contact_email')),
+      !!val('contact_phone'),
+      fd.get('crm_account_confirmed') === 'on',
+      !!val('chatbot_voice'),
+      TONES.some(t => fd.get(`tone_${t}`) === 'on'),
+      !!val('main_cta'),
+      !!val('intro_offer'),
+      !!val('bk_service_description'),
+      !!(val('bk_single_session_rate') || val('bk_membership_pricing')),
+      collectUsers().some(u => u.name && u.email && EMAIL_RX.test(u.email))
+    ];
+    LOCATIONS.forEach((_, i) => {
+      checks.push(!!(val(`loc${i}_business_name`) && val(`loc${i}_address`) && val(`loc${i}_city`)));
+      checks.push(!!val(`loc${i}_crm_store_id`));
+      checks.push(fd.get(`loc${i}_hours_confirmed`) === 'on');
+    });
+    return { filled: checks.filter(Boolean).length, total: checks.length };
+  }
+
+  function updateProgressBar() {
+    const { filled, total } = computeProgress();
+    const pct = Math.round((filled / total) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.querySelector('.progress-bar').setAttribute('aria-valuenow', pct);
+    document.getElementById('sticky-progress-fill').style.width = pct + '%';
+    document.getElementById('sticky-progress-text').textContent = pct + '% complete';
+  }
+
+  function syncStickyOffset() {
+    const bar = document.querySelector('.sticky-draft__bar');
+    const track = document.querySelector('.sticky-draft__track');
+    if (!bar) return;
+    document.body.style.paddingTop = (bar.offsetHeight + (track ? track.offsetHeight : 0)) + 'px';
+  }
+
   /* ------------------------------ init ----------------------------------- */
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -420,8 +462,13 @@
 
     if (PREVIEW) document.getElementById('preview-banner').hidden = false;
 
-    document.getElementById('intake-form').addEventListener('input', saveDraftSoon);
-    document.getElementById('intake-form').addEventListener('change', saveDraftSoon);
+    syncStickyOffset();
+    updateProgressBar();
+    window.addEventListener('resize', syncStickyOffset);
+
+    const onEdit = () => { saveDraftSoon(); updateProgressBar(); };
+    document.getElementById('intake-form').addEventListener('input', onEdit);
+    document.getElementById('intake-form').addEventListener('change', onEdit);
 
     // Two-click guard instead of a confirm() dialog: first click arms, second clears.
     const startOver = document.getElementById('start-over');

@@ -10,15 +10,30 @@
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <link rel="stylesheet" href="styles.css?v=23">
-<link rel="stylesheet" href="magretti.css?v=1">
+<link rel="stylesheet" href="magretti.css?v=2">
 </head>
 <body>
+<div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
+
+<!-- Same navy top bar as the main form; the save button is replaced by the
+     autosave note since this variant saves locally on every change. -->
+<div class="sticky-draft" id="sticky-draft">
+  <div class="sticky-draft__bar">
+    <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="sticky-draft__logo">
+    <div class="sticky-draft__meta">
+      <span class="sticky-draft__title">Client Onboarding</span>
+      <span class="sticky-draft__progress" id="sticky-progress-text">0% complete</span>
+    </div>
+    <span class="mg-autosave-note">Saves automatically</span>
+  </div>
+  <div class="sticky-draft__track"><div class="sticky-draft__track-fill" id="sticky-progress-fill"></div></div>
+</div>
 
 <div class="mg-preview-banner" id="preview-banner" hidden>
   Preview mode — submissions are disabled on localhost. Nothing will be sent.
 </div>
 
-<main class="wrap">
+<main class="container">
   <header>
     <h1>Welcome, Joe &amp; Devon</h1>
     <p class="lead">This onboarding form was prepared just for your three Stretch Zone studios — <strong>Crofton</strong>, <strong>Annapolis</strong>, and <strong>Severna Park</strong>. We pre-filled everything we already know from your agreement and your stretchzone.com pages, so most sections only need a quick review. Answer the shared questions once; anything studio-specific has its own card below.</p>
@@ -60,7 +75,7 @@
     <section>
       <h2>CRM Access <span class="mg-known-chip">ClubReady — on file</span></h2>
       <div class="trust-banner">
-        Your agreement lists <strong>ClubReady</strong> as your booking &amp; CRM system. We need an admin-level account in each studio's ClubReady store. We use it to set up automations, configure API access, and sync members and bookings. Credentials are stored securely and only the Velocity team sees them.
+        <span>Your agreement lists <strong>ClubReady</strong> as your booking &amp; CRM system. We need an admin-level account in each studio's ClubReady store. We use it to set up automations, configure API access, and sync members and bookings. Credentials are stored securely and only the Velocity team sees them.</span>
       </div>
       <label>
         CRM Platform
@@ -266,6 +281,6 @@
   </footer>
 </main>
 
-<script src="magretti.js?v=1"></script>
+<script src="magretti.js?v=2"></script>
 </body>
 </html>

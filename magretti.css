@@ -1,9 +1,12 @@
 /* Magretti Stretch Zone variant — thin layer on top of styles.css.
    Location cards, "on file" chips, preview banner, and confirm step. */
 
+/* Bottom-fixed so it never collides with the navy top bar */
 .mg-preview-banner {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 150;
   background: #7a5c00;
   color: #fff;
@@ -11,6 +14,14 @@
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
+}
+
+.mg-autosave-note {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
 }
 
 .mg-section-note {
