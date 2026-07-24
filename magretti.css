@@ -1,0 +1,127 @@
+/* Magretti Stretch Zone variant — thin layer on top of styles.css.
+   Location cards, "on file" chips, preview banner, and confirm step. */
+
+/* Bottom-fixed so it never collides with the navy top bar */
+.mg-preview-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: #7a5c00;
+  color: #fff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.mg-autosave-note {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
+.mg-section-note {
+  font-size: 13px;
+  color: var(--text-secondary, #9a9a9a);
+  margin: -4px 0 16px;
+}
+
+/* Chips: what we already know, and what applies to all three studios */
+.mg-known-chip,
+.mg-shared-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-left: 10px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.mg-known-chip {
+  color: var(--success, #4ade80);
+  background: var(--success-soft, rgba(74, 222, 128, 0.12));
+  border: 1px solid var(--success, #4ade80);
+}
+
+.mg-shared-chip {
+  color: var(--text-secondary, #9a9a9a);
+  background: transparent;
+  border: 1px solid var(--border, #333);
+}
+
+.mg-source-chip { font-weight: 600; }
+
+.mg-loc-card {
+  border: 1px solid var(--border, #333);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.mg-loc-num {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #9a9a9a);
+  margin-left: 10px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.mg-hours-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 12px;
+}
+
+.mg-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.mg-error {
+  border: 1px solid #b91c1c;
+  background: rgba(185, 28, 28, 0.12);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.mg-confirm {
+  border: 1px solid var(--border, #333);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 20px;
+}
+
+/* User rows gain an access dropdown, so widen the grid the main form defines.
+   The dropdown column gets a floor so studio names never truncate. */
+#users-list .mg-user-row {
+  grid-template-columns: 1fr 1.2fr minmax(210px, 0.9fr) auto;
+}
+
+#users-list .mg-user-row select {
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  #users-list .mg-user-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .mg-loc-card { padding: 16px; }
+  .mg-actions { justify-content: stretch; }
+  .mg-actions button { flex: 1; }
+}
