@@ -96,10 +96,6 @@
         <input type="text" name="assistant_name" placeholder="e.g. Ashley, the name your AI Team Member uses">
         <small>Our other Stretch Zone studios use "Ashley".</small>
       </label>
-      <label>
-        Message Sign-off Name
-        <input type="text" name="sign_off_name" placeholder="e.g. Ashley or The Stretch Zone Team">
-      </label>
       <fieldset class="pill-group">
         <legend>Who should the AI sound like?</legend>
         <label class="pill"><input type="radio" name="chatbot_voice" value="team"> Team</label>
@@ -176,6 +172,13 @@
         Words / claims to avoid <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
         <textarea name="avoid_words" rows="3">No medical claims: never promise to cure, treat, or diagnose any condition. Don't call it massage, chiropractic, or physical therapy. No guaranteed results.</textarea>
       </label>
+      <fieldset class="pill-group">
+        <legend>When should the AI hand off to a human? (pick any)</legend>
+        <label class="pill"><input type="checkbox" name="handoff_never"> Never (AI handles everything)</label>
+        <label class="pill"><input type="checkbox" name="handoff_on_request"> Only on request</label>
+        <label class="pill"><input type="checkbox" name="handoff_business_hours_request"> During studio hours, on request</label>
+        <label class="pill"><input type="checkbox" name="handoff_complex"> When conversation gets complex</label>
+      </fieldset>
     </section>
 
     <section>
@@ -220,38 +223,6 @@ Basic Bi-Weekly (2x/month): $119/month</textarea>
         Common questions leads ask (and your answers)
         <textarea name="bk_faq" rows="3" placeholder="Q: Does it hurt? A: ..."></textarea>
       </label>
-    </section>
-
-    <section>
-      <h2>What should the AI focus on? <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
-      <fieldset class="pill-group">
-        <legend>Automation goals (pick any)</legend>
-        <label class="pill"><input type="checkbox" name="goal_book_demos"> Book demos / trials</label>
-        <label class="pill"><input type="checkbox" name="goal_answer_faqs"> Answer FAQs</label>
-        <label class="pill"><input type="checkbox" name="goal_followup_leads"> Follow up with new leads</label>
-        <label class="pill"><input type="checkbox" name="goal_reactivate_old"> Reactivate old members</label>
-        <label class="pill"><input type="checkbox" name="goal_upsell"> Upsell memberships</label>
-        <label class="pill"><input type="checkbox" name="goal_provide_directions"> Provide directions</label>
-      </fieldset>
-      <fieldset class="pill-group">
-        <legend>Reactivation: who should we reach back out to?</legend>
-        <label class="pill"><input type="checkbox" name="react_no_shows"> Demo / trial no-shows</label>
-        <label class="pill"><input type="checkbox" name="react_cooled_leads"> Cooled leads</label>
-        <label class="pill"><input type="checkbox" name="react_expired_members"> Expired memberships</label>
-        <label class="pill"><input type="checkbox" name="react_paused"> Paused / frozen accounts</label>
-        <label class="pill"><input type="checkbox" name="react_lost_sheep"> Long-term inactive</label>
-      </fieldset>
-      <label>
-        Reactivation offer <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
-        <textarea name="reactivation_offer" rows="2">10% off the first month when a previously cancelled member returns and rejoins</textarea>
-      </label>
-      <fieldset class="pill-group">
-        <legend>When should the AI hand off to a human?</legend>
-        <label class="pill"><input type="radio" name="handoff_rule" value="never"> Never (AI handles everything)</label>
-        <label class="pill"><input type="radio" name="handoff_rule" value="on_request"> Only on request</label>
-        <label class="pill"><input type="radio" name="handoff_rule" value="business_hours_request"> During studio hours, on request</label>
-        <label class="pill"><input type="radio" name="handoff_rule" value="complex"> When conversation gets complex</label>
-      </fieldset>
     </section>
 
     <section>
@@ -302,6 +273,6 @@ Basic Bi-Weekly (2x/month): $119/month</textarea>
   </footer>
 </main>
 
-<script src="magretti.js?v=6"></script>
+<script src="magretti.js?v=7"></script>
 </body>
 </html>

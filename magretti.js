@@ -45,6 +45,7 @@
   const TONES = ['friendly', 'professional', 'motivational', 'humorous', 'upbeat'];
   const AUTOMATION_GOALS = ['book_demos', 'answer_faqs', 'followup_leads', 'reactivate_old', 'upsell', 'provide_directions'];
   const REACTIVATION_SEGMENTS = ['no_shows', 'cooled_leads', 'expired_members', 'paused', 'lost_sheep'];
+  const HANDOFF_RULES = ['never', 'on_request', 'business_hours_request', 'complex'];
   const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   let userCounter = 0;
@@ -287,6 +288,7 @@
       chatbot_tone_notes: null,
       main_cta: fd.get('main_cta') || null,
       main_cta_other: null,
+      assistant_name: fd.get('assistant_name') || null,
       intro_offer: fd.get('intro_offer') || null,
       preferred_words: fd.get('preferred_words') || null,
       avoid_words: fd.get('avoid_words') || null,
@@ -310,14 +312,20 @@
         accepts_hsa_fsa: null,
         insurance_notes: null
       },
+      // Per George: the AI focuses on all of it, so the section was removed
+      // from the form and every goal and reactivation segment is enrolled.
+      // The win-back offer is the standard Stretch Zone one he approved.
       automation_goals: {
-        goals: AUTOMATION_GOALS.filter(g => fd.get(`goal_${g}`) === 'on'),
+        goals: AUTOMATION_GOALS.slice(),
         other_text: null,
-        reactivation_segments: REACTIVATION_SEGMENTS.filter(s => fd.get(`react_${s}`) === 'on'),
+        reactivation_segments: REACTIVATION_SEGMENTS.slice(),
         reactivation_segments_other: null,
-        reactivation_offer: fd.get('reactivation_offer') || null
+        reactivation_offer: '10% off the first month when a previously cancelled member returns and rejoins'
       },
-      handoff_config: { rule: fd.get('handoff_rule') || null, rule_other: null },
+      handoff_config: {
+        rule: HANDOFF_RULES.filter(r => fd.get(`handoff_${r}`) === 'on').join(', ') || null,
+        rule_other: null
+      },
       notification_config: {
         channels: ['email', 'sms'].filter(c => fd.get(`notify_${c}`) === 'on')
       },
