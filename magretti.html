@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Velocity AI Partners — Magretti Stretch Zone Onboarding</title>
+<title>Velocity AI Partners | Magretti Stretch Zone Onboarding</title>
 <meta name="description" content="Onboarding for Stretch Zone Crofton, Annapolis, and Severna Park.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
@@ -30,13 +30,13 @@
 </div>
 
 <div class="mg-preview-banner" id="preview-banner" hidden>
-  Preview mode — submissions are disabled on localhost. Nothing will be sent.
+  Preview mode: submissions are disabled on localhost. Nothing will be sent.
 </div>
 
 <main class="container">
   <header>
     <h1>Welcome, Joe &amp; Devon</h1>
-    <p class="lead">This onboarding form was prepared just for your three Stretch Zone studios — <strong>Crofton</strong>, <strong>Annapolis</strong>, and <strong>Severna Park</strong>. We pre-filled everything we already know from your agreement and your stretchzone.com pages, so most sections only need a quick review. Answer the shared questions once; anything studio-specific has its own card below.</p>
+    <p class="lead">This onboarding form was prepared just for your three Stretch Zone studios: <strong>Crofton</strong>, <strong>Annapolis</strong>, and <strong>Severna Park</strong>. We filled in what we already know so most sections only need a quick review. Answer the shared questions once; anything studio-specific has its own card below.</p>
     <div class="meta-row">
       <span>~10 minutes</span>
       <span>Answers save automatically on this device</span>
@@ -52,10 +52,10 @@
 
     <section>
       <h2>Your Contact Info</h2>
-      <p class="mg-section-note">Who we should reach during setup. Pre-filled from our records — correct anything that's off.</p>
+      <p class="mg-section-note">Who we should reach during setup.</p>
       <label>
         Primary Contact Name <span class="req" aria-hidden="true">*</span>
-        <input type="text" name="contact_name" value="Joe Magretti" data-known>
+        <input type="text" name="contact_name" value="Devon Magretti" data-known>
       </label>
       <label>
         Contact Email <span class="req" aria-hidden="true">*</span>
@@ -73,26 +73,14 @@
     </section>
 
     <section>
-      <h2>CRM Access <span class="mg-known-chip">ClubReady — on file</span></h2>
+      <h2>CRM Access</h2>
       <div class="trust-banner">
-        <span>Your agreement lists <strong>ClubReady</strong> as your booking &amp; CRM system. We need an admin-level account in each studio's ClubReady store. We use it to set up automations, configure API access, and sync members and bookings. Credentials are stored securely and only the Velocity team sees them.</span>
+        <span>We need an admin-level account for each studio's ClubReady. We use it to set up automations, configure API access, and sync members and bookings. Credentials are stored securely and only the Velocity team sees them.</span>
       </div>
-      <label>
-        CRM Platform
-        <select name="crm_platform">
-          <option value="clubready" selected>ClubReady</option>
-          <option value="wellnessliving">WellnessLiving</option>
-          <option value="spark">Spark Membership</option>
-          <option value="mindbody">Mindbody</option>
-          <option value="arketa">Arketa</option>
-          <option value="other">Other (tell us in notes)</option>
-        </select>
-        <small>Change this only if ClubReady is wrong — it applies to all three studios.</small>
-      </label>
       <label>
         Email Address
         <input type="email" value="admin@velocityaipartners.ai" readonly tabindex="-1" aria-readonly="true">
-        <small>Create the admin account in ClubReady under <strong>admin@velocityaipartners.ai</strong> for each studio.</small>
+        <small>Create the admin account in each studio's ClubReady under <strong>admin@velocityaipartners.ai</strong>.</small>
       </label>
       <label class="attestation">
         <input type="checkbox" name="crm_account_confirmed" required>
@@ -105,7 +93,7 @@
       <h2>Branding &amp; Messaging <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
       <label>
         AI Assistant Name
-        <input type="text" name="assistant_name" placeholder="e.g. Riley, Alex — the name your AI Team Member uses">
+        <input type="text" name="assistant_name" placeholder="e.g. Riley or Alex, the name your AI Team Member uses">
       </label>
       <label>
         Message Sign-off Name
@@ -116,8 +104,27 @@
         <label class="pill"><input type="radio" name="chatbot_voice" value="team"> Team</label>
         <label class="pill"><input type="radio" name="chatbot_voice" value="owner"> Owner</label>
         <label class="pill"><input type="radio" name="chatbot_voice" value="brand"> Brand persona</label>
-        <label class="pill"><input type="radio" name="chatbot_voice" value="unsure"> Unsure — advise</label>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="unsure"> Unsure (recommend what works)</label>
       </fieldset>
+      <details class="examples-block">
+        <summary>See example messages</summary>
+        <div class="example-item">
+          <span class="example-tag">Team</span>
+          <p>"Hey! Thanks for reaching out. We'd love to have you in for a free demo. What day works best?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Owner</span>
+          <p>"Hi, it's Devon, the studio owner! I'd love to get you in for a free demo. What day works?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Brand persona</span>
+          <p>"Hi! I'm Morgan from the studio. We'd love to have you in for a free demo. What day works?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Unsure</span>
+          <p>We'll recommend a voice based on similar studios. Team and Brand persona usually perform best.</p>
+        </div>
+      </details>
       <fieldset class="pill-group">
         <legend>Tone (pick any)</legend>
         <label class="pill"><input type="checkbox" name="tone_friendly"> Friendly</label>
@@ -126,6 +133,29 @@
         <label class="pill"><input type="checkbox" name="tone_humorous"> Humorous</label>
         <label class="pill"><input type="checkbox" name="tone_upbeat"> Upbeat</label>
       </fieldset>
+      <details class="examples-block">
+        <summary>See example messages</summary>
+        <div class="example-item">
+          <span class="example-tag">Friendly</span>
+          <p>"Hi! So glad you're interested. The demo stretch is free and takes about 30 minutes. What day works?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Professional</span>
+          <p>"Thank you for reaching out. Our complimentary 30-minute demo stretch is a great introduction. Which day suits your schedule?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Motivational</span>
+          <p>"Love that you're prioritizing mobility! A free demo stretch is the perfect first step. Let's get you booked."</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Humorous</span>
+          <p>"Your hamstrings called. They want a truce. Free demo stretch, no commitment. What day?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Upbeat</span>
+          <p>"Hi! Super excited you're interested. Free demo stretch is the best way to start. What day works?"</p>
+        </div>
+      </details>
       <fieldset class="pill-group">
         <legend>Main call to action for new leads</legend>
         <label class="pill"><input type="radio" name="main_cta" value="book_demo"> Book a free demo</label>
@@ -221,7 +251,7 @@
       </label>
       <fieldset class="pill-group">
         <legend>When should the AI hand off to a human?</legend>
-        <label class="pill"><input type="radio" name="handoff_rule" value="never"> Never — AI handles everything</label>
+        <label class="pill"><input type="radio" name="handoff_rule" value="never"> Never (AI handles everything)</label>
         <label class="pill"><input type="radio" name="handoff_rule" value="on_request"> Only on request</label>
         <label class="pill"><input type="radio" name="handoff_rule" value="business_hours_request"> During studio hours, on request</label>
         <label class="pill"><input type="radio" name="handoff_rule" value="complex"> When conversation gets complex</label>
@@ -230,7 +260,7 @@
 
     <section>
       <h2>Dashboard Users <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
-      <p class="mg-section-note">Who should have access to the Velocity dashboard? We added you both — fill in Devon's email and add any managers.</p>
+      <p class="mg-section-note">Who should have access to the Velocity dashboard? We added you both. Fill in Devon's email and add any managers.</p>
       <div id="users-list"></div>
       <button type="button" id="add-user" class="btn-secondary">+ Add another user</button>
     </section>
@@ -243,11 +273,6 @@
       <label>
         Target Launch Date
         <input type="date" name="target_launch_date">
-      </label>
-      <label>
-        Studio Logo (optional)
-        <input type="file" id="logo-input" accept="image/*">
-        <small>PNG or JPG under 2MB. Used across all three studios.</small>
       </label>
       <label>
         Anything else we should know?
@@ -263,7 +288,7 @@
     </div>
 
     <div class="mg-confirm" id="confirm-box" hidden>
-      <p><strong>Ready to send?</strong> This submits onboarding for all three studios — Crofton, Annapolis, and Severna Park — to the Velocity team.</p>
+      <p><strong>Ready to send?</strong> This submits onboarding for all three studios (Crofton, Annapolis, and Severna Park) to the Velocity team.</p>
       <div class="mg-actions">
         <button type="button" id="confirm-cancel" class="btn-secondary">Keep editing</button>
         <button type="button" id="confirm-submit" class="btn-primary">Confirm &amp; submit all 3 studios</button>
@@ -272,15 +297,15 @@
   </form>
 
   <div id="success-screen" class="success-screen" hidden>
-    <h2>All set — thank you!</h2>
+    <h2>All set. Thank you!</h2>
     <p>We received onboarding details for all three studios. The Velocity team will review everything and reach out at the contact info you provided to schedule activation. A confirmation email is on its way.</p>
   </div>
 
   <footer>
-    <p>Questions? Email <a href="mailto:admin@velocityaipartners.ai">admin@velocityaipartners.ai</a></p>
+    <p>Questions? Email <a href="mailto:bill@velocityaipartners.ai">bill@velocityaipartners.ai</a></p>
   </footer>
 </main>
 
-<script src="magretti.js?v=2"></script>
+<script src="magretti.js?v=3"></script>
 </body>
 </html>

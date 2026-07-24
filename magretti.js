@@ -102,7 +102,7 @@
       </label>
       <label>
         Anything specific to this studio?
-        <textarea name="loc${i}_notes" rows="2" placeholder="Different pricing, staffing notes, promos — anything unique to ${loc.city}"></textarea>
+        <textarea name="loc${i}_notes" rows="2" placeholder="Different pricing, staffing notes, promos, anything unique to ${loc.city}"></textarea>
       </label>
     </section>`;
   }
@@ -233,7 +233,7 @@
       timezone: 'America/New_York',
       contact_email: fd.get('contact_email') || null,
       contact_phone: fd.get('contact_phone') || null,
-      crm_platform: fd.get('crm_platform') || null,
+      crm_platform: 'clubready',
       crm_platform_other: null,
       crm_account_confirmed: fd.get('crm_account_confirmed') === 'on',
       chatbot_voice: fd.get('chatbot_voice') || null,
@@ -310,7 +310,7 @@
         crm_store_id: fd.get(`loc${i}_crm_store_id`) || null,
         hours: collectHours(fd, i),
         hours_confirmed: fd.get(`loc${i}_hours_confirmed`) === 'on',
-        notes: noteParts.join(' — ')
+        notes: noteParts.join(' | ')
       });
     });
   }
@@ -342,21 +342,6 @@
     return problems;
   }
 
-  async function uploadLogo(file) {
-    const path = `magretti-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
-    const resp = await fetch(`${SUPABASE_URL}/storage/v1/object/intake-logos/${path}`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': file.type || 'application/octet-stream'
-      },
-      body: file
-    });
-    if (!resp.ok) throw new Error(`Logo upload failed: ${resp.status}`);
-    return `${SUPABASE_URL}/storage/v1/object/public/intake-logos/${path}`;
-  }
-
   async function insertRow(payload) {
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
       method: 'POST',
@@ -374,7 +359,7 @@
   function showSuccess() {
     document.getElementById('intake-form').hidden = true;
     const s = document.getElementById('success-screen');
-    if (PREVIEW) s.querySelector('p').textContent = 'Preview mode — nothing was actually sent. On the live link this submits all three studios to the Velocity team.';
+    if (PREVIEW) s.querySelector('p').textContent = 'Preview mode: nothing was actually sent. On the live link this submits all three studios to the Velocity team.';
     s.hidden = false;
     s.scrollIntoView({ behavior: 'smooth' });
     try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
@@ -388,12 +373,6 @@
     try {
       if (PREVIEW) { showSuccess(); return; }
       const payloads = buildPayloads();
-      const logoFile = document.getElementById('logo-input').files[0];
-      if (logoFile) {
-        if (logoFile.size > 2 * 1024 * 1024) throw new Error('Logo is over 2MB. Please use a smaller image.');
-        const url = await uploadLogo(logoFile);
-        payloads.forEach(p => { p.logo_url = url; });
-      }
       for (const p of payloads) await insertRow(p);
       // One receipt email, not three — the n8n workflow re-reads the row and
       // emails contact_email, which is the same on every row.
@@ -406,7 +385,7 @@
       showSuccess();
     } catch (err) {
       console.error(err);
-      showError(`Something went wrong: ${err.message}. Try again, or email admin@velocityaipartners.ai.`);
+      showError(`Something went wrong: ${err.message}. Try again, or email bill@velocityaipartners.ai.`);
       btn.disabled = false;
       btn.textContent = 'Confirm & submit all 3 studios';
     }
@@ -487,7 +466,7 @@
       e.preventDefault();
       const problems = validate();
       if (problems.length) {
-        showError(`Almost there — we still need: ${problems.join('; ')}.`);
+        showError(`Almost there. We still need: ${problems.join('; ')}.`);
         return;
       }
       hideError();
