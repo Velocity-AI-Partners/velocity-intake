@@ -109,7 +109,7 @@
 
   function accessOptionsHTML(selected) {
     const opts = [['all', 'All studios']]
-      .concat(LOCATIONS.map((loc, i) => [`loc${i}`, loc.name]));
+      .concat(LOCATIONS.map((loc, i) => [`loc${i}`, `${loc.city} only`]));
     return opts.map(([v, label]) =>
       `<option value="${v}"${v === selected ? ' selected' : ''}>${label}</option>`).join('');
   }
@@ -276,8 +276,8 @@
         pain_points: null,
         lead_sources: [],
         lead_sources_other: null,
-        unique_value: fd.get('bk_unique_value') || null,
-        first_visit: fd.get('bk_first_visit') || null,
+        unique_value: null,
+        first_visit: null,
         faq: fd.get('bk_faq') || null,
         testimonials: null,
         accepts_insurance: null,

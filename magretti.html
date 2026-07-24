@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <link rel="stylesheet" href="styles.css?v=23">
-<link rel="stylesheet" href="magretti.css?v=3">
+<link rel="stylesheet" href="magretti.css?v=4">
 </head>
 <body>
 <div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
@@ -92,7 +92,7 @@
     <section>
       <h2>Branding &amp; Messaging <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
       <label>
-        AI Assistant Name
+        AI Team Member Name
         <input type="text" name="assistant_name" placeholder="e.g. Ashley, the name your AI Team Member uses">
         <small>Our other Stretch Zone studios use "Ashley".</small>
       </label>
@@ -159,7 +159,7 @@
       </details>
       <fieldset class="pill-group">
         <legend>Main call to action for new leads</legend>
-        <label class="pill"><input type="radio" name="main_cta" value="book_demo"> Book a free demo</label>
+        <label class="pill"><input type="radio" name="main_cta" value="book_demo" checked> Book a free demo</label>
         <label class="pill"><input type="radio" name="main_cta" value="schedule_call"> Schedule a call</label>
         <label class="pill"><input type="radio" name="main_cta" value="start_trial"> Start free trial</label>
         <label class="pill"><input type="radio" name="main_cta" value="buy_membership"> Buy a membership</label>
@@ -173,8 +173,8 @@
         <textarea name="preferred_words" rows="2" placeholder="e.g. practitioner, table-based stretching"></textarea>
       </label>
       <label>
-        Words / claims to avoid
-        <textarea name="avoid_words" rows="2" placeholder="e.g. no medical claims, don't say 'massage'"></textarea>
+        Words / claims to avoid <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
+        <textarea name="avoid_words" rows="3">No medical claims: never promise to cure, treat, or diagnose any condition. Don't call it massage, chiropractic, or physical therapy. No guaranteed results.</textarea>
       </label>
     </section>
 
@@ -215,14 +215,6 @@ Basic Bi-Weekly (2x/month): $119/month</textarea>
       <label>
         Ideal Client
         <textarea name="bk_ideal_client" rows="2" placeholder="e.g. Active adults 35–65 with mobility goals"></textarea>
-      </label>
-      <label>
-        What makes your studios different?
-        <textarea name="bk_unique_value" rows="2" placeholder="Your pitch in a sentence or two"></textarea>
-      </label>
-      <label>
-        What happens on a first visit?
-        <textarea name="bk_first_visit" rows="2" placeholder="Walk a new guest through their first appointment"></textarea>
       </label>
       <label>
         Common questions leads ask (and your answers)
@@ -310,6 +302,6 @@ Basic Bi-Weekly (2x/month): $119/month</textarea>
   </footer>
 </main>
 
-<script src="magretti.js?v=4"></script>
+<script src="magretti.js?v=5"></script>
 </body>
 </html>
