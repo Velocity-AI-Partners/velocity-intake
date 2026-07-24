@@ -105,7 +105,16 @@
   margin-top: 20px;
 }
 
+/* User rows gain an access dropdown, so widen the grid the main form defines */
+#users-list .mg-user-row {
+  grid-template-columns: 1.2fr 1.4fr 1fr auto;
+}
+
 @media (max-width: 640px) {
+  #users-list .mg-user-row {
+    grid-template-columns: 1fr auto;
+  }
+
   .mg-loc-card { padding: 16px; }
   .mg-actions { justify-content: stretch; }
   .mg-actions button { flex: 1; }

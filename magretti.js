@@ -107,18 +107,26 @@
     </section>`;
   }
 
-  function userRowHTML(i, name, email) {
+  function accessOptionsHTML(selected) {
+    const opts = [['all', 'All studios']]
+      .concat(LOCATIONS.map((loc, i) => [`loc${i}`, loc.name]));
+    return opts.map(([v, label]) =>
+      `<option value="${v}"${v === selected ? ' selected' : ''}>${label}</option>`).join('');
+  }
+
+  function userRowHTML(i, name, email, access) {
     return `
-      <div class="user-row" data-i="${i}">
-        <div class="input-with-req"><input type="text" name="user_${i}_name" placeholder="Name" value="${name || ''}"></div>
+      <div class="user-row mg-user-row" data-i="${i}">
+        <div class="input-with-req"><input type="text" name="user_${i}_name" placeholder="Name (owner, GM, or studio account)" value="${name || ''}"></div>
         <div class="input-with-req"><input type="email" name="user_${i}_email" placeholder="Email" value="${email || ''}"></div>
+        <select name="user_${i}_access" aria-label="Which studios this user can view">${accessOptionsHTML(access || 'all')}</select>
         <button type="button" class="remove-user" aria-label="Remove user">&times;</button>
       </div>`;
   }
 
-  function addUser(name, email) {
+  function addUser(name, email, access) {
     const list = document.getElementById('users-list');
-    list.insertAdjacentHTML('beforeend', userRowHTML(userCounter++, name, email));
+    list.insertAdjacentHTML('beforeend', userRowHTML(userCounter++, name, email, access));
   }
 
   function renderAll() {
@@ -135,8 +143,9 @@
       });
     });
 
-    addUser('Joe Magretti', 'jmagretti@yahoo.com');
-    addUser('Devon Magretti', '');
+    addUser('Joe Magretti', 'jmagretti@yahoo.com', 'all');
+    addUser('Devon Magretti', '', 'all');
+    LOCATIONS.forEach((_, i) => addUser('', '', `loc${i}`));
 
     document.getElementById('users-list').addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-user')) {
@@ -144,12 +153,13 @@
         saveDraftSoon();
       }
     });
-    document.getElementById('add-user').addEventListener('click', () => addUser('', ''));
+    document.getElementById('add-user').addEventListener('click', () => addUser('', '', 'all'));
 
-    // "From stretchzone.com" chips clear the first time the client edits the field.
-    document.querySelectorAll('#locations label').forEach(lab => {
+    // Source chips ("From stretchzone.com", "Stretch Zone example") clear the
+    // first time the client edits that field.
+    document.querySelectorAll('#intake-form label').forEach(lab => {
       const chip = lab.querySelector('.mg-source-chip');
-      const input = lab.querySelector('input');
+      const input = lab.querySelector('input, textarea');
       if (chip && input) input.addEventListener('input', () => chip.remove(), { once: true });
     });
   }
@@ -215,9 +225,17 @@
     document.querySelectorAll('#users-list .user-row').forEach(row => {
       const name = row.querySelector('[name$="_name"]').value.trim();
       const email = row.querySelector('[name$="_email"]').value.trim();
-      if (name || email) users.push({ name, email, role: 'manager' });
+      const access = row.querySelector('[name$="_access"]').value;
+      if (name || email) users.push({ name, email, role: 'manager', access });
     });
     return users;
+  }
+
+  // A location's row only carries the users who can see that studio.
+  function usersForLocation(allUsers, i) {
+    return allUsers
+      .filter(u => u.access === 'all' || u.access === `loc${i}`)
+      .map(u => ({ name: u.name, email: u.email, role: u.role }));
   }
 
   // Mirrors the main form's buildPayload key set exactly (nulls where this
@@ -227,6 +245,7 @@
     const fd = new FormData(document.getElementById('intake-form'));
     const contactName = (fd.get('contact_name') || '').trim();
     const sharedNotes = (fd.get('notes') || '').trim();
+    const allUsers = collectUsers();
 
     const shared = {
       status: 'pending',
@@ -245,7 +264,6 @@
       intro_offer: fd.get('intro_offer') || null,
       preferred_words: fd.get('preferred_words') || null,
       avoid_words: fd.get('avoid_words') || null,
-      dashboard_users: collectUsers(),
       business_knowledge: {
         service_description: fd.get('bk_service_description') || null,
         single_session_rate: fd.get('bk_single_session_rate') || null,
@@ -310,6 +328,7 @@
         crm_store_id: fd.get(`loc${i}_crm_store_id`) || null,
         hours: collectHours(fd, i),
         hours_confirmed: fd.get(`loc${i}_hours_confirmed`) === 'on',
+        dashboard_users: usersForLocation(allUsers, i),
         notes: noteParts.join(' | ')
       });
     });

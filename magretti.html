@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <link rel="stylesheet" href="styles.css?v=23">
-<link rel="stylesheet" href="magretti.css?v=2">
+<link rel="stylesheet" href="magretti.css?v=3">
 </head>
 <body>
 <div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
@@ -93,11 +93,12 @@
       <h2>Branding &amp; Messaging <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
       <label>
         AI Assistant Name
-        <input type="text" name="assistant_name" placeholder="e.g. Riley or Alex, the name your AI Team Member uses">
+        <input type="text" name="assistant_name" placeholder="e.g. Ashley, the name your AI Team Member uses">
+        <small>Our other Stretch Zone studios use "Ashley".</small>
       </label>
       <label>
         Message Sign-off Name
-        <input type="text" name="sign_off_name" placeholder="e.g. Joe, The Stretch Zone Team">
+        <input type="text" name="sign_off_name" placeholder="e.g. Ashley or The Stretch Zone Team">
       </label>
       <fieldset class="pill-group">
         <legend>Who should the AI sound like?</legend>
@@ -164,8 +165,8 @@
         <label class="pill"><input type="radio" name="main_cta" value="buy_membership"> Buy a membership</label>
       </fieldset>
       <label>
-        Intro Offer
-        <textarea name="intro_offer" rows="2" placeholder="e.g. Free 30-minute demo stretch for first-time guests"></textarea>
+        Intro Offer <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
+        <textarea name="intro_offer" rows="2">Free stretch for first-time guests</textarea>
       </label>
       <label>
         Words / phrases you like us to use
@@ -179,18 +180,21 @@
 
     <section>
       <h2>Services &amp; Pricing <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
-      <p class="mg-section-note">If pricing differs by studio, note the differences in that studio's card below.</p>
+      <p class="mg-section-note">We filled in typical Stretch Zone answers from our other studios. Please confirm the numbers for your studios and adjust anything that differs. If pricing differs by studio, note it in that studio's card below.</p>
       <label>
-        What services do you offer?
-        <textarea name="bk_service_description" rows="3" placeholder="e.g. Practitioner-assisted table stretching in 30-minute sessions..."></textarea>
+        What services do you offer? <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
+        <textarea name="bk_service_description" rows="3">Practitioner-assisted table stretching in 30-minute sessions. Certified stretch practitioners use Stretch Zone's patented strapping and stabilization system to improve mobility, flexibility, and range of motion.</textarea>
       </label>
       <label>
-        Single Session Rate
-        <input type="text" name="bk_single_session_rate" placeholder="e.g. $79">
+        Single Session Rate <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
+        <input type="text" name="bk_single_session_rate" value="$85 per session (pay-as-you-go)">
       </label>
       <label>
-        Membership Pricing
-        <textarea name="bk_membership_pricing" rows="2" placeholder="e.g. 4x/month $236, 8x/month $432"></textarea>
+        Membership Pricing <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
+        <textarea name="bk_membership_pricing" rows="5">1x per week (4x/month): $50 per session or $200/month
+2x per week (8x/month): $45 per session or $360/month
+3x per week (12x/month): $40 per session or $480/month
+Basic Bi-Weekly (2x/month): $119/month</textarea>
       </label>
       <label>
         Package Pricing
@@ -246,8 +250,8 @@
         <label class="pill"><input type="checkbox" name="react_lost_sheep"> Long-term inactive</label>
       </fieldset>
       <label>
-        Reactivation offer
-        <textarea name="reactivation_offer" rows="2" placeholder="What can we offer someone we're winning back?"></textarea>
+        Reactivation offer <span class="ai-suggested-chip mg-source-chip">Stretch Zone example</span>
+        <textarea name="reactivation_offer" rows="2">10% off the first month when a previously cancelled member returns and rejoins</textarea>
       </label>
       <fieldset class="pill-group">
         <legend>When should the AI hand off to a human?</legend>
@@ -259,8 +263,8 @@
     </section>
 
     <section>
-      <h2>Dashboard Users <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
-      <p class="mg-section-note">Who should have access to the Velocity dashboard? We added you both. Fill in Devon's email and add any managers.</p>
+      <h2>Dashboard Users</h2>
+      <p class="mg-section-note">Who should have access to the Velocity dashboard? We added you both with access to all studios. Fill in Devon's email, then add a GM or studio account for each studio and pick which studio each person can view.</p>
       <div id="users-list"></div>
       <button type="button" id="add-user" class="btn-secondary">+ Add another user</button>
     </section>
@@ -306,6 +310,6 @@
   </footer>
 </main>
 
-<script src="magretti.js?v=3"></script>
+<script src="magretti.js?v=4"></script>
 </body>
 </html>
