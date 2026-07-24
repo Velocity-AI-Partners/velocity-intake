@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velocity AI Partners — Magretti Stretch Zone Onboarding</title>
+<meta name="description" content="Onboarding for Stretch Zone Crofton, Annapolis, and Severna Park.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/jpeg" href="favicon.jpg">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="styles.css?v=23">
+<link rel="stylesheet" href="magretti.css?v=1">
+</head>
+<body>
+
+<div class="mg-preview-banner" id="preview-banner" hidden>
+  Preview mode — submissions are disabled on localhost. Nothing will be sent.
+</div>
+
+<main class="wrap">
+  <header>
+    <h1>Welcome, Joe &amp; Devon</h1>
+    <p class="lead">This onboarding form was prepared just for your three Stretch Zone studios — <strong>Crofton</strong>, <strong>Annapolis</strong>, and <strong>Severna Park</strong>. We pre-filled everything we already know from your agreement and your stretchzone.com pages, so most sections only need a quick review. Answer the shared questions once; anything studio-specific has its own card below.</p>
+    <div class="meta-row">
+      <span>~10 minutes</span>
+      <span>Answers save automatically on this device</span>
+      <span>Encrypted transit</span>
+    </div>
+    <p class="required-note"><span class="req" aria-hidden="true">*</span> indicates a required field</p>
+  </header>
+
+  <form id="intake-form" novalidate>
+
+    <!-- Bot defense — same pattern as the main form. Do not remove. -->
+    <input type="text" name="honeypot" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <section>
+      <h2>Your Contact Info</h2>
+      <p class="mg-section-note">Who we should reach during setup. Pre-filled from our records — correct anything that's off.</p>
+      <label>
+        Primary Contact Name <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="contact_name" value="Joe Magretti" data-known>
+      </label>
+      <label>
+        Contact Email <span class="req" aria-hidden="true">*</span>
+        <input type="email" name="contact_email" required value="jmagretti@yahoo.com" data-known>
+      </label>
+      <label>
+        Contact Phone <span class="req" aria-hidden="true">*</span>
+        <input type="tel" name="contact_phone" required value="(215) 990-4734" data-known>
+      </label>
+      <fieldset class="pill-group">
+        <legend>How should we send you setup updates and lead notifications?</legend>
+        <label class="pill"><input type="checkbox" name="notify_email" checked> Email</label>
+        <label class="pill"><input type="checkbox" name="notify_sms"> SMS</label>
+      </fieldset>
+    </section>
+
+    <section>
+      <h2>CRM Access <span class="mg-known-chip">ClubReady — on file</span></h2>
+      <div class="trust-banner">
+        Your agreement lists <strong>ClubReady</strong> as your booking &amp; CRM system. We need an admin-level account in each studio's ClubReady store. We use it to set up automations, configure API access, and sync members and bookings. Credentials are stored securely and only the Velocity team sees them.
+      </div>
+      <label>
+        CRM Platform
+        <select name="crm_platform">
+          <option value="clubready" selected>ClubReady</option>
+          <option value="wellnessliving">WellnessLiving</option>
+          <option value="spark">Spark Membership</option>
+          <option value="mindbody">Mindbody</option>
+          <option value="arketa">Arketa</option>
+          <option value="other">Other (tell us in notes)</option>
+        </select>
+        <small>Change this only if ClubReady is wrong — it applies to all three studios.</small>
+      </label>
+      <label>
+        Email Address
+        <input type="email" value="admin@velocityaipartners.ai" readonly tabindex="-1" aria-readonly="true">
+        <small>Create the admin account in ClubReady under <strong>admin@velocityaipartners.ai</strong> for each studio.</small>
+      </label>
+      <label class="attestation">
+        <input type="checkbox" name="crm_account_confirmed" required>
+        <span>I confirm an admin-level account has been created (or will be before launch) in <strong>each</strong> of the three studios' CRM stores using <strong>admin@velocityaipartners.ai</strong>. <span class="req" aria-hidden="true">*</span></span>
+      </label>
+      <p class="mg-section-note">Each studio's ClubReady <strong>Store ID</strong> has its own field in the studio cards below.</p>
+    </section>
+
+    <section>
+      <h2>Branding &amp; Messaging <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
+      <label>
+        AI Assistant Name
+        <input type="text" name="assistant_name" placeholder="e.g. Riley, Alex — the name your AI Team Member uses">
+      </label>
+      <label>
+        Message Sign-off Name
+        <input type="text" name="sign_off_name" placeholder="e.g. Joe, The Stretch Zone Team">
+      </label>
+      <fieldset class="pill-group">
+        <legend>Who should the AI sound like?</legend>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="team"> Team</label>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="owner"> Owner</label>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="brand"> Brand persona</label>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="unsure"> Unsure — advise</label>
+      </fieldset>
+      <fieldset class="pill-group">
+        <legend>Tone (pick any)</legend>
+        <label class="pill"><input type="checkbox" name="tone_friendly"> Friendly</label>
+        <label class="pill"><input type="checkbox" name="tone_professional"> Professional</label>
+        <label class="pill"><input type="checkbox" name="tone_motivational"> Motivational</label>
+        <label class="pill"><input type="checkbox" name="tone_humorous"> Humorous</label>
+        <label class="pill"><input type="checkbox" name="tone_upbeat"> Upbeat</label>
+      </fieldset>
+      <fieldset class="pill-group">
+        <legend>Main call to action for new leads</legend>
+        <label class="pill"><input type="radio" name="main_cta" value="book_demo"> Book a free demo</label>
+        <label class="pill"><input type="radio" name="main_cta" value="schedule_call"> Schedule a call</label>
+        <label class="pill"><input type="radio" name="main_cta" value="start_trial"> Start free trial</label>
+        <label class="pill"><input type="radio" name="main_cta" value="buy_membership"> Buy a membership</label>
+      </fieldset>
+      <label>
+        Intro Offer
+        <textarea name="intro_offer" rows="2" placeholder="e.g. Free 30-minute demo stretch for first-time guests"></textarea>
+      </label>
+      <label>
+        Words / phrases you like us to use
+        <textarea name="preferred_words" rows="2" placeholder="e.g. practitioner, table-based stretching"></textarea>
+      </label>
+      <label>
+        Words / claims to avoid
+        <textarea name="avoid_words" rows="2" placeholder="e.g. no medical claims, don't say 'massage'"></textarea>
+      </label>
+    </section>
+
+    <section>
+      <h2>Services &amp; Pricing <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
+      <p class="mg-section-note">If pricing differs by studio, note the differences in that studio's card below.</p>
+      <label>
+        What services do you offer?
+        <textarea name="bk_service_description" rows="3" placeholder="e.g. Practitioner-assisted table stretching in 30-minute sessions..."></textarea>
+      </label>
+      <label>
+        Single Session Rate
+        <input type="text" name="bk_single_session_rate" placeholder="e.g. $79">
+      </label>
+      <label>
+        Membership Pricing
+        <textarea name="bk_membership_pricing" rows="2" placeholder="e.g. 4x/month $236, 8x/month $432"></textarea>
+      </label>
+      <label>
+        Package Pricing
+        <textarea name="bk_package_pricing" rows="2" placeholder="e.g. 10-pack $690"></textarea>
+      </label>
+      <label>
+        Current Promotions
+        <textarea name="bk_promotions" rows="2" placeholder="Any running specials the AI should know about"></textarea>
+      </label>
+      <label>
+        Cancellation / No-show Policy
+        <textarea name="bk_cancellation_policy" rows="2" placeholder="e.g. 24-hour notice or session is forfeited"></textarea>
+      </label>
+      <label>
+        Who is a good fit? Any eligibility limits?
+        <textarea name="bk_eligibility" rows="2" placeholder="e.g. Ages 18+, cleared for physical activity"></textarea>
+      </label>
+      <label>
+        Ideal Client
+        <textarea name="bk_ideal_client" rows="2" placeholder="e.g. Active adults 35–65 with mobility goals"></textarea>
+      </label>
+      <label>
+        What makes your studios different?
+        <textarea name="bk_unique_value" rows="2" placeholder="Your pitch in a sentence or two"></textarea>
+      </label>
+      <label>
+        What happens on a first visit?
+        <textarea name="bk_first_visit" rows="2" placeholder="Walk a new guest through their first appointment"></textarea>
+      </label>
+      <label>
+        Common questions leads ask (and your answers)
+        <textarea name="bk_faq" rows="3" placeholder="Q: Does it hurt? A: ..."></textarea>
+      </label>
+    </section>
+
+    <section>
+      <h2>What should the AI focus on? <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
+      <fieldset class="pill-group">
+        <legend>Automation goals (pick any)</legend>
+        <label class="pill"><input type="checkbox" name="goal_book_demos"> Book demos / trials</label>
+        <label class="pill"><input type="checkbox" name="goal_answer_faqs"> Answer FAQs</label>
+        <label class="pill"><input type="checkbox" name="goal_followup_leads"> Follow up with new leads</label>
+        <label class="pill"><input type="checkbox" name="goal_reactivate_old"> Reactivate old members</label>
+        <label class="pill"><input type="checkbox" name="goal_upsell"> Upsell memberships</label>
+        <label class="pill"><input type="checkbox" name="goal_provide_directions"> Provide directions</label>
+      </fieldset>
+      <fieldset class="pill-group">
+        <legend>Reactivation: who should we reach back out to?</legend>
+        <label class="pill"><input type="checkbox" name="react_no_shows"> Demo / trial no-shows</label>
+        <label class="pill"><input type="checkbox" name="react_cooled_leads"> Cooled leads</label>
+        <label class="pill"><input type="checkbox" name="react_expired_members"> Expired memberships</label>
+        <label class="pill"><input type="checkbox" name="react_paused"> Paused / frozen accounts</label>
+        <label class="pill"><input type="checkbox" name="react_lost_sheep"> Long-term inactive</label>
+      </fieldset>
+      <label>
+        Reactivation offer
+        <textarea name="reactivation_offer" rows="2" placeholder="What can we offer someone we're winning back?"></textarea>
+      </label>
+      <fieldset class="pill-group">
+        <legend>When should the AI hand off to a human?</legend>
+        <label class="pill"><input type="radio" name="handoff_rule" value="never"> Never — AI handles everything</label>
+        <label class="pill"><input type="radio" name="handoff_rule" value="on_request"> Only on request</label>
+        <label class="pill"><input type="radio" name="handoff_rule" value="business_hours_request"> During studio hours, on request</label>
+        <label class="pill"><input type="radio" name="handoff_rule" value="complex"> When conversation gets complex</label>
+      </fieldset>
+    </section>
+
+    <section>
+      <h2>Dashboard Users <span class="mg-shared-chip">Shared across all 3 studios</span></h2>
+      <p class="mg-section-note">Who should have access to the Velocity dashboard? We added you both — fill in Devon's email and add any managers.</p>
+      <div id="users-list"></div>
+      <button type="button" id="add-user" class="btn-secondary">+ Add another user</button>
+    </section>
+
+    <!-- Per-studio cards rendered by magretti.js -->
+    <div id="locations"></div>
+
+    <section>
+      <h2>Launch &amp; Anything Else</h2>
+      <label>
+        Target Launch Date
+        <input type="date" name="target_launch_date">
+      </label>
+      <label>
+        Studio Logo (optional)
+        <input type="file" id="logo-input" accept="image/*">
+        <small>PNG or JPG under 2MB. Used across all three studios.</small>
+      </label>
+      <label>
+        Anything else we should know?
+        <textarea name="notes" rows="3" placeholder="Questions, constraints, franchisor rules, anything at all"></textarea>
+      </label>
+    </section>
+
+    <div class="mg-error" id="error-box" hidden></div>
+
+    <div class="mg-actions">
+      <button type="button" id="start-over" class="btn-secondary">Start over</button>
+      <button type="submit" id="submit-btn" class="btn-primary">Review &amp; submit</button>
+    </div>
+
+    <div class="mg-confirm" id="confirm-box" hidden>
+      <p><strong>Ready to send?</strong> This submits onboarding for all three studios — Crofton, Annapolis, and Severna Park — to the Velocity team.</p>
+      <div class="mg-actions">
+        <button type="button" id="confirm-cancel" class="btn-secondary">Keep editing</button>
+        <button type="button" id="confirm-submit" class="btn-primary">Confirm &amp; submit all 3 studios</button>
+      </div>
+    </div>
+  </form>
+
+  <div id="success-screen" class="success-screen" hidden>
+    <h2>All set — thank you!</h2>
+    <p>We received onboarding details for all three studios. The Velocity team will review everything and reach out at the contact info you provided to schedule activation. A confirmation email is on its way.</p>
+  </div>
+
+  <footer>
+    <p>Questions? Email <a href="mailto:admin@velocityaipartners.ai">admin@velocityaipartners.ai</a></p>
+  </footer>
+</main>
+
+<script src="magretti.js?v=1"></script>
+</body>
+</html>
