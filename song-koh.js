@@ -13,7 +13,7 @@
   const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   const DAY_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 
-  // Patrick Song and Robert Koh operate six Stretch Zone studios (three VA,
+  // Patrick Song and Rob Koh operate six Stretch Zone studios (three VA,
   // three MD). Reston is the pilot and the only studio being onboarded here.
   // Kept as an array so the other five drop in as extra objects later.
   //
@@ -128,9 +128,9 @@
       });
     });
 
-    // Robert's email is deliberately blank — we don't have it on file.
+    // Rob's email is deliberately blank — we don't have it on file.
     addUser('Patrick Song', 'patrick@alphaflexllc.com');
-    addUser('Robert Koh', '');
+    addUser('Rob Koh', '');
 
     document.getElementById('users-list').addEventListener('click', (e) => {
       if (e.target.classList.contains('remove-user')) {
