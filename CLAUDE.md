@@ -54,6 +54,27 @@ Client-facing intake form for new Velocity AI Partners locations. A prospective 
 - Multi-location: repeatable location cards; per-location fields defined in `LOCATION_FIELDS` in `franchisor.js`.
 - For a second franchisor brand later: new row value for `form_variant`, swap the logo/branding, adjust `FORM_SECTIONS` — same table.
 
+## Per-client pre-filled variants (`magretti`, `song-koh`)
+
+When a client is worth a tailored link, we fork a variant instead of sending them the generic form. Existing ones: `?form=magretti` (Joe and Devon Magretti, 3 Stretch Zone studios MD) and `?form=song-koh` (Patrick Song and Robert Koh, Stretch Zone Reston VA).
+
+These are **not** like the franchisor form: they submit standard `location_intake_submissions` rows, so `/client-onboarding` review and `provision-from-intake` work unchanged and no migration is needed.
+
+To build a new one:
+
+1. Copy `song-koh.{html,js,css}` to `<client>.{html,js,css}` (it's the simpler single-studio base; `magretti.*` is the multi-studio one).
+2. Add one line to the variant router at the top of `index.html`.
+3. Edit the `LOCATIONS` array and the `addUser(...)` seeds in `<client>.js`, and the `<h1>`, `<title>`, and `data-known` contact values in `<client>.html`.
+4. Rename `DRAFT_KEY` so the new form doesn't collide with another variant's localStorage draft.
+5. Keep the honeypot input, `noindex`, and the `?v=N` cache-busters.
+
+**Rules that matter more than coverage:**
+
+- **Pre-fill from verifiable sources only** — a signed agreement, the brand's official location page, or an existing location's knowledge base. Tag each pre-filled field with a source chip so the client can see what we filled and why. Never invent an email, a phone, or a price to fill a field.
+- **Label assumptions as assumptions.** If we're guessing a CRM platform, give the client a field to correct it and write their answer to `crm_platform_other` rather than recording the guess as fact.
+- **Verify the payload against the live schema before shipping.** Every key must be a real column in `location_intake_submissions` or PostgREST rejects the whole insert.
+- **Test the submit path without writing to prod.** Localhost is preview-only; to exercise the real `buildPayload`, load with `?live=1` and stub `window.fetch` so the payload can be inspected while nothing leaves the browser.
+
 ## Form sections (for orientation)
 
 1. Business info — name, address, timezone, contact, website, multi-location, logo
