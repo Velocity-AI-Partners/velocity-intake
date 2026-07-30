@@ -77,6 +77,37 @@
   .sk-actions { justify-content: stretch; }
   .sk-actions button { flex: 1; }
 
+  /* styles.css uses `90px 1fr 1fr 72px` for the hours grid, but 1fr means
+     minmax(auto, 1fr) and a time input's min-content width is ~133px in
+     Chrome, so those tracks cannot compress. The row needs 490px, which
+     pushed all seven "closed" toggles outside a 390px phone viewport and, at
+     320px, the closing-time inputs too. Give the day label its own full-width
+     row so open/close/closed share the width beneath it. Same fix as
+     gorman.css and magretti.css. */
+  .hours-grid {
+    grid-template-columns: 1fr 1fr auto;
+    row-gap: 4px;
+  }
+
+  .hours-grid .day-label {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  /* Letting the track shrink is not enough — the input has to be allowed to
+     shrink below its own intrinsic width too. Trim the padding so the AM/PM
+     is not clipped: "8:00 AN" on an hours form is a real misread. */
+  .hours-grid input[type="time"] {
+    min-width: 0;
+    width: 100%;
+    padding-left: 8px;
+    padding-right: 4px;
+  }
+
+  .hours-grid .closed-wrap {
+    gap: 4px;
+  }
+
   /* The base stylesheet stacks every cell full-width below 965px, which leaves
      the remove-user "x" as a full-width bar. Give the name its own row and sit
      the "x" next to the email field instead. */
