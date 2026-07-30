@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <link rel="stylesheet" href="styles.css?v=23">
-<link rel="stylesheet" href="song-koh.css?v=1">
+<link rel="stylesheet" href="song-koh.css?v=2">
 </head>
 <body>
 <div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
@@ -36,7 +36,7 @@
 <main class="container">
   <header>
     <h1>Welcome, Patrick &amp; Robert</h1>
-    <p class="lead">This onboarding form was prepared just for your <strong>Reston, VA</strong> studio. We filled in what we already know from the official Stretch Zone location page, so most of this is a quick review rather than data entry. It should take about 10 minutes.</p>
+    <p class="lead">This onboarding form is for your <strong>Reston, VA</strong> studio. We have pre-filled what we have found from online sources, but please review everything.</p>
     <div class="meta-row">
       <span>~10 minutes</span>
       <span>Answers save automatically on this device</span>
@@ -51,8 +51,7 @@
     <input type="text" name="honeypot" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
 
     <section>
-      <h2>Your Contact Info</h2>
-      <p class="sk-section-note">Who we should reach during setup.</p>
+      <h2>Primary Contact Info</h2>
       <label>
         Primary Contact Name <span class="req" aria-hidden="true">*</span>
         <input type="text" name="contact_name" value="Patrick Song" data-known>
@@ -75,7 +74,7 @@
     <section>
       <h2>CRM Access</h2>
       <div class="trust-banner">
-        <span>We need an admin-level account for the studio's ClubReady. We use it to set up automations, configure API access, and sync members and bookings. Credentials are stored securely and only the Velocity team sees them.</span>
+        <span>We need an admin-level account for the studio's ClubReady. We use it to set up automations, configure webhooks, and set up your branded messaging. Credentials are stored securely and only the Velocity team sees them.</span>
       </div>
       <label>
         Email Address
@@ -86,11 +85,6 @@
         <input type="checkbox" name="crm_account_confirmed" required>
         <span>I confirm an admin-level account has been created (or will be before launch) in the Reston studio's CRM using <strong>admin@velocityaipartners.ai</strong>. <span class="req" aria-hidden="true">*</span></span>
       </label>
-      <label>
-        Is Reston on a different CRM?
-        <input type="text" name="crm_platform_note" placeholder="Leave blank if it's ClubReady">
-        <small>We assumed ClubReady because that's what the other Stretch Zone studios we run use. Tell us here if Reston is on something else.</small>
-      </label>
     </section>
 
     <section>
@@ -98,7 +92,7 @@
       <label>
         AI Team Member Name
         <input type="text" name="assistant_name" placeholder="e.g. Ashley, the name your AI Team Member uses">
-        <small>Our other Stretch Zone studios use "Ashley".</small>
+        <small>Our other Stretch Zone studios use Ashley or James.</small>
       </label>
       <fieldset class="pill-group">
         <legend>Who should the AI sound like?</legend>
@@ -187,7 +181,6 @@
 
     <section>
       <h2>Services &amp; Pricing</h2>
-      <p class="sk-section-note">We filled in typical Stretch Zone answers from our other studios. Please confirm the numbers for Reston and adjust anything that differs.</p>
       <label>
         What services do you offer? <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
         <textarea name="bk_service_description" rows="3">Practitioner-assisted table stretching in 30-minute sessions. Certified stretch practitioners use Stretch Zone's patented strapping and stabilization system to improve mobility, flexibility, and range of motion.</textarea>
@@ -212,8 +205,8 @@ Basic Bi-Weekly (2x/month): $119/month</textarea>
         <textarea name="bk_promotions" rows="2" placeholder="Any running specials the AI should know about"></textarea>
       </label>
       <label>
-        Cancellation / No-show Policy
-        <textarea name="bk_cancellation_policy" rows="2" placeholder="e.g. 24-hour notice or session is forfeited"></textarea>
+        Cancellation / No-show Policy <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
+        <textarea name="bk_cancellation_policy" rows="3">Memberships require 30 days notice to cancel. Individual appointments can be cancelled up to 12 hours before the session at no charge; less than 12 hours notice may forfeit the session or incur a late cancellation fee.</textarea>
       </label>
       <label>
         Who is a good fit? Any eligibility limits?
@@ -240,11 +233,7 @@ Basic Bi-Weekly (2x/month): $119/month</textarea>
     <div id="locations"></div>
 
     <section>
-      <h2>Launch &amp; Anything Else</h2>
-      <label>
-        Target Launch Date
-        <input type="date" name="target_launch_date">
-      </label>
+      <h2>Anything Else</h2>
       <label>
         Anything else we should know?
         <textarea name="notes" rows="3" placeholder="Questions, constraints, franchisor rules, anything at all"></textarea>
@@ -277,6 +266,6 @@ Basic Bi-Weekly (2x/month): $119/month</textarea>
   </footer>
 </main>
 
-<script src="song-koh.js?v=1"></script>
+<script src="song-koh.js?v=2"></script>
 </body>
 </html>

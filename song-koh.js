@@ -247,19 +247,16 @@
     const contactName = (fd.get('contact_name') || '').trim();
     const sharedNotes = (fd.get('notes') || '').trim();
     const locNotes = (fd.get(`loc${i}_notes`) || '').trim();
-    const crmNote = (fd.get('crm_platform_note') || '').trim();
 
     // Strip the loc0_ prefix so the admin note reads cleanly, but keep the
     // studio's own notes field distinguishable from the shared one.
     const changed = changedFieldNames()
-      .filter(k => k !== 'crm_platform_note')
       .map(k => k === `loc${i}_notes` ? 'studio_notes' : k.replace(`loc${i}_`, ''));
 
     const noteParts = [
       `Song/Koh Stretch Zone intake. Reston, VA is the pilot studio; the group operates six Stretch Zone studios (three VA, three MD). Primary contact: ${contactName || 'Patrick Song'}.`,
       locNotes && `Studio notes: ${locNotes}`,
       sharedNotes && `Shared notes: ${sharedNotes}`,
-      crmNote && `Client says the CRM is NOT ClubReady: ${crmNote}`,
       changed.length && `Client updated: ${changed.join(', ')}`
     ].filter(Boolean);
 
@@ -278,11 +275,9 @@
       google_business_profile_url: fd.get(`loc${i}_google_business_profile_url`) || null,
       hours: collectHours(fd, i),
       hours_confirmed: fd.get(`loc${i}_hours_confirmed`) === 'on',
-      // ClubReady is the working assumption (every other Stretch Zone studio we
-      // run is on it). If the client says otherwise we flip to 'other' rather
-      // than record a platform we haven't confirmed.
-      crm_platform: crmNote ? 'other' : 'clubready',
-      crm_platform_other: crmNote || null,
+      // George confirmed 2026-07-30 that Reston is on ClubReady.
+      crm_platform: 'clubready',
+      crm_platform_other: null,
       crm_store_id: fd.get(`loc${i}_crm_store_id`) || null,
       crm_account_confirmed: fd.get('crm_account_confirmed') === 'on',
       chatbot_voice: fd.get('chatbot_voice') || null,
