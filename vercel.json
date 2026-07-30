@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/reston", "destination": "/song-koh.html" },
+    { "source": "/song-koh", "destination": "/song-koh.html" }
+  ]
+}
