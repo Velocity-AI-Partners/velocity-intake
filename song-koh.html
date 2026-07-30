@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velocity AI Partners | Stretch Zone Reston Onboarding</title>
+<meta name="description" content="Onboarding for Stretch Zone Reston, VA.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/jpeg" href="favicon.jpg">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="styles.css?v=23">
+<link rel="stylesheet" href="song-koh.css?v=2">
+</head>
+<body>
+<div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
+
+<!-- Same navy top bar as the main form; the save button is replaced by the
+     autosave note since this variant saves locally on every change. -->
+<div class="sticky-draft" id="sticky-draft">
+  <div class="sticky-draft__bar">
+    <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="sticky-draft__logo">
+    <div class="sticky-draft__meta">
+      <span class="sticky-draft__title">Client Onboarding</span>
+      <span class="sticky-draft__progress" id="sticky-progress-text">0% complete</span>
+    </div>
+    <span class="sk-autosave-note">Saves automatically</span>
+  </div>
+  <div class="sticky-draft__track"><div class="sticky-draft__track-fill" id="sticky-progress-fill"></div></div>
+</div>
+
+<div class="sk-preview-banner" id="preview-banner" hidden>
+  Preview mode: submissions are disabled on localhost. Nothing will be sent.
+</div>
+
+<main class="container">
+  <header>
+    <h1>Welcome, Patrick &amp; Robert</h1>
+    <p class="lead">This onboarding form is for your <strong>Reston, VA</strong> studio. We have pre-filled what we have found from online sources, but please review everything.</p>
+    <div class="meta-row">
+      <span>~10 minutes</span>
+      <span>Answers save automatically on this device</span>
+      <span>Encrypted transit</span>
+    </div>
+    <p class="required-note"><span class="req" aria-hidden="true">*</span> indicates a required field</p>
+  </header>
+
+  <form id="intake-form" novalidate>
+
+    <!-- Bot defense — same pattern as the main form. Do not remove. -->
+    <input type="text" name="honeypot" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <section>
+      <h2>Primary Contact Info</h2>
+      <label>
+        Primary Contact Name <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="contact_name" value="Patrick Song" data-known>
+      </label>
+      <label>
+        Contact Email <span class="req" aria-hidden="true">*</span>
+        <input type="email" name="contact_email" required value="patrick@alphaflexllc.com" data-known>
+      </label>
+      <label>
+        Contact Phone <span class="req" aria-hidden="true">*</span>
+        <input type="tel" name="contact_phone" required value="(917) 642-8030" data-known>
+      </label>
+      <fieldset class="pill-group">
+        <legend>How should we send you setup updates?</legend>
+        <label class="pill"><input type="checkbox" name="notify_email" checked> Email</label>
+        <label class="pill"><input type="checkbox" name="notify_sms"> SMS</label>
+      </fieldset>
+    </section>
+
+    <section>
+      <h2>CRM Access</h2>
+      <div class="trust-banner">
+        <span>We need an admin-level account for the studio's ClubReady. We use it to set up automations, configure webhooks, and set up your branded messaging. Credentials are stored securely and only the Velocity team sees them.</span>
+      </div>
+      <label>
+        Email Address
+        <input type="email" value="admin@velocityaipartners.ai" readonly tabindex="-1" aria-readonly="true">
+        <small>Create the admin account in the studio's ClubReady under <strong>admin@velocityaipartners.ai</strong>.</small>
+      </label>
+      <label class="attestation">
+        <input type="checkbox" name="crm_account_confirmed" required>
+        <span>I confirm an admin-level account has been created (or will be before launch) in the Reston studio's CRM using <strong>admin@velocityaipartners.ai</strong>. <span class="req" aria-hidden="true">*</span></span>
+      </label>
+    </section>
+
+    <section>
+      <h2>Branding &amp; Messaging</h2>
+      <label>
+        AI Team Member Name
+        <input type="text" name="assistant_name" placeholder="e.g. Ashley, the name your AI Team Member uses">
+        <small>Our other Stretch Zone studios use Ashley or James.</small>
+      </label>
+      <fieldset class="pill-group">
+        <legend>Who should the AI sound like?</legend>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="team"> Team</label>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="owner"> Owner</label>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="brand"> Brand persona</label>
+        <label class="pill"><input type="radio" name="chatbot_voice" value="unsure"> Unsure (recommend what works)</label>
+      </fieldset>
+      <details class="examples-block">
+        <summary>See example messages</summary>
+        <div class="example-item">
+          <span class="example-tag">Team</span>
+          <p>"Hey! Thanks for reaching out. We'd love to have you in for a free demo. What day works best?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Owner</span>
+          <p>"Hi, it's Patrick, the studio owner! I'd love to get you in for a free demo. What day works?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Brand persona</span>
+          <p>"Hi! I'm Morgan from the studio. We'd love to have you in for a free demo. What day works?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Unsure</span>
+          <p>We'll recommend a voice based on similar studios. Team and Brand persona usually perform best.</p>
+        </div>
+      </details>
+      <fieldset class="pill-group">
+        <legend>Tone (pick any)</legend>
+        <label class="pill"><input type="checkbox" name="tone_friendly"> Friendly</label>
+        <label class="pill"><input type="checkbox" name="tone_professional"> Professional</label>
+        <label class="pill"><input type="checkbox" name="tone_motivational"> Motivational</label>
+        <label class="pill"><input type="checkbox" name="tone_humorous"> Humorous</label>
+        <label class="pill"><input type="checkbox" name="tone_upbeat"> Upbeat</label>
+      </fieldset>
+      <details class="examples-block">
+        <summary>See example messages</summary>
+        <div class="example-item">
+          <span class="example-tag">Friendly</span>
+          <p>"Hi! So glad you're interested. The demo stretch is free and takes about 30 minutes. What day works?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Professional</span>
+          <p>"Thank you for reaching out. Our complimentary 30-minute demo stretch is a great introduction. Which day suits your schedule?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Motivational</span>
+          <p>"Love that you're prioritizing mobility! A free demo stretch is the perfect first step. Let's get you booked."</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Humorous</span>
+          <p>"Your hamstrings called. They want a truce. Free demo stretch, no commitment. What day?"</p>
+        </div>
+        <div class="example-item">
+          <span class="example-tag">Upbeat</span>
+          <p>"Hi! Super excited you're interested. Free demo stretch is the best way to start. What day works?"</p>
+        </div>
+      </details>
+      <fieldset class="pill-group">
+        <legend>Main call to action for new leads</legend>
+        <label class="pill"><input type="radio" name="main_cta" value="book_demo" checked> Book a free demo</label>
+        <label class="pill"><input type="radio" name="main_cta" value="schedule_call"> Schedule a call</label>
+        <label class="pill"><input type="radio" name="main_cta" value="start_trial"> Start free trial</label>
+        <label class="pill"><input type="radio" name="main_cta" value="buy_membership"> Buy a membership</label>
+      </fieldset>
+      <label>
+        Intro Offer <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
+        <textarea name="intro_offer" rows="2">Free stretch for first-time guests</textarea>
+      </label>
+      <label>
+        Words / phrases you like us to use
+        <textarea name="preferred_words" rows="2" placeholder="e.g. practitioner, table-based stretching"></textarea>
+      </label>
+      <label>
+        Words / claims to avoid <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
+        <textarea name="avoid_words" rows="3">No medical claims: never promise to cure, treat, or diagnose any condition. Don't call it massage, chiropractic, or physical therapy. No guaranteed results.</textarea>
+      </label>
+      <fieldset class="pill-group">
+        <legend>When should the AI hand off to a human? (pick any)</legend>
+        <label class="pill"><input type="checkbox" name="handoff_never"> Never (AI handles everything)</label>
+        <label class="pill"><input type="checkbox" name="handoff_on_request"> Only on request</label>
+        <label class="pill"><input type="checkbox" name="handoff_business_hours_request"> During studio hours, on request</label>
+        <label class="pill"><input type="checkbox" name="handoff_complex"> When conversation gets complex</label>
+      </fieldset>
+    </section>
+
+    <section>
+      <h2>Services &amp; Pricing</h2>
+      <label>
+        What services do you offer? <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
+        <textarea name="bk_service_description" rows="3">Practitioner-assisted table stretching in 30-minute sessions. Certified stretch practitioners use Stretch Zone's patented strapping and stabilization system to improve mobility, flexibility, and range of motion.</textarea>
+      </label>
+      <label>
+        Single Session Rate <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
+        <input type="text" name="bk_single_session_rate" value="$85 per session (pay-as-you-go)">
+      </label>
+      <label>
+        Membership Pricing <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
+        <textarea name="bk_membership_pricing" rows="5">1x per week (4x/month): $50 per session or $200/month
+2x per week (8x/month): $45 per session or $360/month
+3x per week (12x/month): $40 per session or $480/month
+Basic Bi-Weekly (2x/month): $119/month</textarea>
+      </label>
+      <label>
+        Package Pricing
+        <textarea name="bk_package_pricing" rows="2" placeholder="e.g. 10-pack $690"></textarea>
+      </label>
+      <label>
+        Current Promotions
+        <textarea name="bk_promotions" rows="2" placeholder="Any running specials the AI should know about"></textarea>
+      </label>
+      <label>
+        Cancellation / No-show Policy <span class="ai-suggested-chip sk-source-chip">Stretch Zone example</span>
+        <textarea name="bk_cancellation_policy" rows="3">Memberships require 30 days notice to cancel. Individual appointments can be cancelled up to 12 hours before the session at no charge; less than 12 hours notice may forfeit the session or incur a late cancellation fee.</textarea>
+      </label>
+      <label>
+        Who is a good fit? Any eligibility limits?
+        <textarea name="bk_eligibility" rows="2" placeholder="e.g. Ages 18+, cleared for physical activity"></textarea>
+      </label>
+      <label>
+        Ideal Client
+        <textarea name="bk_ideal_client" rows="2" placeholder="e.g. Active adults 35-65 with mobility goals"></textarea>
+      </label>
+      <label>
+        Common questions leads ask (and your answers)
+        <textarea name="bk_faq" rows="3" placeholder="Q: Does it hurt? A: ..."></textarea>
+      </label>
+    </section>
+
+    <section>
+      <h2>Dashboard Users</h2>
+      <p class="sk-section-note">Who should have access to the Velocity dashboard for Reston? We added you both. Fill in Robert's email, then add your GM or a studio account if you'd like them to have access too.</p>
+      <div id="users-list"></div>
+      <button type="button" id="add-user" class="btn-secondary">+ Add another user</button>
+    </section>
+
+    <!-- Studio card rendered by song-koh.js -->
+    <div id="locations"></div>
+
+    <section>
+      <h2>Anything Else</h2>
+      <label>
+        Anything else we should know?
+        <textarea name="notes" rows="3" placeholder="Questions, constraints, franchisor rules, anything at all"></textarea>
+      </label>
+    </section>
+
+    <div class="sk-error" id="error-box" hidden></div>
+
+    <div class="sk-actions">
+      <button type="button" id="start-over" class="btn-secondary">Start over</button>
+      <button type="submit" id="submit-btn" class="btn-primary">Review &amp; submit</button>
+    </div>
+
+    <div class="sk-confirm" id="confirm-box" hidden>
+      <p><strong>Ready to send?</strong> This submits onboarding for your Reston studio to the Velocity team.</p>
+      <div class="sk-actions">
+        <button type="button" id="confirm-cancel" class="btn-secondary">Keep editing</button>
+        <button type="button" id="confirm-submit" class="btn-primary">Confirm &amp; submit</button>
+      </div>
+    </div>
+  </form>
+
+  <div id="success-screen" class="success-screen" hidden>
+    <h2>All set. Thank you!</h2>
+    <p>We received your onboarding details for Reston. The Velocity team will review everything and reach out at the contact info you provided to schedule activation. A confirmation email is on its way.</p>
+  </div>
+
+  <footer>
+    <p>Questions? Email <a href="mailto:bill@velocityaipartners.ai">bill@velocityaipartners.ai</a></p>
+  </footer>
+</main>
+
+<script src="song-koh.js?v=2"></script>
+</body>
+</html>

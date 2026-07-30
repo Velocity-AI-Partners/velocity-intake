@@ -1,0 +1,94 @@
+/* Song/Koh Stretch Zone Reston variant — thin layer on top of styles.css.
+   Studio card, source chips, preview banner, and confirm step.
+   Single studio, so no per-studio numbering and no dashboard-access column:
+   the base #users-list .user-row grid (1fr 1fr 40px) already fits. */
+
+/* Bottom-fixed so it never collides with the navy top bar */
+.sk-preview-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: #7a5c00;
+  color: #fff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.sk-autosave-note {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
+.sk-section-note {
+  font-size: 13px;
+  color: var(--text-secondary, #9a9a9a);
+  margin: -4px 0 16px;
+}
+
+.sk-source-chip { font-weight: 600; }
+
+.sk-loc-card {
+  border: 1px solid var(--border, #333);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.sk-hours-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 12px;
+}
+
+.sk-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.sk-error {
+  border: 1px solid #b91c1c;
+  background: rgba(185, 28, 28, 0.12);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.sk-confirm {
+  border: 1px solid var(--border, #333);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  .sk-loc-card { padding: 16px; }
+  .sk-actions { justify-content: stretch; }
+  .sk-actions button { flex: 1; }
+
+  /* The base stylesheet stacks every cell full-width below 965px, which leaves
+     the remove-user "x" as a full-width bar. Give the name its own row and sit
+     the "x" next to the email field instead. */
+  #users-list .sk-user-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  #users-list .sk-user-row .input-with-req:first-child {
+    grid-column: 1 / -1;
+  }
+
+  #users-list .sk-user-row .remove-user {
+    width: 44px;
+  }
+}
