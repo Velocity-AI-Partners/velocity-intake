@@ -479,6 +479,10 @@
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
+        // Required by migration 016: anon may only touch the row whose id it
+        // presents here. Note this also needs SELECT, because
+        // return=representation reads the row back.
+        'x-draft-id': id,
         Prefer: 'return=representation'
       },
       body: JSON.stringify(payload)
@@ -497,7 +501,10 @@
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          // Required by migration 016: without this the request succeeds but
+          // matches zero rows, and the draft link looks broken to the client.
+          'x-draft-id': id
         }
       }
     );
