@@ -124,4 +124,49 @@
   .mg-loc-card { padding: 16px; }
   .mg-actions { justify-content: stretch; }
   .mg-actions button { flex: 1; }
+
+  /* styles.css uses `90px 1fr 1fr 72px` for the hours grid, but 1fr means
+     minmax(auto, 1fr) and a time input's min-content width is ~133px in
+     Chrome, so those tracks cannot compress. The row needs 490px, which
+     pushed every "closed" toggle outside a 390px phone viewport — 21 of them
+     here, since this form has three studios — and at 320px the closing-time
+     inputs as well. Give the day label its own full-width row so
+     open/close/closed share the width beneath it. Same fix as gorman.css and
+     song-koh.css; applies to every per-studio grid. */
+  .hours-grid {
+    grid-template-columns: 1fr 1fr auto;
+    row-gap: 4px;
+  }
+
+  .hours-grid .day-label {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  /* Letting the track shrink is not enough — the input has to be allowed to
+     shrink below its own intrinsic width too. Trim the padding so the AM/PM
+     is not clipped: "8:00 AN" on an hours form is a real misread. */
+  .hours-grid input[type="time"] {
+    min-width: 0;
+    width: 100%;
+    padding-left: 8px;
+    padding-right: 4px;
+  }
+
+  .hours-grid .closed-wrap {
+    gap: 4px;
+  }
+
+  /* Both of these are nowrap, so on a 320px phone they cannot compress and
+     push the document out to 379px. Nothing becomes unreachable, but the page
+     drifts sideways. Let them wrap at phone widths only. */
+  .mg-shared-chip,
+  .mg-autosave-note {
+    white-space: normal;
+  }
+
+  .mg-autosave-note {
+    text-align: right;
+    line-height: 1.25;
+  }
 }

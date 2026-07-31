@@ -1,7 +1,11 @@
-/* Song/Koh Stretch Zone Reston variant — thin layer on top of styles.css.
+/* Gorman Stretch Zone Brickell variant — thin layer on top of styles.css.
    Studio card, source chips, preview banner, and confirm step.
    Single studio, so no per-studio numbering and no dashboard-access column:
-   the base #users-list .user-row grid (1fr 1fr 40px) already fits. */
+   the base #users-list .user-row grid (1fr 1fr 40px) already fits.
+
+   The sk- prefix is inherited from song-koh.css, which this was forked from.
+   Only gorman.html loads this file, so these rules are Gorman-only despite the
+   name; edit freely without worrying about the Reston page. */
 
 /* Bottom-fixed so it never collides with the navy top bar */
 .sk-preview-banner {
@@ -77,13 +81,11 @@
   .sk-actions { justify-content: stretch; }
   .sk-actions button { flex: 1; }
 
-  /* styles.css uses `90px 1fr 1fr 72px` for the hours grid, but 1fr means
-     minmax(auto, 1fr) and a time input's min-content width is ~133px in
-     Chrome, so those tracks cannot compress. The row needs 490px, which
-     pushed all seven "closed" toggles outside a 390px phone viewport and, at
-     320px, the closing-time inputs too. Give the day label its own full-width
-     row so open/close/closed share the width beneath it. Same fix as
-     gorman.css and magretti.css. */
+  /* styles.css uses `90px 1fr 1fr 72px` here, but 1fr means minmax(auto, 1fr)
+     and a time input's min-content width is ~133px in Chrome, so those tracks
+     refuse to compress: the row needs 490px and a 390px phone scrolls
+     sideways with the "closed" toggle stranded off-screen. Give the day label
+     its own full-width row so open/close/closed share the width beneath it. */
   .hours-grid {
     grid-template-columns: 1fr 1fr auto;
     row-gap: 4px;
@@ -94,9 +96,9 @@
     margin-top: 10px;
   }
 
-  /* Letting the track shrink is not enough — the input has to be allowed to
-     shrink below its own intrinsic width too. Trim the padding so the AM/PM
-     is not clipped: "8:00 AN" on an hours form is a real misread. */
+  /* minmax(0, ...) alone is not enough — the input needs to be allowed to
+     shrink below its own intrinsic width too. Trim the horizontal padding so
+     the AM/PM is not clipped: "8:00 AN" on an hours form is a real misread. */
   .hours-grid input[type="time"] {
     min-width: 0;
     width: 100%;
