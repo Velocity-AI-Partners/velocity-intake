@@ -199,7 +199,10 @@
     saveTimer = setTimeout(saveDraft, 300);
   }
 
-  function saveDraft() {
+  // The raw field map. Used for the localStorage draft AND stored on the first
+  // studio's server row as form_state, so a draft rehydrates exactly. The
+  // mapped columns cannot do that: buildPayloads composes `notes` lossily.
+  function collectFormState() {
     const data = {};
     document.querySelectorAll('#intake-form [name]').forEach(el => {
       if (el.name === 'honeypot') return;
@@ -209,12 +212,20 @@
         data[el.name] = el.value;
       }
     });
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch (e) {}
+    return data;
+  }
+
+  function saveDraft() {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(collectFormState())); } catch (e) {}
   }
 
   function restoreDraft() {
     let data;
     try { data = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch (e) { return; }
+    applyFormState(data);
+  }
+
+  function applyFormState(data) {
     if (!data) return;
     // Recreate extra user rows beyond the two defaults
     const userIdx = Object.keys(data).map(k => k.match(/^user_(\d+)_/)).filter(Boolean).map(m => +m[1]);
@@ -268,14 +279,17 @@
   // Mirrors the main form's buildPayload key set exactly (nulls where this
   // tailored form doesn't ask), so the three rows flow through the same
   // /client-onboarding review + provision-from-intake path untouched.
-  function buildPayloads() {
+  // status is 'draft' while the client is still filling it in, 'pending' at
+  // submit. firstId lets draft-sync keep one stable row for studio 1, which is
+  // the row that carries the draft for the whole form.
+  function buildPayloads(status, firstId) {
     const fd = new FormData(document.getElementById('intake-form'));
     const contactName = (fd.get('contact_name') || '').trim();
     const sharedNotes = (fd.get('notes') || '').trim();
     const allUsers = collectUsers();
 
     const shared = {
-      status: 'pending',
+      status: status,
       timezone: 'America/New_York',
       contact_email: fd.get('contact_email') || null,
       contact_phone: fd.get('contact_phone') || null,
@@ -359,7 +373,10 @@
         locChanged.length && `Client updated (this studio): ${locChanged.join(', ')}`
       ].filter(Boolean);
       return Object.assign({}, shared, {
-        id: crypto.randomUUID(),
+        id: i === 0 ? (firstId || crypto.randomUUID()) : crypto.randomUUID(),
+        // Only studio 1 carries the raw form state: it is the draft row, and
+        // one authoritative copy beats three that could drift.
+        form_state: i === 0 ? collectFormState() : null,
         business_name: fd.get(`loc${i}_business_name`) || null,
         business_email: fd.get(`loc${i}_business_email`) || null,
         business_phone: fd.get(`loc${i}_business_phone`) || null,
@@ -417,6 +434,46 @@
     if (!resp.ok) throw new Error(`Insert failed: ${resp.status} ${await resp.text()}`);
   }
 
+  /* ---------------------------- draft sync ------------------------------ */
+
+  // Tells the truth about where the answers currently live. It must never say
+  // "Saved to Velocity" when only localStorage has them.
+  function setSyncLabel(state) {
+    const el = document.querySelector('.mg-autosave-note');
+    if (!el) return;
+    if (state === 'saving') el.textContent = 'Saving...';
+    else if (state === 'saved') el.textContent = 'Saved to Velocity';
+    else if (state === 'preview') el.textContent = 'Preview mode';
+    else el.textContent = 'Saved on this device';
+  }
+
+  const sync = VelocityDraftSync.create({
+    supabaseUrl: SUPABASE_URL,
+    anonKey: SUPABASE_ANON_KEY,
+    table: TABLE,
+    storageKey: DRAFT_KEY,
+    preview: PREVIEW,
+    // Studio 1's row is the draft carrier for the whole form.
+    buildPayload: (status, id) => buildPayloads(status, id)[0],
+    // Studio 1 has just been flipped to pending by draft-sync; insert the rest.
+    afterSubmit: async (firstId) => {
+      const rest = buildPayloads('pending', firstId).slice(1);
+      for (const p of rest) await insertRow(p);
+    },
+    onState: setSyncLabel
+  });
+
+  // Reached when the draft in the URL has already been submitted. Editing a
+  // live submission from a stale link would silently diverge from what the
+  // team is provisioning, so the form is closed instead.
+  function showAlreadySubmitted() {
+    document.getElementById('intake-form').hidden = true;
+    const s = document.getElementById('success-screen');
+    s.querySelector('h2').textContent = 'This form has already been submitted';
+    s.querySelector('p').textContent = 'We have your onboarding details for all three studios. If something needs changing, email bill@velocityaipartners.ai and we will update it for you.';
+    s.hidden = false;
+  }
+
   function showSuccess() {
     document.getElementById('intake-form').hidden = true;
     const s = document.getElementById('success-screen');
@@ -433,15 +490,16 @@
     btn.textContent = 'Submitting...';
     try {
       if (PREVIEW) { showSuccess(); return; }
-      const payloads = buildPayloads();
-      for (const p of payloads) await insertRow(p);
+      // Flips studio 1's draft row to 'pending' (or inserts it outright), then
+      // afterSubmit inserts studios 2 and 3.
+      const intakeId = await sync.submit();
       // One receipt email, not three — the n8n workflow re-reads the row and
       // emails contact_email, which is the same on every row.
       fetch('https://velocityaipartners.app.n8n.cloud/webhook/intake-confirmation', {
         method: 'POST',
         keepalive: true,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intake_id: payloads[0].id })
+        body: JSON.stringify({ intake_id: intakeId })
       }).catch(() => {});
       showSuccess();
     } catch (err) {
@@ -502,12 +560,31 @@
     restoreDraft();
 
     if (PREVIEW) document.getElementById('preview-banner').hidden = false;
+    setSyncLabel(PREVIEW ? 'preview' : 'local-only');
+
+    // The server draft is the shared truth. If one exists it wins over the
+    // local copy, which is what lets another device, or another person holding
+    // the same link, pick up where the last edit left off.
+    sync.load().then(res => {
+      if (!res) return;
+      if (res.alreadySubmitted) { showAlreadySubmitted(); return; }
+      applyFormState(res.row && res.row.form_state);
+      updateProgressBar();
+      saveDraft();
+      setSyncLabel('saved');
+    });
+
+    // Best-effort write when the tab is closed or backgrounded mid-edit.
+    window.addEventListener('pagehide', () => sync.flush());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') sync.flush();
+    });
 
     syncStickyOffset();
     updateProgressBar();
     window.addEventListener('resize', syncStickyOffset);
 
-    const onEdit = () => { saveDraftSoon(); updateProgressBar(); };
+    const onEdit = () => { saveDraftSoon(); sync.touch(); updateProgressBar(); };
     document.getElementById('intake-form').addEventListener('input', onEdit);
     document.getElementById('intake-form').addEventListener('change', onEdit);
 
@@ -520,7 +597,17 @@
         setTimeout(() => { startOver.dataset.armed = ''; startOver.textContent = 'Start over'; }, 4000);
         return;
       }
-      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+      // Clear the local copy AND the draft pointer, and drop ?draft= from the
+      // URL, or the reload would just pull the server draft straight back.
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+        localStorage.removeItem(DRAFT_KEY + ':draft-id');
+      } catch (e) {}
+      try {
+        const url = new URL(location.href);
+        url.searchParams.delete('draft');
+        history.replaceState({}, '', url.toString());
+      } catch (e) {}
       location.reload();
     });
 
