@@ -1,0 +1,174 @@
+/* Pelaez/Spata Stretch Zone variant (West Bradenton + Sarasota South) — thin
+   layer on top of styles.css. Location cards, "on file" chips, preview banner,
+   and confirm step. Forked from magretti.css; the mg- class prefix is kept
+   from that base (same as gorman.css keeping song-koh's sk- prefix). */
+
+/* Bottom-fixed so it never collides with the navy top bar */
+.mg-preview-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  background: #7a5c00;
+  color: #fff;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.mg-autosave-note {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+}
+
+.mg-section-note {
+  font-size: 13px;
+  color: var(--text-secondary, #9a9a9a);
+  margin: -4px 0 16px;
+}
+
+/* Chips: what we already know, and what applies to both studios */
+.mg-known-chip,
+.mg-shared-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+  margin-left: 10px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.mg-known-chip {
+  color: var(--success, #4ade80);
+  background: var(--success-soft, rgba(74, 222, 128, 0.12));
+  border: 1px solid var(--success, #4ade80);
+}
+
+.mg-shared-chip {
+  color: var(--text-secondary, #9a9a9a);
+  background: transparent;
+  border: 1px solid var(--border, #333);
+}
+
+.mg-source-chip { font-weight: 600; }
+
+.mg-loc-card {
+  border: 1px solid var(--border, #333);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.mg-loc-num {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #9a9a9a);
+  margin-left: 10px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.mg-hours-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 20px 0 12px;
+}
+
+.mg-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.mg-error {
+  border: 1px solid #b91c1c;
+  background: rgba(185, 28, 28, 0.12);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  margin-top: 20px;
+}
+
+.mg-confirm {
+  border: 1px solid var(--border, #333);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 20px;
+}
+
+/* User rows gain an access dropdown, so widen the grid the main form defines.
+   The dropdown column gets a floor so studio names never truncate. */
+#users-list .mg-user-row {
+  grid-template-columns: 1fr 1.2fr minmax(210px, 0.9fr) auto;
+}
+
+#users-list .mg-user-row select {
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  #users-list .mg-user-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .mg-loc-card { padding: 16px; }
+  .mg-actions { justify-content: stretch; }
+  .mg-actions button { flex: 1; }
+
+  /* styles.css uses `90px 1fr 1fr 72px` for the hours grid, but 1fr means
+     minmax(auto, 1fr) and a time input's min-content width is ~133px in
+     Chrome, so those tracks cannot compress. The row needs 490px, which
+     pushed every "closed" toggle outside a 390px phone viewport — 14 of them
+     here, since this form has two studios — and at 320px the closing-time
+     inputs as well. Give the day label its own full-width row so
+     open/close/closed share the width beneath it. Same fix as gorman.css and
+     song-koh.css; applies to every per-studio grid. */
+  .hours-grid {
+    grid-template-columns: 1fr 1fr auto;
+    row-gap: 4px;
+  }
+
+  .hours-grid .day-label {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  /* Letting the track shrink is not enough — the input has to be allowed to
+     shrink below its own intrinsic width too. Trim the padding so the AM/PM
+     is not clipped: "8:00 AN" on an hours form is a real misread. */
+  .hours-grid input[type="time"] {
+    min-width: 0;
+    width: 100%;
+    padding-left: 8px;
+    padding-right: 4px;
+  }
+
+  .hours-grid .closed-wrap {
+    gap: 4px;
+  }
+
+  /* Both of these are nowrap, so on a 320px phone they cannot compress and
+     push the document out to 379px. Nothing becomes unreachable, but the page
+     drifts sideways. Let them wrap at phone widths only. */
+  .mg-shared-chip,
+  .mg-autosave-note {
+    white-space: normal;
+  }
+
+  .mg-autosave-note {
+    text-align: right;
+    line-height: 1.25;
+  }
+}
