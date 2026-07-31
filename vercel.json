@@ -4,6 +4,9 @@
     { "source": "/song-koh", "destination": "/song-koh.html" },
     { "source": "/brickell", "destination": "/gorman.html" },
     { "source": "/gorman", "destination": "/gorman.html" },
-    { "source": "/magretti", "destination": "/magretti.html" }
+    { "source": "/magretti", "destination": "/magretti.html" },
+    { "source": "/bradenton", "destination": "/pelaez-spata.html" },
+    { "source": "/sarasota", "destination": "/pelaez-spata.html" },
+    { "source": "/pelaez-spata", "destination": "/pelaez-spata.html" }
   ]
 }
