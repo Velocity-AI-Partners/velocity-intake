@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
   // Variant router: ?form=redesign, ?form=trimmed, ?form=franchisor,
-  // ?form=magretti, ?form=song-koh, ?form=gorman, ?form=pelaez-spata, and
-  // ?form=western-springs serve the variant pages. Default (no param) = this
-  // full live form, unchanged.
+  // ?form=magretti, ?form=song-koh, ?form=gorman, ?form=pelaez-spata,
+  // ?form=western-springs, and ?form=willowbrook serve the variant pages.
+  // Default (no param) = this full live form, unchanged.
   (function () {
     try {
       var f = new URLSearchParams(location.search).get('form');
@@ -19,6 +19,7 @@
       else if (f === 'gorman') location.replace('gorman.html' + location.hash);
       else if (f === 'pelaez-spata') location.replace('pelaez-spata.html' + location.hash);
       else if (f === 'western-springs') location.replace('western-springs.html' + location.hash);
+      else if (f === 'willowbrook') location.replace('willowbrook.html' + location.hash);
     } catch (e) {}
   })();
 </script>

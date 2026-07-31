@@ -8,6 +8,7 @@
     { "source": "/bradenton", "destination": "/pelaez-spata.html" },
     { "source": "/sarasota", "destination": "/pelaez-spata.html" },
     { "source": "/pelaez-spata", "destination": "/pelaez-spata.html" },
-    { "source": "/western-springs", "destination": "/western-springs.html" }
+    { "source": "/western-springs", "destination": "/western-springs.html" },
+    { "source": "/willowbrook", "destination": "/willowbrook.html" }
   ]
 }
