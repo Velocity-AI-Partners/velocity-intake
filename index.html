@@ -34,8 +34,9 @@
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <link rel="stylesheet" href="styles.css?v=23">
 <style>
-  /* v2-only styles. Kept inline so styles.css does not need a cache-buster
-     bump while this is still a preview. Fold into styles.css on ship. */
+  /* Styles added with the 2026-08-02 restructure. Kept inline so styles.css
+     stays byte-identical for the per-client forked forms that still share it.
+     Fold into styles.css once those forks are retired. */
   .stage { margin: 0 0 18px; }
   .stage__head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 8px; }
   .stage__name { font-size: 11px; font-weight: 700; letter-spacing: .09em;
@@ -70,6 +71,13 @@
      from the styles.css 640px breakpoint. */
   #users-list .user-row { grid-template-columns: 1fr 1fr 116px 40px; }
   @media (max-width: 640px) { #users-list .user-row { grid-template-columns: 1fr; } }
+  /* Autosave indicator in the sticky bar. Quiet by default so it reassures
+     without competing with the progress percentage. */
+  .autosave-status { display: block; font-size: 11px; line-height: 1.3;
+    color: rgba(255,255,255,.62); margin-top: 1px; }
+  .autosave-status[data-tone="ok"]   { color: rgba(150,235,190,.95); }
+  .autosave-status[data-tone="busy"] { color: rgba(255,255,255,.82); }
+  .autosave-status[data-tone="warn"] { color: rgba(255,214,150,.95); }
 </style>
 </head>
 <body>
@@ -83,6 +91,7 @@
     <div class="sticky-draft__meta">
       <span class="sticky-draft__title">Client Onboarding</span>
       <span class="sticky-draft__progress" id="sticky-progress-text">0% complete</span>
+      <span class="autosave-status" id="autosave-status" aria-live="polite"></span>
     </div>
     <button type="button" id="sticky-save-draft-btn" class="btn-secondary sticky-draft__btn">Save as draft</button>
     <!-- Collapses the draft link out of the way. Stays hidden until there is a
@@ -108,7 +117,7 @@
 
 <main class="container">
   <div id="preview-banner" class="trust-banner" style="background:#fff4e5;border-color:#f0c894;color:#7a4a06;margin-bottom:18px;" hidden>
-    <strong>Preview mode.</strong> This is the v2 draft running locally. Nothing you type here is saved and nothing is sent to the Velocity team.
+    <strong>Preview mode.</strong> You are running this form locally. Nothing you type is saved and nothing is sent to the Velocity team.
   </div>
   <header>
     <h1>Client Onboarding</h1>
@@ -814,6 +823,6 @@
 </main>
 
 
-<script src="form.js?v=27"></script>
+<script src="form.js?v=28"></script>
 </body>
 </html>

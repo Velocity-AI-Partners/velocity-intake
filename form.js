@@ -230,9 +230,223 @@
   }
 
   function clearStaleLocalStorage() {
-    // Older versions used localStorage for autosave. Remove any leftover state
-    // so the bare URL is always a fresh blank form.
+    // Older versions used a different localStorage key. Remove any leftover
+    // state so it can never bleed into the current autosave backup.
     try { localStorage.removeItem('velocity-intake-draft-v1'); } catch (e) {}
+  }
+
+  // Snapshot / restore of the raw form controls, used by the local backup.
+  // Distinct from buildPayload(), which shapes answers for the database: this
+  // is a literal picture of the page so a client gets back exactly what they
+  // typed, including fields the payload folds into jsonb.
+  function formState() {
+    const form = document.getElementById('intake-form');
+    const state = { fields: {}, userCount: 1 };
+    if (!form) return state;
+    form.querySelectorAll('input, select, textarea').forEach((el) => {
+      const n = el.name;
+      if (!n || n === 'honeypot' || el.type === 'file') return;
+      if (el.type === 'checkbox') state.fields[n] = el.checked;
+      else if (el.type === 'radio') { if (el.checked) state.fields[n] = el.value; }
+      else state.fields[n] = el.value;
+    });
+    state.userCount = document.querySelectorAll('#users-list .user-row').length || 1;
+    return state;
+  }
+
+  function applyFormState(state) {
+    const form = document.getElementById('intake-form');
+    if (!form || !state || !state.fields) return;
+
+    // Rebuild the repeater first, or the user_N_* inputs would not exist yet.
+    const list = document.getElementById('users-list');
+    const want = Math.max(1, state.userCount || 1);
+    if (list) {
+      list.innerHTML = '';
+      for (let i = 0; i < want; i++) list.insertAdjacentHTML('beforeend', userRowHTML(i));
+      userCounter = want;
+    }
+
+    Object.keys(state.fields).forEach((n) => {
+      let els;
+      try { els = form.querySelectorAll(`[name="${CSS.escape(n)}"]`); } catch (e) { return; }
+      if (!els.length) return;
+      const v = state.fields[n];
+      els.forEach((el) => {
+        // Checkboxes are stored as true/false, never omitted. Restoring only the
+        // ticked ones is what made a de-selected "closed" day silently re-check
+        // itself in the per-client forks.
+        if (el.type === 'checkbox') el.checked = !!v;
+        else if (el.type === 'radio') el.checked = (el.value === v);
+        else el.value = v == null ? '' : v;
+      });
+    });
+
+    DAYS.forEach((d) => {
+      const c = form.elements[`hours_${d}_closed`];
+      const o = form.elements[`hours_${d}_open`];
+      const cl = form.elements[`hours_${d}_close`];
+      if (c && o && cl) { o.disabled = !!c.checked; cl.disabled = !!c.checked; }
+    });
+
+    applyConditionals();
+    updateProgressBar();
+  }
+
+  // ---------------------------------------------------------------- autosave
+  // Until 2026-08-02 the ONLY writes were the two button clicks, so a client who
+  // typed for twenty minutes and closed the tab lost everything, left no row,
+  // and we never knew they had started. Autosave makes their answers durable
+  // without them having to know to press anything.
+  const AUTOSAVE_DEBOUNCE_MS = 4000;   // quiet period after the last keystroke
+  const AUTOSAVE_MIN_GAP_MS = 20000;   // floor between server writes
+  const AUTOSAVE_MIN_FIELDS = 3;       // before creating a row from a cold start
+  const LOCAL_BACKUP_KEY = 'velocity-intake-backup-v2';
+
+  let autosaveTimer = null;
+  let autosaveLastAt = 0;
+  let autosaveInFlight = false;
+  let autosaveStopped = false;         // set on submit / lock: never write again
+
+  function setSaveStatus(text, tone) {
+    const el = document.getElementById('autosave-status');
+    if (!el) return;
+    el.textContent = text || '';
+    el.dataset.tone = tone || '';
+  }
+
+  // How many fields the client has actually CHANGED. Counting non-empty fields
+  // does not work: the form ships with the hours grid pre-filled at 09:00-17:00,
+  // so fourteen inputs are already populated before anyone types. Diffing
+  // against the state captured at load is the only honest measure, and it also
+  // handles a pre-filled draft correctly (an untouched draft counts as zero).
+  let autosaveBaseline = null;
+
+  function captureAutosaveBaseline() {
+    autosaveBaseline = JSON.stringify(formState().fields);
+  }
+
+  function changedFieldCount() {
+    if (!autosaveBaseline) return 0;
+    let base;
+    try { base = JSON.parse(autosaveBaseline); } catch (e) { return 0; }
+    const now = formState().fields;
+    const keys = new Set(Object.keys(base).concat(Object.keys(now)));
+    let n = 0;
+    keys.forEach((k) => {
+      if (k === 'location_page_url') return;
+      const a = base[k] === undefined ? '' : base[k];
+      const b = now[k] === undefined ? '' : now[k];
+      if (a !== b) n++;
+    });
+    return n;
+  }
+
+  function writeLocalBackup() {
+    // Covers the window autosave cannot: before the row exists, and any moment
+    // the network is down. Keyed by draft id so two clients on a shared device
+    // can never see each other's answers.
+    try {
+      if (changedFieldCount() < 1) return;
+      localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify({
+        draftId: draftId || null,
+        savedAt: Date.now(),
+        state: formState()
+      }));
+    } catch (e) { /* private mode / quota: the server autosave still applies */ }
+  }
+
+  function clearLocalBackup() {
+    try { localStorage.removeItem(LOCAL_BACKUP_KEY); } catch (e) {}
+  }
+
+  async function autosaveNow(reason) {
+    if (autosaveStopped || autosaveInFlight) return;
+    const form = document.getElementById('intake-form');
+    if (!form || form.hidden) return;
+    // A filled honeypot cannot be written anyway: the RLS INSERT policy requires
+    // it to be empty. Bail quietly rather than surfacing a failure to a bot.
+    const fd = new FormData(form);
+    if ((fd.get('honeypot') || '').toString().trim() !== '') return;
+    // Cold start: only mint a row once there is real content to protect.
+    if (!draftId && changedFieldCount() < AUTOSAVE_MIN_FIELDS) return;
+
+    autosaveInFlight = true;
+    setSaveStatus('Saving...', 'busy');
+    try {
+      const payload = buildPayload('draft');
+      if (draftId) {
+        await updateRow(draftId, payload);
+      } else {
+        const newId = (crypto.randomUUID && crypto.randomUUID()) || generateUuid();
+        payload.id = newId;
+        await insertRow(payload);
+        draftId = newId;
+        setDraftIdInUrl(newId);
+        showDraftLink(false);
+      }
+      autosaveLastAt = Date.now();
+      clearLocalBackup();
+      setSaveStatus('All changes saved', 'ok');
+    } catch (err) {
+      console.error('[autosave] failed:', reason, err);
+      // Keep the local copy as the fallback and stay quiet in the UI: the client
+      // has done nothing wrong and the next attempt usually succeeds.
+      writeLocalBackup();
+      setSaveStatus('Saved on this device', 'warn');
+    } finally {
+      autosaveInFlight = false;
+    }
+  }
+
+  function scheduleAutosave() {
+    if (autosaveStopped) return;
+    writeLocalBackup();
+    setSaveStatus('Unsaved changes', '');
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    const sinceLast = Date.now() - autosaveLastAt;
+    const wait = Math.max(AUTOSAVE_DEBOUNCE_MS, AUTOSAVE_MIN_GAP_MS - sinceLast);
+    autosaveTimer = setTimeout(() => autosaveNow('debounce'), wait);
+  }
+
+  function stopAutosave() {
+    autosaveStopped = true;
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    setSaveStatus('', '');
+  }
+
+  function initAutosave() {
+    const form = document.getElementById('intake-form');
+    if (!form) return;
+    form.addEventListener('input', scheduleAutosave);
+    form.addEventListener('change', scheduleAutosave);
+    // Closing the tab or switching away is the exact moment work gets lost.
+    // keepalive lets the request outlive the page; sendBeacon cannot be used
+    // because PostgREST needs the apikey and x-draft-id headers.
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        if (autosaveTimer) clearTimeout(autosaveTimer);
+        writeLocalBackup();
+        autosaveNow('hidden');
+      }
+    });
+    window.addEventListener('pagehide', () => { writeLocalBackup(); });
+  }
+
+  // Restore a local backup only when the server had nothing for us, so a stale
+  // copy can never overwrite answers that did reach the database.
+  function maybeRestoreLocalBackup() {
+    let backup = null;
+    try {
+      const raw = localStorage.getItem(LOCAL_BACKUP_KEY);
+      if (raw) backup = JSON.parse(raw);
+    } catch (e) { return; }
+    if (!backup || !backup.state) return;
+    if (backup.draftId && backup.draftId !== draftId) { clearLocalBackup(); return; }
+    if (draftId) return;                       // the server row already won
+    if (changedFieldCount() > 0) return;       // never overwrite a populated form
+    applyFormState(backup.state);
+    setSaveStatus('Restored your unsaved answers from this device', 'warn');
   }
 
   function revealToggle(el, show) {
@@ -1023,6 +1237,8 @@
         body: JSON.stringify({ intake_id: draftId || payload.id }),
       }).catch(() => {}); // best-effort; must never block or break the success screen
 
+      stopAutosave();
+      clearLocalBackup();
       closeSubmitConfirm();
       document.getElementById('intake-form').hidden = true;
       document.getElementById('draft-banner').hidden = true;
@@ -1044,6 +1260,7 @@
   function lockFormWithError(message) {
     const form = document.getElementById('intake-form');
     if (form) form.hidden = true;
+    stopAutosave();
     disableStickyDraftBar();
     showError(message);
   }
@@ -1370,6 +1587,9 @@
     initPrefillButton();
 
     await initDraftFromUrl();
+    captureAutosaveBaseline();
+    maybeRestoreLocalBackup();
+    initAutosave();
     updateProgressBar();
 
     document.getElementById('intake-form').addEventListener('change', (e) => {
