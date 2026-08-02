@@ -648,6 +648,7 @@
     const fromSticky = source === 'sticky';
     setDraftButtonState('Saving...', true);
     try {
+      const payload = buildPayload('draft');
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
@@ -1000,7 +1001,7 @@
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Submitting...';
     try {
-
+      const payload = buildPayload('pending');
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
