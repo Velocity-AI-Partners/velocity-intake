@@ -4,6 +4,12 @@
   const TABLE = 'location_intake_submissions';
   const BUCKET = 'intake-logos';
 
+  // Local preview never writes to prod. The main form.js has no such guard, so
+  // v2 adds the one the per-client variants already use. ?live=1 overrides for
+  // a deliberate end-to-end test.
+  const PREVIEW = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    && !/[?&]live=1\b/.test(location.search);
+
   const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   const DAY_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 
@@ -12,7 +18,6 @@
   // 'pending'. If no draft param, we're on a blank form and the first Save
   // Draft creates a new row + puts its id in the URL.
   let draftId = null;
-  let existingLogoUrl = null;
   let userCounter = 0;
 
   function getDraftIdFromUrl() {
@@ -57,6 +62,10 @@
           <input type="email" name="user_${i}_email" placeholder="Email">
           <span class="req" aria-hidden="true">*</span>
         </div>
+        <select name="user_${i}_role" aria-label="Access level">
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
         <button type="button" class="remove-user" aria-label="Remove user">&times;</button>
       </div>
     `;
@@ -91,44 +100,55 @@
     const hours = {};
     for (const d of DAYS) {
       const closed = fd.get(`hours_${d}_closed`) === 'on';
-      hours[d] = closed
-        ? { closed: true }
-        : { open: fd.get(`hours_${d}_open`), close: fd.get(`hours_${d}_close`), closed: false };
+      // Read the times from the DOM, not FormData: a closed day disables its
+      // open/close inputs and FormData omits disabled fields. Keeping the times
+      // means un-ticking "closed" after a save restores what the client
+      // originally entered instead of snapping back to the 09:00-17:00 default.
+      const openEl = document.querySelector(`[name="hours_${d}_open"]`);
+      const closeEl = document.querySelector(`[name="hours_${d}_close"]`);
+      hours[d] = {
+        open: (openEl && openEl.value) || null,
+        close: (closeEl && closeEl.value) || null,
+        closed
+      };
     }
     return hours;
   }
 
-  const TONES = ['friendly', 'professional', 'motivational', 'humorous', 'upbeat'];
-  const AUTOMATION_GOALS = ['book_demos', 'answer_faqs', 'followup_leads', 'reactivate_old', 'upsell', 'provide_directions', 'other'];
   const NOTIFICATION_CHANNELS = ['email', 'sms'];
-  const LEAD_SOURCES = ['website', 'paid_ads', 'phone', 'walkin', 'referrals', 'events', 'gbp', 'social_dms', 'other'];
-  const REACTIVATION_SEGMENTS = ['no_shows', 'cooled_leads', 'expired_members', 'paused', 'lost_sheep', 'other'];
+
+  // The campaign lifecycle from the Campaign Map, in map order. These replace
+  // the old abstract goal_* checkboxes: the client now picks real campaigns,
+  // which map 1:1 onto campaign_toggles.campaign_type at provisioning time.
+  const CAMPAIGNS = [
+    'contacting_new_leads', 'lead_reactivation_warm', 'lead_reactivation_cold',
+    'booking_reminder', 'no_show_recovery', 'cancel_recovery',
+    'post_visit_followup', 'complete_your_intro',
+    'missed_sale',
+    'birthday_milestones', 'milestone_reminders', 'member_rebooking',
+    'client_retention_medium', 'client_retention_high',
+    'ex_member_winback'
+  ];
   const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PHONE_RX = /(?:\d[^\d]*){7,}/;
 
   const LABELS = {
-    // Automation goals
-    book_demos: 'Book demos / trials',
-    answer_faqs: 'Answer FAQs',
-    followup_leads: 'Follow up with new leads',
-    reactivate_old: 'Reactivate old members',
-    upsell: 'Upsell memberships',
-    provide_directions: 'Provide directions',
-    // Reactivation segments
-    no_shows: 'Demo / trial no-shows',
-    cooled_leads: 'Cooled leads',
-    expired_members: 'Expired memberships',
-    paused: 'Paused / frozen accounts',
-    lost_sheep: 'Long-term inactive',
-    // Lead sources
-    website: 'Website form',
-    paid_ads: 'Paid ads',
-    phone: 'Phone calls',
-    walkin: 'Walk-ins',
-    referrals: 'Referrals',
-    events: 'Local events',
-    gbp: 'Google Business Profile',
-    social_dms: 'Social media DMs',
+    // Campaigns, in Campaign Map order
+    contacting_new_leads: 'Contacting New Leads',
+    lead_reactivation_warm: 'Lead Reactivation · Warm',
+    lead_reactivation_cold: 'Lead Reactivation · Cold',
+    booking_reminder: 'Booking Reminder',
+    no_show_recovery: 'No-Show Recovery',
+    cancel_recovery: 'Cancel Recovery',
+    post_visit_followup: 'Post-Visit Follow-Up',
+    complete_your_intro: 'Complete Your Intro',
+    missed_sale: 'Missed Sale',
+    birthday_milestones: 'Birthday & Milestones',
+    milestone_reminders: 'Milestone Reminders',
+    member_rebooking: 'Member Rebooking',
+    client_retention_medium: 'Client Retention · Medium',
+    client_retention_high: 'Client Retention · High',
+    ex_member_winback: 'Ex-Member Winback',
     // Notification channels + tones + voice
     email: 'Email',
     sms: 'SMS',
@@ -166,29 +186,19 @@
     return LABELS[key] || key;
   }
 
-  function collectTones(fd) {
-    return TONES.filter(t => fd.get(`tone_${t}`) === 'on');
-  }
-
-  function collectAutomationGoals(fd) {
-    return AUTOMATION_GOALS.filter(g => fd.get(`goal_${g}`) === 'on');
+  function collectCampaigns(fd) {
+    return CAMPAIGNS.filter(c => fd.get(`camp_${c}`) === 'on');
   }
 
   function collectNotificationChannels(fd) {
     return NOTIFICATION_CHANNELS.filter(c => fd.get(`notify_${c}`) === 'on');
   }
 
-  function collectLeadSources(fd) {
-    return LEAD_SOURCES.filter(s => fd.get(`lead_source_${s}`) === 'on');
-  }
-
-  function collectReactivationSegments(fd) {
-    return REACTIVATION_SEGMENTS.filter(s => fd.get(`react_${s}`) === 'on');
-  }
-
   function collectBusinessKnowledge(fd) {
     const yesNoToBool = (v) => v === 'yes' ? true : v === 'no' ? false : null;
     return {
+      // TODO(migration 018): promote to a real contact_name column.
+      contact_name: fd.get('contact_name') || null,
       service_description: fd.get('bk_service_description') || null,
       single_session_rate: fd.get('bk_single_session_rate') || null,
       membership_pricing: fd.get('bk_membership_pricing') || null,
@@ -198,12 +208,9 @@
       eligibility: fd.get('bk_eligibility') || null,
       ideal_client: fd.get('bk_ideal_client') || null,
       pain_points: fd.get('bk_pain_points') || null,
-      lead_sources: collectLeadSources(fd),
-      lead_sources_other: fd.get('lead_source_other_text') || null,
       unique_value: fd.get('bk_unique_value') || null,
       first_visit: fd.get('bk_first_visit') || null,
       faq: fd.get('bk_faq') || null,
-      testimonials: fd.get('bk_testimonials') || null,
       accepts_insurance: yesNoToBool(fd.get('bk_accepts_insurance')),
       accepts_hsa_fsa: yesNoToBool(fd.get('bk_accepts_hsa_fsa')),
       insurance_notes: fd.get('bk_insurance_notes') || null
@@ -215,7 +222,9 @@
     document.querySelectorAll('#users-list .user-row').forEach(row => {
       const name = row.querySelector('[name$="_name"]').value.trim();
       const email = row.querySelector('[name$="_email"]').value.trim();
-      if (name || email) users.push({ name, email, role: 'manager' });
+      const roleEl = row.querySelector('[name$="_role"]');
+      const role = (roleEl && roleEl.value) || 'manager';
+      if (name || email) users.push({ name, email, role });
     });
     return users;
   }
@@ -235,38 +244,6 @@
       // force reflow so the animation replays
       void el.offsetWidth;
       el.classList.add('reveal-in');
-    }
-  }
-
-  function toggleParentBrand() {
-    const yes = document.querySelector('[name="is_multi_location"][value="yes"]').checked;
-    const wrap = document.getElementById('parent-brand-wrap');
-    revealToggle(wrap, yes);
-    if (!yes) {
-      const select = wrap.querySelector('[name="parent_brand_name"]');
-      if (select) select.value = '';
-    }
-    toggleBrandSpecificFields();
-  }
-
-  function toggleBrandSpecificFields() {
-    const isYes = document.querySelector('[name="is_multi_location"][value="yes"]').checked;
-    const select = document.querySelector('[name="parent_brand_name"]');
-    const brand = isYes && select ? select.value : '';
-
-    const conditionals = [
-      { wrap: 'parent-brand-other-wrap', input: 'parent_brand_other', show: brand === 'other' },
-      { wrap: 'booking-payment-link-wrap', input: 'booking_payment_link', show: brand === 'StretchLab' },
-      { wrap: 'store-id-wrap', input: 'crm_store_id', show: brand === 'Stretch Zone' }
-    ];
-
-    for (const c of conditionals) {
-      const wrap = document.getElementById(c.wrap);
-      revealToggle(wrap, c.show);
-      if (!c.show && wrap) {
-        const input = wrap.querySelector(`[name="${c.input}"]`);
-        if (input) input.value = '';
-      }
     }
   }
 
@@ -292,102 +269,20 @@
     }
   }
 
-  function toggleGoalOther() {
-    const cb = document.querySelector('[name="goal_other"]');
-    const isOther = cb && cb.checked;
-    const wrap = document.getElementById('goal-other-wrap');
-    revealToggle(wrap, isOther);
-    if (!isOther && wrap) {
-      const input = wrap.querySelector('[name="goal_other_text"]');
-      if (input) input.value = '';
-    }
-  }
-
-  function toggleHandoffRuleOther() {
-    const radio = document.querySelector('[name="handoff_rule"][value="other"]');
-    const isOther = radio && radio.checked;
-    const wrap = document.getElementById('handoff-rule-other-wrap');
-    revealToggle(wrap, isOther);
-    if (!isOther && wrap) {
-      const input = wrap.querySelector('[name="handoff_rule_other"]');
-      if (input) input.value = '';
-    }
-  }
-
-  function toggleReactOther() {
-    const cb = document.querySelector('[name="react_other"]');
-    const isOther = cb && cb.checked;
-    const wrap = document.getElementById('react-other-wrap');
-    revealToggle(wrap, isOther);
-    if (!isOther && wrap) {
-      const input = wrap.querySelector('[name="react_other_text"]');
-      if (input) input.value = '';
-    }
-  }
-
-  function toggleLeadSourceOther() {
-    const cb = document.querySelector('[name="lead_source_other"]');
-    const isOther = cb && cb.checked;
-    const wrap = document.getElementById('lead-source-other-wrap');
-    revealToggle(wrap, isOther);
-    if (!isOther && wrap) {
-      const input = wrap.querySelector('[name="lead_source_other_text"]');
-      if (input) input.value = '';
+  function toggleNotifyTarget() {
+    const radio = document.querySelector('[name="notify_target"][value="different"]');
+    const isDifferent = radio && radio.checked;
+    const wrap = document.getElementById('notify-different-wrap');
+    revealToggle(wrap, isDifferent);
+    if (!isDifferent && wrap) {
+      wrap.querySelectorAll('input').forEach(i => { i.value = ''; });
     }
   }
 
   function applyConditionals() {
-    toggleParentBrand();
     toggleCrmOther();
     toggleMainCtaOther();
-    toggleGoalOther();
-    toggleHandoffRuleOther();
-    toggleReactOther();
-    toggleLeadSourceOther();
-  }
-
-  async function uploadLogo(file) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const safeBase = (file.name || 'logo').replace(/[^a-z0-9]/gi, '-').slice(0, 40);
-    const path = `${Date.now()}-${safeBase}.${ext}`;
-    const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`;
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': file.type,
-        'x-upsert': 'false'
-      },
-      body: file
-    });
-    if (!resp.ok) {
-      const body = await resp.text();
-      throw new Error(`Logo upload failed: ${resp.status} ${body}`);
-    }
-    const newUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
-    if (existingLogoUrl && existingLogoUrl !== newUrl) {
-      deleteLogoSilent(existingLogoUrl);
-    }
-    existingLogoUrl = newUrl;
-    return newUrl;
-  }
-
-  async function deleteLogoSilent(publicUrl) {
-    try {
-      const prefix = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/`;
-      if (!publicUrl || !publicUrl.startsWith(prefix)) return;
-      const path = publicUrl.slice(prefix.length);
-      await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {
-        method: 'DELETE',
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-        }
-      });
-    } catch (e) {
-      // Silently ignore — stale logos in the bucket are low-harm.
-    }
+    toggleNotifyTarget();
   }
 
   function buildPayload(status) {
@@ -403,16 +298,22 @@
       timezone: fd.get('timezone') || null,
       contact_email: fd.get('contact_email') || null,
       contact_phone: fd.get('contact_phone') || null,
+      // TODO(migration 018): contact_name has no column yet. Parked in the
+      // business_knowledge bundle so the answer is not lost; move it to a real
+      // column before this ships. See collectBusinessKnowledge().
       hours: collectHours(fd),
       hours_confirmed: fd.get('hours_confirmed') === 'on',
       crm_platform: fd.get('crm_platform') || null,
       crm_platform_other: fd.get('crm_platform_other') || null,
-      crm_store_id: fd.get('crm_store_id') || null,
       crm_account_confirmed: fd.get('crm_account_confirmed') === 'on',
-      chatbot_voice: fd.get('chatbot_voice') || null,
-      chatbot_voice_notes: fd.get('chatbot_voice_notes') || null,
-      chatbot_tone: collectTones(fd),
-      chatbot_tone_notes: fd.get('chatbot_tone_notes') || null,
+      // Read by provision-from-intake but never collected until now: every
+      // location provisioned with assistant_name NULL and booking_link NULL,
+      // then got patched by hand. These close that gap.
+      assistant_name: fd.get('assistant_name') || null,
+      trial_booking_url: fd.get('trial_booking_url') || null,
+      // Derived, not asked: a free demo or free trial CTA means the first visit
+      // is free. Any other CTA (schedule a call, buy a membership) does not.
+      has_free_trial: ['book_demo', 'start_trial'].includes(fd.get('main_cta')),
       main_cta: fd.get('main_cta') || null,
       main_cta_other: fd.get('main_cta_other') || null,
       intro_offer: fd.get('intro_offer') || null,
@@ -420,35 +321,24 @@
       avoid_words: fd.get('avoid_words') || null,
       dashboard_users: collectUsers(),
       business_knowledge: collectBusinessKnowledge(fd),
+      // Campaign map. `campaigns` are Campaign Map keys, which map 1:1 onto
+      // campaign_toggles.campaign_type. TODO: provision-from-intake still reads
+      // automation_goals.goals for its "AI Employee Goals" KB row and must be
+      // updated to read `campaigns` and write campaign_toggles from it.
       automation_goals: {
-        goals: collectAutomationGoals(fd),
-        other_text: fd.get('goal_other_text') || null,
-        reactivation_segments: collectReactivationSegments(fd),
-        reactivation_segments_other: fd.get('react_other_text') || null,
-        reactivation_offer: fd.get('reactivation_offer') || null
-      },
-      handoff_config: {
-        rule: fd.get('handoff_rule') || null,
-        rule_other: fd.get('handoff_rule_other') || null
+        campaigns: collectCampaigns(fd)
       },
       notification_config: {
-        channels: collectNotificationChannels(fd)
+        channels: collectNotificationChannels(fd),
+        target: fd.get('notify_target') || 'primary',
+        email: fd.get('notify_email_address') || null,
+        phone: fd.get('notify_phone_number') || null
       },
-      sms_cadence: {
-        initial_delay: fd.get('sms_initial_delay') || null,
-        followup_cadence: fd.get('sms_followup_cadence') || null
-      },
-      kpi_targets: fd.get('kpi_targets') || null,
       website_url: fd.get('website_url') || null,
       google_business_profile_url: fd.get('google_business_profile_url') || null,
-      is_multi_location: fd.get('is_multi_location') === 'yes',
-      parent_brand_name: fd.get('parent_brand_name') || null,
-      parent_brand_other: fd.get('parent_brand_other') || null,
-      booking_payment_link: fd.get('booking_payment_link') || null,
       instagram_handle: fd.get('instagram_handle') || null,
       facebook_page_url: fd.get('facebook_page_url') || null,
       tiktok_handle: fd.get('tiktok_handle') || null,
-      target_launch_date: fd.get('target_launch_date') || null,
       notes: fd.get('notes') || null,
       honeypot: fd.get('honeypot') || null,
       user_agent: navigator.userAgent
@@ -456,6 +346,7 @@
   }
 
   async function insertRow(payload) {
+    if (PREVIEW) { console.log('[preview] INSERT suppressed. Payload:', payload); return; }
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}`, {
       method: 'POST',
       headers: {
@@ -473,6 +364,7 @@
   }
 
   async function updateRow(id, payload) {
+    if (PREVIEW) { console.log('[preview] PATCH suppressed for', id, 'Payload:', payload); return; }
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: {
@@ -531,7 +423,6 @@
       if (radio) radio.checked = true;
     };
 
-    existingLogoUrl = row.logo_url || null;
 
     set('business_name', row.business_name);
     set('business_email', row.business_email);
@@ -543,10 +434,6 @@
     set('contact_phone', row.contact_phone);
     set('website_url', row.website_url);
     set('google_business_profile_url', row.google_business_profile_url);
-    setRadio('is_multi_location', row.is_multi_location);
-    set('parent_brand_name', row.parent_brand_name);
-    set('parent_brand_other', row.parent_brand_other);
-    set('booking_payment_link', row.booking_payment_link);
 
     const hoursConfirmedEl = form.elements['hours_confirmed'];
     if (hoursConfirmedEl) hoursConfirmedEl.checked = !!row.hours_confirmed;
@@ -558,32 +445,23 @@
         const closedEl = form.elements[`hours_${d}_closed`];
         const openEl = form.elements[`hours_${d}_open`];
         const closeEl = form.elements[`hours_${d}_close`];
-        if (h.closed) {
-          if (closedEl) closedEl.checked = true;
-          if (openEl) openEl.disabled = true;
-          if (closeEl) closeEl.disabled = true;
-        } else {
-          if (closedEl) closedEl.checked = false;
-          if (openEl) { openEl.disabled = false; if (h.open) openEl.value = h.open; }
-          if (closeEl) { closeEl.disabled = false; if (h.close) closeEl.value = h.close; }
-        }
+        // Always restore the stored times, then set disabled from `closed`.
+        // Older rows saved before this fix have no times on a closed day, so
+        // the 09:00-17:00 default stands in and nothing is lost either way.
+        if (openEl && h.open) openEl.value = h.open;
+        if (closeEl && h.close) closeEl.value = h.close;
+        if (closedEl) closedEl.checked = !!h.closed;
+        if (openEl) openEl.disabled = !!h.closed;
+        if (closeEl) closeEl.disabled = !!h.closed;
       }
     }
 
     set('crm_platform', row.crm_platform);
     set('crm_platform_other', row.crm_platform_other);
-    set('crm_store_id', row.crm_store_id);
     set('crm_account_confirmed', row.crm_account_confirmed);
 
-    setRadio('chatbot_voice', row.chatbot_voice);
-    set('chatbot_voice_notes', row.chatbot_voice_notes);
-    if (Array.isArray(row.chatbot_tone)) {
-      TONES.forEach(t => {
-        const cb = form.elements[`tone_${t}`];
-        if (cb) cb.checked = row.chatbot_tone.includes(t);
-      });
-    }
-    set('chatbot_tone_notes', row.chatbot_tone_notes);
+    set('assistant_name', row.assistant_name);
+    set('trial_booking_url', row.trial_booking_url);
     set('main_cta', row.main_cta);
     set('main_cta_other', row.main_cta_other);
     set('intro_offer', row.intro_offer);
@@ -603,50 +481,22 @@
     set('bk_eligibility', bk.eligibility);
     set('bk_ideal_client', bk.ideal_client);
     set('bk_pain_points', bk.pain_points);
-    if (Array.isArray(bk.lead_sources)) {
-      LEAD_SOURCES.forEach(s => {
-        const cb = form.elements[`lead_source_${s}`];
-        if (cb) cb.checked = bk.lead_sources.includes(s);
-      });
-    }
-    set('lead_source_other_text', bk.lead_sources_other);
+    set('contact_name', bk.contact_name);
     set('bk_unique_value', bk.unique_value);
     set('bk_first_visit', bk.first_visit);
     set('bk_faq', bk.faq);
-    set('bk_testimonials', bk.testimonials);
     setRadio('bk_accepts_insurance', bk.accepts_insurance);
     setRadio('bk_accepts_hsa_fsa', bk.accepts_hsa_fsa);
     set('bk_insurance_notes', bk.insurance_notes);
 
     const ag = row.automation_goals;
-    let goalsArr = [];
-    let goalsOther = null;
-    let reactSegs = [];
-    let reactOther = null;
-    let reactOffer = null;
-    if (Array.isArray(ag)) {
-      goalsArr = ag;
-    } else if (ag && typeof ag === 'object') {
-      goalsArr = Array.isArray(ag.goals) ? ag.goals : [];
-      goalsOther = ag.other_text || null;
-      reactSegs = Array.isArray(ag.reactivation_segments) ? ag.reactivation_segments : [];
-      reactOther = ag.reactivation_segments_other || null;
-      reactOffer = ag.reactivation_offer || null;
-    }
-    AUTOMATION_GOALS.forEach(g => {
-      const cb = form.elements[`goal_${g}`];
-      if (cb) cb.checked = goalsArr.includes(g);
+    const campaigns = (ag && typeof ag === 'object' && Array.isArray(ag.campaigns))
+      ? ag.campaigns : [];
+    CAMPAIGNS.forEach(c => {
+      const cb = form.elements[`camp_${c}`];
+      if (cb) cb.checked = campaigns.includes(c);
     });
-    set('goal_other_text', goalsOther);
-    REACTIVATION_SEGMENTS.forEach(s => {
-      const cb = form.elements[`react_${s}`];
-      if (cb) cb.checked = reactSegs.includes(s);
-    });
-    set('react_other_text', reactOther);
-    set('reactivation_offer', reactOffer);
-    const hc = row.handoff_config || {};
-    setRadio('handoff_rule', hc.rule);
-    set('handoff_rule_other', hc.rule_other);
+
     const nc = row.notification_config || {};
     if (Array.isArray(nc.channels)) {
       NOTIFICATION_CHANNELS.forEach(c => {
@@ -654,12 +504,9 @@
         if (cb) cb.checked = nc.channels.includes(c);
       });
     }
-
-    const sc = row.sms_cadence || {};
-    setRadio('sms_initial_delay', sc.initial_delay);
-    set('sms_followup_cadence', sc.followup_cadence);
-
-    set('kpi_targets', row.kpi_targets);
+    setRadio('notify_target', nc.target || 'primary');
+    set('notify_email_address', nc.email);
+    set('notify_phone_number', nc.phone);
 
     const users = Array.isArray(row.dashboard_users) ? row.dashboard_users : [];
     const list = document.getElementById('users-list');
@@ -670,11 +517,12 @@
         const row = list.lastElementChild;
         row.querySelector('[name$="_name"]').value = u.name || '';
         row.querySelector('[name$="_email"]').value = u.email || '';
+        const roleEl = row.querySelector('[name$="_role"]');
+        if (roleEl && u.role) roleEl.value = u.role;
       });
       userCounter = users.length;
     }
 
-    set('target_launch_date', row.target_launch_date);
     set('notes', row.notes);
 
     applyConditionals();
@@ -707,17 +555,9 @@
       else if (el.type === 'tel' && !PHONE_RX.test(val)) problems.push(el);
     }
 
-    if (fd.get('is_multi_location') === 'yes' && !(fd.get('parent_brand_name') || '').trim()) {
-      problems.push(form.querySelector('[name="parent_brand_name"]'));
-    }
-    if (fd.get('parent_brand_name') === 'other' && !(fd.get('parent_brand_other') || '').trim()) {
-      problems.push(form.querySelector('[name="parent_brand_other"]'));
-    }
     if (fd.get('crm_platform') === 'other' && !(fd.get('crm_platform_other') || '').trim()) {
       problems.push(form.querySelector('[name="crm_platform_other"]'));
     }
-    if (!fd.get('chatbot_voice')) problems.push(form.querySelector('[name="chatbot_voice"]'));
-    if (collectTones(fd).length === 0) problems.push(form.querySelector('[name="tone_friendly"]'));
     if (fd.get('main_cta') === 'other' && !(fd.get('main_cta_other') || '').trim()) {
       problems.push(form.querySelector('[name="main_cta_other"]'));
     }
@@ -725,9 +565,11 @@
       problems.push(form.querySelector('[name="bk_single_session_rate"]'));
       problems.push(form.querySelector('[name="bk_membership_pricing"]'));
     }
-    if (!fd.get('handoff_rule')) problems.push(form.querySelector('[name="handoff_rule"]'));
-    if (fd.get('handoff_rule') === 'other' && !(fd.get('handoff_rule_other') || '').trim()) {
-      problems.push(form.querySelector('[name="handoff_rule_other"]'));
+    if (collectCampaigns(fd).length === 0) {
+      problems.push(form.querySelector('[name="camp_contacting_new_leads"]'));
+    }
+    if (collectNotificationChannels(fd).length === 0) {
+      problems.push(form.querySelector('[name="notify_email"]'));
     }
 
     document.querySelectorAll('#users-list .user-row').forEach(row => {
@@ -819,16 +661,7 @@
     const fromSticky = source === 'sticky';
     setDraftButtonState('Saving...', true);
     try {
-      const logoFile = document.getElementById('logo-input').files[0];
       const payload = buildPayload('draft');
-      if (logoFile) {
-        if (logoFile.size > 2 * 1024 * 1024) {
-          showError('Logo is over 2MB. Please use a smaller image.');
-          setDraftButtonState('Save as draft', false);
-          return;
-        }
-        payload.logo_url = await uploadLogo(logoFile);
-      }
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
@@ -932,26 +765,17 @@
       return s || '—';
     };
 
-    const tones = collectTones(fd);
     const users = collectUsers();
-    const goals = collectAutomationGoals(fd);
-    const reactSegs = collectReactivationSegments(fd);
-    const leadSrcs = collectLeadSources(fd);
+    const campaigns = collectCampaigns(fd);
     const channels = collectNotificationChannels(fd);
 
-    const multi = fd.get('is_multi_location') === 'yes';
-    const brand = multi ? (fd.get('parent_brand_name') === 'other' ? dash(fd.get('parent_brand_other')) + ' (other)' : dash(fd.get('parent_brand_name'))) : 'Standalone';
     const crmDisplay = fd.get('crm_platform') === 'other' ? dash(fd.get('crm_platform_other')) + ' (other)' : label(fd.get('crm_platform')) || '—';
     const ctaDisplay = fd.get('main_cta') === 'other' ? dash(fd.get('main_cta_other')) + ' (other)' : label(fd.get('main_cta')) || '—';
-    const handoffDisplay = fd.get('handoff_rule') === 'other' ? dash(fd.get('handoff_rule_other')) + ' (other)' : label(fd.get('handoff_rule')) || '—';
-    const tonesDisplay = tones.length ? tones.map(label).join(', ') : '—';
-    const goalsDisplay = goals.length ? goals.map(label).join(', ') : '—';
-    const reactDisplay = reactSegs.length ? reactSegs.map(label).join(', ') : '—';
-    const leadsDisplay = leadSrcs.length ? leadSrcs.map(label).join(', ') : '—';
+    const campaignsDisplay = campaigns.length ? campaigns.map(label).join('\n') : '—';
     const channelsDisplay = channels.length ? channels.map(label).join(', ') : '—';
-    const voiceDisplay = label(fd.get('chatbot_voice')) || '—';
-    const delayMap = { immediate: 'Immediately', '15_30s': '15–30 seconds', '1_2min': '1–2 minutes', '5_plus_min': '5+ minutes', unsure: 'Unsure — advise' };
-    const initialDelayDisplay = delayMap[fd.get('sms_initial_delay')] || '—';
+    const notifyTargetDisplay = fd.get('notify_target') === 'different'
+      ? `${dash(fd.get('notify_email_address'))} / ${dash(fd.get('notify_phone_number'))}`
+      : 'Same as primary contact';
 
     const hours = collectHours(fd);
     const hoursLines = DAYS.map(d => {
@@ -961,12 +785,6 @@
     });
     const hoursDisplay = hoursLines.join('\n');
 
-    const logoFile = document.getElementById('logo-input').files[0];
-    const logoDisplay = logoFile
-      ? `${logoFile.name} (${(logoFile.size / 1024).toFixed(0)} KB)`
-      : existingLogoUrl
-        ? 'Previously uploaded'
-        : '—';
 
     const usersDisplay = users.length
       ? users.map(u => `${u.name || '(no name)'} — ${u.email || '(no email)'}`).join('\n')
@@ -974,7 +792,16 @@
 
     const groups = [
       {
-        heading: 'Business Information',
+        heading: 'Your Team',
+        items: [
+          ['Primary contact', dash(fd.get('contact_name'))],
+          ['Primary contact email', dash(fd.get('contact_email'))],
+          ['Primary contact phone', dash(fd.get('contact_phone'))],
+          ['Dashboard users', usersDisplay]
+        ]
+      },
+      {
+        heading: 'Studio Information',
         items: [
           ['Name', dash(fd.get('business_name'))],
           ['Business email', dash(fd.get('business_email'))],
@@ -982,14 +809,8 @@
           ['City', dash(fd.get('city'))],
           ['Address', dash(fd.get('address'))],
           ['Timezone', dash(fd.get('timezone'))],
-          ['Primary contact email', dash(fd.get('contact_email'))],
-          ['Primary contact phone', dash(fd.get('contact_phone'))],
           ['Website', dash(fd.get('website_url'))],
-          ['Google Business Profile', dash(fd.get('google_business_profile_url'))],
-          ['Brand', brand],
-          ...(fd.get('parent_brand_name') === 'StretchLab' ? [['Booking payment link', dash(fd.get('booking_payment_link'))]] : []),
-          ...(fd.get('parent_brand_name') === 'Stretch Zone' ? [['Store ID', dash(fd.get('crm_store_id'))]] : []),
-          ['Studio logo', logoDisplay]
+          ['Google Business Profile', dash(fd.get('google_business_profile_url'))]
         ]
       },
       {
@@ -1015,12 +836,10 @@
         ]
       },
       {
-        heading: 'Branding & Messaging',
+        heading: 'Your AI Team Member',
         items: [
-          ['AI Team Member voice', voiceDisplay],
-          ['Voice specifics', dash(fd.get('chatbot_voice_notes'))],
-          ['AI Team Member tone', tonesDisplay],
-          ['Tone specifics', dash(fd.get('chatbot_tone_notes'))],
+          ['Name', dash(fd.get('assistant_name'))],
+          ['Booking link', dash(fd.get('trial_booking_url'))],
           ['Main CTA', ctaDisplay],
           ['Main CTA details', dash(fd.get('intro_offer'))],
           ['Words / taglines to use', dash(fd.get('preferred_words'))],
@@ -1045,46 +864,30 @@
       {
         heading: 'Business & Audience',
         items: [
-          ['Lead sources', leadsDisplay],
-          ...(fd.get('lead_source_other') === 'on' ? [['Other lead source', dash(fd.get('lead_source_other_text'))]] : []),
           ['Ideal client', dash(fd.get('bk_ideal_client'))],
           ['Pain points', dash(fd.get('bk_pain_points'))],
           ['Unique value', dash(fd.get('bk_unique_value'))],
           ['First visit', dash(fd.get('bk_first_visit'))],
-          ['Testimonials', dash(fd.get('bk_testimonials'))],
           ['FAQ', dash(fd.get('bk_faq'))]
         ]
       },
       {
-        heading: 'Automation & Follow-up',
+        heading: 'Campaigns',
         items: [
-          ['AI goals', goalsDisplay],
-          ...(fd.get('goal_other') === 'on' ? [['Other goal', dash(fd.get('goal_other_text'))]] : []),
-          ['Reactivation segments', reactDisplay],
-          ...(fd.get('react_other') === 'on' ? [['Other segment', dash(fd.get('react_other_text'))]] : []),
-          ['Reactivation offer', dash(fd.get('reactivation_offer'))],
-          ['Initial reply delay', initialDelayDisplay],
-          ['Follow-up cadence', dash(fd.get('sms_followup_cadence'))]
+          [`Switched on (${campaigns.length})`, campaignsDisplay]
         ]
       },
       {
-        heading: 'Handoff & Notifications',
+        heading: 'Notifications',
         items: [
-          ['Handoff rule', handoffDisplay],
-          ['Notification channels', channelsDisplay]
+          ['How', channelsDisplay],
+          ['Where', notifyTargetDisplay]
         ]
       },
       {
         heading: 'Anything Else?',
         items: [
-          ['KPI targets', dash(fd.get('kpi_targets'))],
           ['Notes', dash(fd.get('notes'))]
-        ]
-      },
-      {
-        heading: 'Dashboard Users',
-        items: [
-          ['Users (Manager role)', usersDisplay]
         ]
       }
     ];
@@ -1171,16 +974,8 @@
         return;
       }
 
-      const launch = (fd.get('target_launch_date') || '').trim();
-      const today = new Date().toISOString().split('T')[0];
-      const launchInvalid = launch && launch < today;
-
       clearAllErrors();
       const problems = findAllProblems();
-      if (launchInvalid) {
-        const el = document.querySelector('[name="target_launch_date"]');
-        if (el) problems.push(el);
-      }
       if (problems.length) {
         problems.forEach(markInvalid);
         showError('Please fix the highlighted fields.');
@@ -1211,19 +1006,7 @@
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Submitting...';
     try {
-      const logoFile = document.getElementById('logo-input').files[0];
       const payload = buildPayload('pending');
-      if (logoFile) {
-        if (logoFile.size > 2 * 1024 * 1024) {
-          closeSubmitConfirm();
-          showError('Logo is over 2MB. Please use a smaller image.');
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = 'Confirm & submit';
-          return;
-        }
-        payload.logo_url = await uploadLogo(logoFile);
-      }
-
       if (draftId) {
         await updateRow(draftId, payload);
       } else {
@@ -1233,7 +1016,7 @@
 
       // Fire-and-forget confirmation email via the n8n "Intake Confirmation Email"
       // workflow — it re-reads the row by id and emails contact_email (only when status='pending').
-      fetch('https://velocityaipartners.app.n8n.cloud/webhook/intake-confirmation', {
+      if (!PREVIEW) fetch('https://velocityaipartners.app.n8n.cloud/webhook/intake-confirmation', {
         method: 'POST',
         keepalive: true,
         headers: { 'Content-Type': 'application/json' },
@@ -1255,13 +1038,32 @@
     }
   }
 
+  // A bad draft link must never present a blank, editable form. If it did, the
+  // client would fill the whole thing in, hit Save, and silently create a second
+  // row while the pre-filled one they were sent sat untouched.
+  function lockFormWithError(message) {
+    const form = document.getElementById('intake-form');
+    if (form) form.hidden = true;
+    disableStickyDraftBar();
+    showError(message);
+  }
+
   async function initDraftFromUrl() {
     const id = getDraftIdFromUrl();
-    if (!id) return false;
+    if (!id) {
+      // A draft param is present but not a valid uuid: truncated on paste, or
+      // mangled by an email client. Previously this fell through to a pristine
+      // blank form with no warning at all.
+      if (/[?&]draft=/.test(window.location.search)) {
+        lockFormWithError('This link looks incomplete. Please use the full link from your email, or reply to us and we will resend it.');
+        return false;
+      }
+      return false;
+    }
     try {
       const row = await fetchDraft(id);
       if (!row) {
-        showError('This draft link could not be loaded. It may have already been submitted.');
+        lockFormWithError('We could not find your onboarding form from this link. Please reply to the email we sent, or contact admin@velocityaipartners.ai and we will send you a new one.');
         return false;
       }
       if (row.status && row.status !== 'draft') {
@@ -1276,17 +1078,21 @@
       return true;
     } catch (err) {
       console.error(err);
-      showError(`Could not load draft: ${err.message}`);
+      // Network or RLS failure. Locking is deliberate: letting them type into a
+      // form we could not load means their answers go somewhere we cannot join
+      // back to their record.
+      lockFormWithError(`We could not load your onboarding form (${err.message}). Please refresh, or contact admin@velocityaipartners.ai.`);
       return false;
     }
   }
 
   const PROGRESS_FIELDS = [
     'business_name', 'business_email', 'business_phone', 'city', 'address', 'timezone',
-    'contact_email', 'contact_phone', 'crm_platform',
+    'contact_name', 'contact_email', 'contact_phone', 'crm_platform',
     'bk_service_description', 'bk_cancellation_policy', 'bk_eligibility',
     'bk_ideal_client', 'bk_pain_points', 'bk_unique_value', 'bk_first_visit', 'bk_faq',
-    'chatbot_voice', 'main_cta', 'intro_offer', 'handoff_rule'
+    'assistant_name', 'trial_booking_url',
+    'main_cta', 'intro_offer'
   ];
 
   function computeProgress() {
@@ -1302,21 +1108,15 @@
       if (ok && (n === 'business_phone' || n === 'contact_phone')) ok = PHONE_RX.test(v);
       checks.push(ok);
     });
-    checks.push(collectTones(fd).length > 0);
     checks.push(!!((fd.get('bk_single_session_rate') || '').trim() || (fd.get('bk_membership_pricing') || '').trim()));
     checks.push(fd.get('crm_account_confirmed') === 'on');
     checks.push(fd.get('hours_confirmed') === 'on');
     checks.push(collectUsers().some(u => u.name && u.email && EMAIL_RX.test(u.email)));
 
-    if (fd.get('is_multi_location') === 'yes') {
-      checks.push(!!(fd.get('parent_brand_name') || '').trim());
-      if (fd.get('parent_brand_name') === 'other') {
-        checks.push(!!(fd.get('parent_brand_other') || '').trim());
-      }
-    }
     if (fd.get('crm_platform') === 'other') checks.push(!!(fd.get('crm_platform_other') || '').trim());
     if (fd.get('main_cta') === 'other') checks.push(!!(fd.get('main_cta_other') || '').trim());
-    if (fd.get('handoff_rule') === 'other') checks.push(!!(fd.get('handoff_rule_other') || '').trim());
+    checks.push(collectCampaigns(fd).length > 0);
+    checks.push(collectNotificationChannels(fd).length > 0);
 
     const filled = checks.filter(Boolean).length;
     return { filled, total: checks.length };
@@ -1396,7 +1196,7 @@
       return true;
     };
     Object.keys(s).forEach((key) => {
-      if (key === 'hours' || key === 'is_multi_location' || key === 'address' || key === 'state' || key === 'zip') return; // handled below
+      if (key === 'hours' || key === 'address' || key === 'state' || key === 'zip') return; // handled below
       if (setField(key, s[key])) filled.push(key);
     });
     // This form has a single street-address line and no state/zip fields, so
@@ -1406,12 +1206,6 @@
       const tail = [s.state, s.zip].filter(Boolean).join(' ').trim();
       if (tail && !(s.zip && line.indexOf(s.zip) >= 0)) line += ', ' + tail;
       if (setField('address', line)) filled.push('address');
-    }
-    // A recognized parent brand implies a chain/franchise even when the model
-    // omitted the boolean; both stay client-reviewable ("AI suggested" chips).
-    const multi = s.is_multi_location != null ? s.is_multi_location : (s.parent_brand_name ? true : null);
-    if (multi != null) {
-      if (setField('is_multi_location', multi ? 'yes' : 'no')) filled.push('is_multi_location');
     }
     // Format any scraped phone to the form's (555) 123-4567 style.
     ['business_phone', 'contact_phone'].forEach((n) => {
@@ -1440,21 +1234,6 @@
         any = true;
       });
       if (any) filled.push('hours');
-    }
-    // Parent brand: a recognized franchise that isn't in the dropdown (e.g. a
-    // brand we don't serve yet) -> pick "Other" and drop the name in free text.
-    // Independent businesses return no brand, so they stay blank.
-    if (s.parent_brand_name) {
-      const sel = form.elements['parent_brand_name'];
-      if (sel && sel.tagName === 'SELECT' && !sel.value) {
-        const hasOther = [].slice.call(sel.options).some((o) => o.value === 'other');
-        if (hasOther) {
-          sel.value = 'other';
-          const otherEl = form.elements['parent_brand_other'];
-          if (otherEl) { otherEl.value = s.parent_brand_name; if (filled.indexOf('parent_brand_other') < 0) filled.push('parent_brand_other'); }
-          if (filled.indexOf('parent_brand_name') < 0) filled.push('parent_brand_name');
-        }
-      }
     }
     // Main CTA: a call-to-action phrase that isn't one of the options -> "Other"
     // + free text (the matching case is handled by setField in the loop above).
@@ -1496,7 +1275,7 @@
       const isGroup = (typeof el.length === 'number' && el.tagName === undefined);
       const node = isGroup ? el[0] : el;
       if (!node || !node.closest) return;
-      // Radio group (e.g. is_multi_location): chip after the fieldset legend.
+      // Radio group: chip after the fieldset legend.
       if (isGroup) {
         const fs = node.closest('fieldset');
         const legend = fs ? fs.querySelector('legend') : null;
@@ -1579,18 +1358,14 @@
     });
   }
 
-  function initMinLaunchDate() {
-    const el = document.querySelector('[name="target_launch_date"]');
-    if (!el) return;
-    const today = new Date().toISOString().split('T')[0];
-    el.min = today;
-  }
-
   document.addEventListener('DOMContentLoaded', async () => {
     clearStaleLocalStorage();
     renderHours();
+    if (PREVIEW) {
+      const b = document.getElementById('preview-banner');
+      if (b) b.hidden = false;
+    }
     renderUsers();
-    initMinLaunchDate();
     initProgressBar();
     initPrefillButton();
 
@@ -1598,14 +1373,9 @@
     updateProgressBar();
 
     document.getElementById('intake-form').addEventListener('change', (e) => {
-      if (e.target.name === 'is_multi_location') toggleParentBrand();
-      if (e.target.name === 'parent_brand_name') toggleBrandSpecificFields();
       if (e.target.name === 'crm_platform') toggleCrmOther();
       if (e.target.name === 'main_cta') toggleMainCtaOther();
-      if (e.target.name === 'goal_other') toggleGoalOther();
-      if (e.target.name === 'handoff_rule') toggleHandoffRuleOther();
-      if (e.target.name === 'react_other') toggleReactOther();
-      if (e.target.name === 'lead_source_other') toggleLeadSourceOther();
+      if (e.target.name === 'notify_target') toggleNotifyTarget();
     });
     document.getElementById('intake-form').addEventListener('submit', handleSubmit);
     document.getElementById('save-draft-btn').addEventListener('click', () => handleSaveDraft('footer'));

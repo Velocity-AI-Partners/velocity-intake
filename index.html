@@ -7,7 +7,10 @@
   // Variant router: ?form=redesign, ?form=trimmed, ?form=franchisor,
   // ?form=magretti, ?form=song-koh, ?form=gorman, ?form=pelaez-spata,
   // ?form=western-springs, and ?form=willowbrook serve the variant pages.
-  // Default (no param) = this full live form, unchanged.
+  // Default (no param) = this full live form.
+  // Kept when v2 was promoted to index.html on 2026-08-02: the main app builds
+  // admin links as `${INTAKE_FORM_URL}?form=<slug>` (ClientOnboarding.tsx:627),
+  // so removing this breaks every variant link on /client-onboarding.
   (function () {
     try {
       var f = new URLSearchParams(location.search).get('form');
@@ -23,12 +26,51 @@
     } catch (e) {}
   })();
 </script>
-<title>Velocity AI Partners — Client Onboarding</title>
+<meta name="robots" content="noindex, nofollow">
+<title>Velocity AI Partners &mdash; Client Onboarding</title>
 <meta name="description" content="Share the details we need to configure your AI Team Member on the Velocity AI platform.">
 <link rel="icon" type="image/jpeg" href="favicon.jpg">
 <link rel="preconnect" href="https://rsms.me/">
 <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <link rel="stylesheet" href="styles.css?v=23">
+<style>
+  /* v2-only styles. Kept inline so styles.css does not need a cache-buster
+     bump while this is still a preview. Fold into styles.css on ship. */
+  .stage { margin: 0 0 18px; }
+  .stage__head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 8px; }
+  .stage__name { font-size: 11px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: #1e3a5f; }
+  .stage__desc { font-size: 12px; color: #6b7280; }
+  .camp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+    gap: 8px; }
+  .camp { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px;
+    border: 1px solid #e3e6ea; border-radius: 9px; cursor: pointer;
+    transition: border-color .12s, background .12s; background: #fff; }
+  .camp:hover { border-color: #b9c2cc; background: #fbfcfd; }
+  .camp:has(input:checked) { border-color: #1e3a5f; background: #f4f7fb; }
+  .camp input { margin: 2px 0 0; flex: 0 0 auto; width: 16px; height: 16px;
+    accent-color: #1e3a5f; cursor: pointer; }
+  .camp__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .camp__name { font-size: 13.5px; font-weight: 600; color: #16202b; line-height: 1.3; }
+  .camp__desc { font-size: 12px; color: #6b7280; line-height: 1.4; }
+  .rails { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px; margin: 18px 0 0; padding: 15px 17px; border-radius: 9px;
+    background: #f7f9fb; border: 1px solid #e8ecf0; }
+  .rail__name { font-size: 10.5px; font-weight: 700; letter-spacing: .07em;
+    text-transform: uppercase; color: #1e3a5f; margin: 0 0 3px; }
+  .rail__desc { font-size: 12px; color: #5b6673; line-height: 1.45; margin: 0; }
+  .new-flag { display: inline-block; font-size: 10px; font-weight: 700;
+    letter-spacing: .05em; text-transform: uppercase; color: #0a7d55;
+    background: #e6f6ef; border: 1px solid #b9e5d2; border-radius: 4px;
+    padding: 1px 6px; margin-left: 7px; vertical-align: 2px; }
+  @media (max-width: 560px) { .camp-grid { grid-template-columns: 1fr; } }
+  /* Dashboard-user rows gained a role select, so the grid needs a fourth column.
+     Declared here rather than in styles.css because that file is shared with the
+     live v1 form, which still has three. Mobile keeps the stacked single column
+     from the styles.css 640px breakpoint. */
+  #users-list .user-row { grid-template-columns: 1fr 1fr 116px 40px; }
+  @media (max-width: 640px) { #users-list .user-row { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
 <div class="progress-bar" role="progressbar" aria-label="Required fields completed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar__fill" id="progress-fill"></div></div>
@@ -65,6 +107,9 @@
 </div>
 
 <main class="container">
+  <div id="preview-banner" class="trust-banner" style="background:#fff4e5;border-color:#f0c894;color:#7a4a06;margin-bottom:18px;" hidden>
+    <strong>Preview mode.</strong> This is the v2 draft running locally. Nothing you type here is saved and nothing is sent to the Velocity team.
+  </div>
   <header>
     <h1>Client Onboarding</h1>
     <p class="lead">Share the information we need to configure your AI Team Member. Save a draft at any point and use the link we provide to resume or hand off to a teammate.</p>
@@ -89,7 +134,39 @@
     </div>
 
     <section>
-      <h2>Business Information</h2>
+      <h2>Your Team</h2>
+      <p class="section-hint">Who we work with, and who needs a login to the dashboard.</p>
+
+      <label>
+        Primary Contact Name <span class="req" aria-hidden="true">*</span>
+        <input type="text" name="contact_name" required placeholder="John Smith">
+        <small>The person we work with on setup.</small>
+      </label>
+
+      <label>
+        Primary Contact Email <span class="req" aria-hidden="true">*</span>
+        <input type="email" name="contact_email" required placeholder="owner@business.com">
+        <small>Direct email of the person we'll work with on setup. Booking notifications and call requests go here too.</small>
+      </label>
+
+      <label>
+        Primary Contact Phone <span class="req" aria-hidden="true">*</span>
+        <input type="tel" name="contact_phone" required placeholder="1234567890">
+        <small>Direct line for the person managing this setup.</small>
+      </label>
+
+      <h3 class="subhead">Dashboard Users</h3>
+      <p class="section-hint">Everyone who needs a login. Add as many as you like.</p>
+
+      <div id="users-list">
+        <!-- rendered by form.js -->
+      </div>
+
+      <button type="button" id="add-user" class="btn-secondary">+ Add another user</button>
+    </section>
+
+    <section>
+      <h2>Studio Information</h2>
 
       <label>
         Business Name <span class="req" aria-hidden="true">*</span>
@@ -225,19 +302,6 @@
           </optgroup>
         </select>
       </label>
-
-      <label>
-        Primary Contact Email <span class="req" aria-hidden="true">*</span>
-        <input type="email" name="contact_email" required placeholder="owner@business.com">
-        <small>Direct email of the person we'll work with on setup. Booking notifications and call requests go here too.</small>
-      </label>
-
-      <label>
-        Primary Contact Phone <span class="req" aria-hidden="true">*</span>
-        <input type="tel" name="contact_phone" required placeholder="(555) 123-4567">
-        <small>Direct line for the person managing this setup.</small>
-      </label>
-
       <label>
         Business Website URL
         <input type="url" name="website_url" placeholder="https://">
@@ -248,47 +312,10 @@
         <input type="url" name="google_business_profile_url" placeholder="https://g.page/...">
       </label>
 
-      <fieldset class="pill-group">
-        <legend>Is this location part of a chain or franchise?</legend>
-        <label class="pill"><input type="radio" name="is_multi_location" value="no" checked> No, standalone</label>
-        <label class="pill"><input type="radio" name="is_multi_location" value="yes"> Yes, part of a chain or franchise</label>
-      </fieldset>
-
-      <label id="parent-brand-wrap" hidden>
-        Parent Brand <span class="req" aria-hidden="true">*</span>
-        <select name="parent_brand_name">
-          <option value="">Select your parent brand...</option>
-          <option value="Stretch Zone">Stretch Zone</option>
-          <option value="StretchLab">StretchLab</option>
-          <option value="Integrated Martial Arts">Integrated Martial Arts (IMA)</option>
-          <option value="Trybe Fytness">Trybe Fytness</option>
-          <option value="Title Boxing">Title Boxing</option>
-          <option value="other">Other (please specify)</option>
-        </select>
-      </label>
-
-      <label id="parent-brand-other-wrap" hidden>
-        Which brand? <span class="req" aria-hidden="true">*</span>
-        <input type="text" name="parent_brand_other" placeholder="e.g. OrangeTheory, F45">
-      </label>
-
-      <label id="booking-payment-link-wrap" hidden>
-        Booking Payment Link
-        <input type="url" name="booking_payment_link" placeholder="https://...">
-        <small>Link StretchLab clients use to complete booking payment.</small>
-      </label>
-
-      <label id="store-id-wrap" hidden>
-        Store ID
-        <input type="text" name="crm_store_id" placeholder="e.g. 12345">
-        <small>Your CRM's internal identifier for this location. Leave blank if you don't know — we can find it.</small>
-      </label>
-
-      <label>
-        Studio Logo
-        <input type="file" name="logo" accept="image/png,image/jpeg" id="logo-input">
-        <small>PNG or JPG, under 2MB. We use this in client-facing pages.</small>
-      </label>
+      <!-- Removed 2026-08-02 (George): chain/franchise, parent brand, store ID,
+           StretchLab booking-payment link and studio logo. All of these are
+           things we already know or can look up ourselves, so they are set on
+           the Velocity side rather than asked of the client. -->
     </section>
 
     <section>
@@ -361,77 +388,19 @@
     </section>
 
     <section>
-      <h2>Branding &amp; Messaging</h2>
+      <h2>Your AI Team Member</h2>
       <p class="section-hint">How your AI Team Member sounds to your clients over text.</p>
 
-      <fieldset class="pill-group">
-        <legend>AI Team Member voice <span class="req" aria-hidden="true">*</span></legend>
-        <label class="pill"><input type="radio" name="chatbot_voice" value="team"> Team</label>
-        <label class="pill"><input type="radio" name="chatbot_voice" value="owner"> Owner</label>
-        <label class="pill"><input type="radio" name="chatbot_voice" value="brand"> Brand persona</label>
-        <label class="pill"><input type="radio" name="chatbot_voice" value="unsure"> Unsure — recommend what works</label>
-      </fieldset>
-      <details class="examples-block">
-        <summary>See example messages</summary>
-        <div class="example-item">
-          <span class="example-tag">Team</span>
-          <p>"Hey! Thanks for reaching out. We'd love to have you in for a free demo. What day works best?"</p>
-        </div>
-        <div class="example-item">
-          <span class="example-tag">Owner</span>
-          <p>"Hi, it's Sarah, the studio owner! I'd love to get you in for a free demo. What day works?"</p>
-        </div>
-        <div class="example-item">
-          <span class="example-tag">Brand persona</span>
-          <p>"Hi! I'm Morgan from the studio. We'd love to have you in for a free demo. What day works?"</p>
-        </div>
-        <div class="example-item">
-          <span class="example-tag">Unsure</span>
-          <p>We'll recommend a voice based on similar studios. Team and Brand persona usually perform best.</p>
-        </div>
-      </details>
-
       <label>
-        Voice Specifics
-        <input type="text" name="chatbot_voice_notes" placeholder="e.g. warm and welcoming but direct">
+        AI Team Member Name <span class="req" aria-hidden="true">*</span><span class="new-flag">New</span>
+        <input type="text" name="assistant_name" required placeholder="e.g. Ashley">
+        <small>The first name every text is signed with. Pick something that sounds like a real member of your team.</small>
       </label>
 
-      <fieldset class="pill-group">
-        <legend>AI Team Member tone (pick all that apply) <span class="req" aria-hidden="true">*</span></legend>
-        <label class="pill"><input type="checkbox" name="tone_friendly"> Friendly</label>
-        <label class="pill"><input type="checkbox" name="tone_professional"> Professional</label>
-        <label class="pill"><input type="checkbox" name="tone_motivational"> Motivational</label>
-        <label class="pill"><input type="checkbox" name="tone_humorous"> Humorous</label>
-        <label class="pill"><input type="checkbox" name="tone_upbeat"> Upbeat</label>
-      </fieldset>
-      <details class="examples-block">
-        <summary>See example messages</summary>
-        <div class="example-item">
-          <span class="example-tag">Friendly</span>
-          <p>"Hi! So glad you're interested. The demo stretch is free and takes about 30 minutes. What day works?"</p>
-        </div>
-        <div class="example-item">
-          <span class="example-tag">Professional</span>
-          <p>"Thank you for reaching out. Our complimentary 30-minute demo stretch is a great introduction. Which day suits your schedule?"</p>
-        </div>
-        <div class="example-item">
-          <span class="example-tag">Motivational</span>
-          <p>"Love that you're prioritizing mobility! A free demo stretch is the perfect first step. Let's get you booked."</p>
-        </div>
-        <div class="example-item">
-          <span class="example-tag">Humorous</span>
-          <p>"Your hamstrings called. They want a truce. Free demo stretch, no commitment. What day?"</p>
-        </div>
-        <div class="example-item">
-          <span class="example-tag">Upbeat</span>
-          <p>"Hi! Super excited you're interested. Free demo stretch is the best way to start. What day works?"</p>
-        </div>
-      </details>
-
-      <label>
-        Tone Specifics
-        <input type="text" name="chatbot_tone_notes" placeholder="e.g. friendly but not overly casual">
-      </label>
+      <!-- Removed 2026-08-02 (George): sign-off name, AI Team Member voice,
+           voice specifics, AI Team Member tone and tone specifics. Voice and
+           tone guidance now comes from the words-to-use / words-to-avoid
+           fields below, which clients answer in their own language. -->
 
       <label>
         Main Call-to-Action <span class="req" aria-hidden="true">*</span>
@@ -454,6 +423,16 @@
         Main CTA Details <span class="req" aria-hidden="true">*</span>
         <textarea name="intro_offer" rows="3" required placeholder="e.g. Free demo session — book at https://yourstudio.com/book, or 2 classes for $29"></textarea>
       </label>
+
+      <label>
+        Booking Link <span class="req" aria-hidden="true">*</span><span class="new-flag">New</span>
+        <input type="url" name="trial_booking_url" required placeholder="https://...">
+        <small>The exact link a new lead should tap to book. Every campaign sends people here.</small>
+      </label>
+
+      <!-- Removed 2026-08-02 (George): "Is the first visit free?". It follows
+           from the Main Call-to-Action, so has_free_trial is derived in
+           buildPayload() rather than asked. -->
 
       <label>
         Words, Phrases, or Taglines to Use
@@ -531,22 +510,6 @@
       <h2>Business &amp; Audience</h2>
       <p class="section-hint">Who your clients are, what makes you different, and what the AI Team Member needs to know to represent you.</p>
 
-      <fieldset class="pill-group">
-        <legend>How do leads currently find you? (pick all that apply)</legend>
-        <label class="pill"><input type="checkbox" name="lead_source_website"> Website form</label>
-        <label class="pill"><input type="checkbox" name="lead_source_paid_ads"> Paid ads (Facebook / Instagram / Google)</label>
-        <label class="pill"><input type="checkbox" name="lead_source_phone"> Phone calls</label>
-        <label class="pill"><input type="checkbox" name="lead_source_walkin"> Walk-ins</label>
-        <label class="pill"><input type="checkbox" name="lead_source_referrals"> Referrals</label>
-        <label class="pill"><input type="checkbox" name="lead_source_events"> Local events</label>
-        <label class="pill"><input type="checkbox" name="lead_source_gbp"> Google Business Profile</label>
-        <label class="pill"><input type="checkbox" name="lead_source_social_dms"> Social media DMs</label>
-        <label class="pill"><input type="checkbox" name="lead_source_other"> Other (please specify)</label>
-      </fieldset>
-      <label id="lead-source-other-wrap" hidden>
-        <input type="text" name="lead_source_other_text" aria-label="Other lead source" placeholder="Describe the other lead source">
-      </label>
-
       <label>
         Who is your ideal client? <span class="req" aria-hidden="true">*</span>
         <textarea name="bk_ideal_client" rows="3" required placeholder="Demographics and who they are. e.g. Professionals 35 to 65, active but tight from desk jobs, athletes, runners, golfers."></textarea>
@@ -569,100 +532,224 @@
       </label>
 
       <label>
-        Testimonials or Reviews
-        <textarea name="bk_testimonials" rows="4" placeholder="Paste 2-5 reviews or testimonials, or drop a link. Raw dump is fine — we'll parse."></textarea>
-        <small>Helps the AI Team Member echo how real customers talk about you.</small>
-      </label>
-
-      <label>
         Frequently Asked Questions <span class="req" aria-hidden="true">*</span>
         <textarea name="bk_faq" rows="4" required placeholder="Anything clients ask repeatedly. Just dump them here, raw. We'll parse."></textarea>
       </label>
     </section>
 
     <section>
-      <h2>Automation &amp; Follow-up</h2>
-      <p class="section-hint">What the AI Team Member does automatically, which past leads to re-engage, and how fast it replies and follows up.</p>
+      <h2>What Should Your AI Team Member Do?</h2>
+      <p class="section-hint">Every studio runs the same lifecycle. What changes is which campaigns are switched on. Pick the ones you want live. You can turn any of these on or off later.</p>
 
-      <fieldset class="pill-group">
-        <legend>What should the AI Team Member do? (pick all that apply)</legend>
-        <p class="section-hint" style="margin: -4px 0 12px;">These control automated AI Team Member actions. Content you provided elsewhere (FAQs, main CTA, booking link) informs the AI Team Member's answers regardless of what's checked here.</p>
-        <label class="pill"><input type="checkbox" name="goal_book_demos"> Book demos / trials</label>
-        <label class="pill"><input type="checkbox" name="goal_answer_faqs"> Answer FAQs</label>
-        <label class="pill"><input type="checkbox" name="goal_followup_leads"> Follow up with new leads</label>
-        <label class="pill"><input type="checkbox" name="goal_reactivate_old"> Reactivate past leads &amp; old members</label>
-        <label class="pill"><input type="checkbox" name="goal_upsell"> Upsell memberships or packages</label>
-        <label class="pill"><input type="checkbox" name="goal_provide_directions"> Provide address &amp; directions</label>
-        <label class="pill"><input type="checkbox" name="goal_other"> Other (please specify)</label>
-      </fieldset>
-      <label id="goal-other-wrap" hidden>
-        <input type="text" name="goal_other_text" aria-label="Other automation goal" placeholder="Describe the other automation goal">
-      </label>
+      <div class="stage">
+        <div class="stage__head">
+          <span class="stage__name">Acquire</span>
+          <span class="stage__desc">Turn a name into a booked visit</span>
+        </div>
+        <div class="camp-grid">
+          <label class="camp">
+            <input type="checkbox" name="camp_contacting_new_leads">
+            <span class="camp__body">
+              <span class="camp__name">Contacting New Leads</span>
+              <span class="camp__desc">Greet, answer questions, book the intro</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_lead_reactivation_warm">
+            <span class="camp__body">
+              <span class="camp__name">Lead Reactivation &middot; Warm</span>
+              <span class="camp__desc">Restart a conversation that went quiet</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_lead_reactivation_cold">
+            <span class="camp__body">
+              <span class="camp__name">Lead Reactivation &middot; Cold</span>
+              <span class="camp__desc">Reintroduce the studio to contacts nobody has texted</span>
+            </span>
+          </label>
+        </div>
+      </div>
 
-      <fieldset class="pill-group">
-        <legend>Which past-lead segments should the AI Team Member target for reactivation? (pick all that apply)</legend>
-        <label class="pill"><input type="checkbox" name="react_no_shows"> Demo / trial no-shows</label>
-        <label class="pill"><input type="checkbox" name="react_cooled_leads"> Cooled leads (no response after 2+ weeks)</label>
-        <label class="pill"><input type="checkbox" name="react_expired_members"> Expired memberships</label>
-        <label class="pill"><input type="checkbox" name="react_paused"> Paused / frozen accounts</label>
-        <label class="pill"><input type="checkbox" name="react_lost_sheep"> Long-term inactive ("lost sheep")</label>
-        <label class="pill"><input type="checkbox" name="react_other"> Other (please specify)</label>
-      </fieldset>
-      <label id="react-other-wrap" hidden>
-        <input type="text" name="react_other_text" aria-label="Other reactivation segment" placeholder="Describe the other segment">
-      </label>
+      <div class="stage">
+        <div class="stage__head">
+          <span class="stage__name">Book</span>
+          <span class="stage__desc">Protect the appointment</span>
+        </div>
+        <div class="camp-grid">
+          <label class="camp">
+            <input type="checkbox" name="camp_booking_reminder">
+            <span class="camp__body">
+              <span class="camp__name">Booking Reminder</span>
+              <span class="camp__desc">Confirm, prep, and protect the appointment</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_no_show_recovery">
+            <span class="camp__body">
+              <span class="camp__name">No-Show Recovery</span>
+              <span class="camp__desc">Rebook the visit they missed</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_cancel_recovery">
+            <span class="camp__body">
+              <span class="camp__name">Cancel Recovery</span>
+              <span class="camp__desc">Get the canceled visit back on the calendar</span>
+            </span>
+          </label>
+        </div>
+      </div>
 
-      <label>
-        Reactivation Offer or Incentive
-        <textarea name="reactivation_offer" rows="3" placeholder="e.g. Free demo to try again, first month 50% off, or referral bonus"></textarea>
-      </label>
+      <div class="stage">
+        <div class="stage__head">
+          <span class="stage__name">Show</span>
+          <span class="stage__desc">They came in. Now what?</span>
+        </div>
+        <div class="camp-grid">
+          <label class="camp">
+            <input type="checkbox" name="camp_post_visit_followup">
+            <span class="camp__body">
+              <span class="camp__name">Post-Visit Follow-Up</span>
+              <span class="camp__desc">Ask how it went, then route them</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_complete_your_intro">
+            <span class="camp__body">
+              <span class="camp__name">Complete Your Intro</span>
+              <span class="camp__desc">Book the unused half of a multi-part intro</span>
+            </span>
+          </label>
+        </div>
+      </div>
 
-      <fieldset class="pill-group">
-        <legend>Initial reply delay</legend>
-        <label class="pill"><input type="radio" name="sms_initial_delay" value="immediate"> Immediately</label>
-        <label class="pill"><input type="radio" name="sms_initial_delay" value="15_30s"> 15–30 seconds</label>
-        <label class="pill"><input type="radio" name="sms_initial_delay" value="1_2min"> 1–2 minutes</label>
-        <label class="pill"><input type="radio" name="sms_initial_delay" value="5_plus_min"> 5+ minutes</label>
-        <label class="pill"><input type="radio" name="sms_initial_delay" value="unsure"> Unsure — advise</label>
-      </fieldset>
+      <div class="stage">
+        <div class="stage__head">
+          <span class="stage__name">Convert</span>
+          <span class="stage__desc">Turn a visitor into a paying client</span>
+        </div>
+        <div class="camp-grid">
+          <label class="camp">
+            <input type="checkbox" name="camp_missed_sale">
+            <span class="camp__body">
+              <span class="camp__name">Missed Sale</span>
+              <span class="camp__desc">Five touches over a month toward a membership</span>
+            </span>
+          </label>
+        </div>
+      </div>
 
-      <label>
-        Follow-up Cadence
-        <input type="text" name="sms_followup_cadence" placeholder="e.g. Day 1, 3, 5 or Day 1 and 7">
-      </label>
+      <div class="stage">
+        <div class="stage__head">
+          <span class="stage__name">Retain</span>
+          <span class="stage__desc">Keep them coming back</span>
+        </div>
+        <div class="camp-grid">
+          <label class="camp">
+            <input type="checkbox" name="camp_birthday_milestones">
+            <span class="camp__body">
+              <span class="camp__name">Birthday &amp; Milestones</span>
+              <span class="camp__desc">A warm text on their birthday, and on the moments worth marking</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_milestone_reminders">
+            <span class="camp__body">
+              <span class="camp__name">Milestone Reminders</span>
+              <span class="camp__desc">Tell them when they are one visit away from something</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_member_rebooking">
+            <span class="camp__body">
+              <span class="camp__name">Member Rebooking</span>
+              <span class="camp__desc">Book the next visit before the last one fades</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_client_retention_medium">
+            <span class="camp__body">
+              <span class="camp__name">Client Retention &middot; Medium</span>
+              <span class="camp__desc">Friendly check-in when visits slow down</span>
+            </span>
+          </label>
+          <label class="camp">
+            <input type="checkbox" name="camp_client_retention_high">
+            <span class="camp__body">
+              <span class="camp__name">Client Retention &middot; High</span>
+              <span class="camp__desc">Ask for the truth before they quit</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="stage__head">
+          <span class="stage__name">Win Back</span>
+          <span class="stage__desc">Bring the ones who left home</span>
+        </div>
+        <div class="camp-grid">
+          <label class="camp">
+            <input type="checkbox" name="camp_ex_member_winback">
+            <span class="camp__body">
+              <span class="camp__name">Ex-Member Winback</span>
+              <span class="camp__desc">Remind them why they joined, make the way back easy</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="rails">
+        <div class="rail">
+          <p class="rail__name">One at a time</p>
+          <p class="rail__desc">Only one campaign runs per person. Joining a new one closes the previous one, so nobody is ever in two conversations at once.</p>
+        </div>
+        <div class="rail">
+          <p class="rail__name">STOP ends everything</p>
+          <p class="rail__desc">A single reply opts them out of every campaign, permanently, across the entire system.</p>
+        </div>
+        <div class="rail">
+          <p class="rail__name">Sending windows</p>
+          <p class="rail__desc">Nothing goes out outside your studio's local sending hours, no matter when the trigger fires.</p>
+        </div>
+        <div class="rail">
+          <p class="rail__name">Everything is logged</p>
+          <p class="rail__desc">Every message lands on the contact timeline with the campaign that sent it and the time it went out.</p>
+        </div>
+      </div>
     </section>
 
     <section>
-      <h2>Handoff &amp; Notifications</h2>
-      <p class="section-hint">When the AI Team Member should transfer to a human and how your team gets notified of bookings.</p>
+      <h2>Notifications</h2>
+      <p class="section-hint">How your team hears about it when a lead books, replies, or asks for a call back.</p>
 
       <fieldset class="pill-group">
-        <legend>When should the AI Team Member transfer to a human? <span class="req" aria-hidden="true">*</span></legend>
-        <label class="pill"><input type="radio" name="handoff_rule" value="never"> Never — AI handles everything</label>
-        <label class="pill"><input type="radio" name="handoff_rule" value="on_request"> Only when client asks</label>
-        <label class="pill"><input type="radio" name="handoff_rule" value="business_hours_request"> During studio hours when client asks for a call</label>
-        <label class="pill"><input type="radio" name="handoff_rule" value="complex"> When conversation gets complex or off-topic</label>
-        <label class="pill"><input type="radio" name="handoff_rule" value="other"> Other (please specify)</label>
+        <legend>How should your team be notified? (pick all that apply) <span class="req" aria-hidden="true">*</span></legend>
+        <label class="pill"><input type="checkbox" name="notify_email"> Email</label>
+        <label class="pill"><input type="checkbox" name="notify_sms"> Text message</label>
       </fieldset>
-      <label id="handoff-rule-other-wrap" hidden>
-        <input type="text" name="handoff_rule_other" aria-label="Other handoff rule" placeholder="Describe when the AI Team Member should transfer to a human">
-      </label>
 
       <fieldset class="pill-group">
-        <legend>Where should booking confirmations go? (pick all that apply)</legend>
-        <label class="pill"><input type="checkbox" name="notify_email"> Email the location</label>
-        <label class="pill"><input type="checkbox" name="notify_sms"> SMS a staff number</label>
+        <legend>Where should they go? <span class="req" aria-hidden="true">*</span></legend>
+        <label class="pill"><input type="radio" name="notify_target" value="primary" checked> Same as my primary contact</label>
+        <label class="pill"><input type="radio" name="notify_target" value="different"> A different person</label>
       </fieldset>
-      <p class="section-hint" style="margin-top: 6px;">Notifications route to the Primary Contact Email and Phone from the Business Information section.</p>
+
+      <div id="notify-different-wrap" hidden>
+        <label>
+          Notification Email
+          <input type="email" name="notify_email_address" placeholder="frontdesk@yourstudio.com">
+        </label>
+        <label>
+          Notification Phone
+          <input type="tel" name="notify_phone_number" placeholder="(555) 123-4567">
+        </label>
+      </div>
     </section>
 
     <section>
       <h2>Anything Else?</h2>
-
-      <label>
-        Target KPIs or Goals
-        <textarea name="kpi_targets" rows="3" placeholder="e.g. 15 leads per week, 40% booking rate, 25 new members per month"></textarea>
-      </label>
 
       <label>
         Notes for the Velocity Team
@@ -670,21 +757,16 @@
       </label>
     </section>
 
-    <section>
-      <h2>Dashboard Users</h2>
-      <p class="section-hint">Who on your team needs a login?</p>
-
-      <div id="users-list">
-        <!-- rendered by form.js -->
-      </div>
-
-      <button type="button" id="add-user" class="btn-secondary">+ Add another user</button>
-    </section>
-
     <!-- honeypot: humans don't see this, bots fill it -->
+    <!-- Bot trap. The data-*-ignore attributes tell 1Password, LastPass, Dashlane
+         and Bitwarden to skip it: a password manager filling this field would
+         make a real client's submission look like a bot and be silently
+         discarded, with a convincing success screen and no way to tell. -->
     <div class="honeypot" aria-hidden="true">
       <label>Leave this field blank
-        <input type="text" name="honeypot" tabindex="-1" autocomplete="off">
+        <input type="text" name="honeypot" tabindex="-1" autocomplete="off"
+               data-1p-ignore data-lpignore="true" data-bwignore
+               data-form-type="other" aria-hidden="true">
       </label>
     </div>
 
@@ -731,6 +813,7 @@
   </div>
 </main>
 
-<script src="form.js?v=26"></script>
+
+<script src="form.js?v=27"></script>
 </body>
 </html>
