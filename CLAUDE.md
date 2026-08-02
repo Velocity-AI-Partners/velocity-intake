@@ -28,7 +28,7 @@ Client-facing intake form for new Velocity AI Partners locations. A prospective 
 2. If logo attached, direct upload to Supabase storage bucket `intake-logos` (public read, anon insert)
 3. Form POSTs to `rest/v1/location_intake_submissions` with anon key
 4. On final submit, the form also POSTs `{ intake_id }` to the n8n **Intake Confirmation Email** workflow (`v3ajDIEDjDmCwMvi`), which re-reads the row and emails the client's `contact_email` a receipt — guarded to `status='pending'`, credentials excluded
-5. Supabase Database Webhook fires on INSERT → Slack notification in `#all-velocity-ai-partners`
+5. Trigger `slack-intake-submission` fires **AFTER INSERT OR UPDATE, with no WHEN clause**, POSTing the whole row to the n8n webhook `client-onboarding` (workflow `lRl1e9D8owq9GeoX`), which posts to Slack **`#client-onboarding`** (a private channel, not `#all-velocity-ai-partners`). Draft creation fires it too, not just submission — n8n swallows the repeat autosaves, so in practice it is roughly one `<!channel>` message per new form plus one on submit (verified 2026-08-02: 199 trigger fires on 7/31 produced 6 Slack messages).
 6. Velocity admin reviews on main app's `/client-onboarding` page, chooses slug/brand/short_slug, clicks Provision
 7. `provision-from-intake` edge function creates `locations`, `workflow_location_config`, `business_knowledge`, `ab_tests` rows
 

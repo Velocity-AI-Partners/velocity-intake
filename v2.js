@@ -62,6 +62,10 @@
           <input type="email" name="user_${i}_email" placeholder="Email">
           <span class="req" aria-hidden="true">*</span>
         </div>
+        <select name="user_${i}_role" aria-label="Access level">
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+        </select>
         <button type="button" class="remove-user" aria-label="Remove user">&times;</button>
       </div>
     `;
@@ -96,9 +100,17 @@
     const hours = {};
     for (const d of DAYS) {
       const closed = fd.get(`hours_${d}_closed`) === 'on';
-      hours[d] = closed
-        ? { closed: true }
-        : { open: fd.get(`hours_${d}_open`), close: fd.get(`hours_${d}_close`), closed: false };
+      // Read the times from the DOM, not FormData: a closed day disables its
+      // open/close inputs and FormData omits disabled fields. Keeping the times
+      // means un-ticking "closed" after a save restores what the client
+      // originally entered instead of snapping back to the 09:00-17:00 default.
+      const openEl = document.querySelector(`[name="hours_${d}_open"]`);
+      const closeEl = document.querySelector(`[name="hours_${d}_close"]`);
+      hours[d] = {
+        open: (openEl && openEl.value) || null,
+        close: (closeEl && closeEl.value) || null,
+        closed
+      };
     }
     return hours;
   }
@@ -210,7 +222,9 @@
     document.querySelectorAll('#users-list .user-row').forEach(row => {
       const name = row.querySelector('[name$="_name"]').value.trim();
       const email = row.querySelector('[name$="_email"]').value.trim();
-      if (name || email) users.push({ name, email, role: 'manager' });
+      const roleEl = row.querySelector('[name$="_role"]');
+      const role = (roleEl && roleEl.value) || 'manager';
+      if (name || email) users.push({ name, email, role });
     });
     return users;
   }
@@ -325,7 +339,6 @@
       instagram_handle: fd.get('instagram_handle') || null,
       facebook_page_url: fd.get('facebook_page_url') || null,
       tiktok_handle: fd.get('tiktok_handle') || null,
-      target_launch_date: fd.get('target_launch_date') || null,
       notes: fd.get('notes') || null,
       honeypot: fd.get('honeypot') || null,
       user_agent: navigator.userAgent
@@ -432,15 +445,14 @@
         const closedEl = form.elements[`hours_${d}_closed`];
         const openEl = form.elements[`hours_${d}_open`];
         const closeEl = form.elements[`hours_${d}_close`];
-        if (h.closed) {
-          if (closedEl) closedEl.checked = true;
-          if (openEl) openEl.disabled = true;
-          if (closeEl) closeEl.disabled = true;
-        } else {
-          if (closedEl) closedEl.checked = false;
-          if (openEl) { openEl.disabled = false; if (h.open) openEl.value = h.open; }
-          if (closeEl) { closeEl.disabled = false; if (h.close) closeEl.value = h.close; }
-        }
+        // Always restore the stored times, then set disabled from `closed`.
+        // Older rows saved before this fix have no times on a closed day, so
+        // the 09:00-17:00 default stands in and nothing is lost either way.
+        if (openEl && h.open) openEl.value = h.open;
+        if (closeEl && h.close) closeEl.value = h.close;
+        if (closedEl) closedEl.checked = !!h.closed;
+        if (openEl) openEl.disabled = !!h.closed;
+        if (closeEl) closeEl.disabled = !!h.closed;
       }
     }
 
@@ -505,11 +517,12 @@
         const row = list.lastElementChild;
         row.querySelector('[name$="_name"]').value = u.name || '';
         row.querySelector('[name$="_email"]').value = u.email || '';
+        const roleEl = row.querySelector('[name$="_role"]');
+        if (roleEl && u.role) roleEl.value = u.role;
       });
       userCounter = users.length;
     }
 
-    set('target_launch_date', row.target_launch_date);
     set('notes', row.notes);
 
     applyConditionals();
@@ -961,16 +974,8 @@
         return;
       }
 
-      const launch = (fd.get('target_launch_date') || '').trim();
-      const today = new Date().toISOString().split('T')[0];
-      const launchInvalid = launch && launch < today;
-
       clearAllErrors();
       const problems = findAllProblems();
-      if (launchInvalid) {
-        const el = document.querySelector('[name="target_launch_date"]');
-        if (el) problems.push(el);
-      }
       if (problems.length) {
         problems.forEach(markInvalid);
         showError('Please fix the highlighted fields.');
@@ -1033,13 +1038,32 @@
     }
   }
 
+  // A bad draft link must never present a blank, editable form. If it did, the
+  // client would fill the whole thing in, hit Save, and silently create a second
+  // row while the pre-filled one they were sent sat untouched.
+  function lockFormWithError(message) {
+    const form = document.getElementById('intake-form');
+    if (form) form.hidden = true;
+    disableStickyDraftBar();
+    showError(message);
+  }
+
   async function initDraftFromUrl() {
     const id = getDraftIdFromUrl();
-    if (!id) return false;
+    if (!id) {
+      // A draft param is present but not a valid uuid: truncated on paste, or
+      // mangled by an email client. Previously this fell through to a pristine
+      // blank form with no warning at all.
+      if (/[?&]draft=/.test(window.location.search)) {
+        lockFormWithError('This link looks incomplete. Please use the full link from your email, or reply to us and we will resend it.');
+        return false;
+      }
+      return false;
+    }
     try {
       const row = await fetchDraft(id);
       if (!row) {
-        showError('This draft link could not be loaded. It may have already been submitted.');
+        lockFormWithError('We could not find your onboarding form from this link. Please reply to the email we sent, or contact admin@velocityaipartners.ai and we will send you a new one.');
         return false;
       }
       if (row.status && row.status !== 'draft') {
@@ -1054,7 +1078,10 @@
       return true;
     } catch (err) {
       console.error(err);
-      showError(`Could not load draft: ${err.message}`);
+      // Network or RLS failure. Locking is deliberate: letting them type into a
+      // form we could not load means their answers go somewhere we cannot join
+      // back to their record.
+      lockFormWithError(`We could not load your onboarding form (${err.message}). Please refresh, or contact admin@velocityaipartners.ai.`);
       return false;
     }
   }
@@ -1331,13 +1358,6 @@
     });
   }
 
-  function initMinLaunchDate() {
-    const el = document.querySelector('[name="target_launch_date"]');
-    if (!el) return;
-    const today = new Date().toISOString().split('T')[0];
-    el.min = today;
-  }
-
   document.addEventListener('DOMContentLoaded', async () => {
     clearStaleLocalStorage();
     renderHours();
@@ -1346,7 +1366,6 @@
       if (b) b.hidden = false;
     }
     renderUsers();
-    initMinLaunchDate();
     initProgressBar();
     initPrefillButton();
 
