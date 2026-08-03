@@ -549,6 +549,11 @@
         phone: fd.get('notify_phone_number') || null
       },
       website_url: fd.get('website_url') || null,
+      // The specific location page the client pasted for AI prefill. Distinct
+      // from website_url (the business homepage) and worth keeping: it is the
+      // only record of which page we extracted from, so a reviewer can check
+      // an AI-suggested value against its source.
+      location_page_url: fd.get('location_page_url') || null,
       google_business_profile_url: fd.get('google_business_profile_url') || null,
       instagram_handle: fd.get('instagram_handle') || null,
       facebook_page_url: fd.get('facebook_page_url') || null,
@@ -647,6 +652,7 @@
     set('contact_email', row.contact_email);
     set('contact_phone', row.contact_phone);
     set('website_url', row.website_url);
+    set('location_page_url', row.location_page_url);
     set('google_business_profile_url', row.google_business_profile_url);
 
     const hoursConfirmedEl = form.elements['hours_confirmed'];
@@ -1530,7 +1536,10 @@
     btn.disabled = true;
     btn.classList.add('is-loading');
     btn.textContent = 'Reading your page...';
-    setPrefillStatus('Scanning your page and pulling in everything we can find. This takes a few seconds...', 'loading');
+    // Be honest about the wait. This reads the location page plus up to two
+    // About/Story pages and then runs extraction, which measures 12-19s on real
+    // brand sites. "A few seconds" made people think it had failed and click away.
+    setPrefillStatus('Reading your page and pulling in everything we can find. This usually takes 10 to 20 seconds — hang tight, we will fill in what we find.', 'loading');
     try {
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/scrape-location-page`, {
         method: 'POST',

@@ -1,27 +1,45 @@
 // scrape-location-page — anon-callable edge function (verify_jwt = false).
 //
-// Takes a client-supplied location-page URL, scrapes it with Firecrawl, extracts
-// the public business fields with Claude (tool-use / structured output), snaps
-// hours to the form's 15-minute grid, and returns a form-field-keyed `suggested`
-// object the intake form applies via applyScrapedSuggestions(). Read-only: it
-// never writes the submission row and never returns any secret. Guardrails:
-// http(s)-only + SSRF host block, per-IP rate limit, and a per-URL cache.
+// Takes a client-supplied location-page URL, fetches it directly, extracts the
+// public business fields with Gemini (structured output), snaps hours to the
+// form's 15-minute grid, and returns a form-field-keyed `suggested` object the
+// intake form applies via applyScrapedSuggestions(). Read-only: it never writes
+// the submission row and never returns any secret. Guardrails: http(s)-only +
+// SSRF host block re-checked on every redirect hop, per-IP rate limit, and a
+// per-URL cache.
+//
+// Fetching used to go through Firecrawl. That key ran out of credits and the
+// whole feature returned 502 for eleven days before anyone noticed, so the
+// dependency is gone: brand location pages are server-rendered and a plain
+// fetch reads them fine. We keep what Firecrawl was actually buying us —
+// main-content extraction — by pulling JSON-LD and the title out before
+// flattening the markup, which on these pages is better structured than the
+// markdown Firecrawl returned.
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 // Gemini per George's direction (2026-07-22) — the Anthropic account behind the
 // available key is unfunded. GEMINI_API_KEY is the primary provider; when it's
 // absent the function falls back to Anthropic (ANTHROPIC_API_KEY) on Opus 4.8.
+import {
+  DAYS,
+  MIN_USEFUL_CHARS,
+  FINDER_PATH_RE,
+  isBlockedHost,
+  pageText,
+  enrichmentLinks,
+  snapHours,
+} from './extract.ts';
+
 const GEMINI_MODEL = 'gemini-3.5-flash';
 const ANTHROPIC_MODEL = 'claude-opus-4-8';
 const CACHE_TTL_HOURS = 24 * 7;     // reuse a scrape for a week
 const RATE_LIMIT = 12;              // requests ...
 const RATE_WINDOW_MIN = 60;        // ... per IP per hour
-const FIRECRAWL_MAX_CHARS = 60000; // cap the location-page markdown
 const MAX_ENRICH_PAGES = 2;        // also follow up to N About/Story/FAQ links
 const COMBINED_MAX_CHARS = 90000;  // cap the combined text fed to the model
 
-const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
 
 // Best-guess US state -> IANA timezone, using ONLY the values the form's
 // timezone <select> offers. Predominant zone per state (a placeholder the
@@ -62,92 +80,6 @@ function jsonOk(body: unknown) {
   });
 }
 
-// SSRF defense-in-depth: reject localhost / private / link-local / metadata hosts.
-function isBlockedHost(hostname: string): boolean {
-  const h = (hostname || '').toLowerCase();
-  if (!h || h === 'localhost' || h.endsWith('.localhost') || h === '0.0.0.0') return true;
-  const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (m) {
-    const a = +m[1], b = +m[2];
-    if (a === 0 || a === 10 || a === 127) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a === 169 && b === 254) return true;       // link-local incl. 169.254.169.254 metadata
-    if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
-  }
-  if (h === '::1' || h.startsWith('fc') || h.startsWith('fd') || h.startsWith('fe80')) return true;
-  return false;
-}
-
-// Scrape one URL to clean markdown via Firecrawl; '' on any failure.
-async function firecrawlMarkdown(url: string, key: string): Promise<string> {
-  try {
-    const fc = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, formats: ['markdown'], onlyMainContent: true }),
-    });
-    if (!fc.ok) return '';
-    const fj = await fc.json();
-    return String(fj?.data?.markdown || '');
-  } catch { return ''; }
-}
-
-// Find up to `max` same-domain About/Story/FAQ-style links in markdown to also
-// scrape for richer descriptive content. SSRF-guarded; skips the base page.
-function enrichmentLinks(markdown: string, baseUrl: string, max: number): string[] {
-  let base: URL;
-  try { base = new URL(baseUrl); } catch { return []; }
-  const re = /\[([^\]]*)\]\(([^)\s]+)\)/g;
-  const kw = /(about|our[-\s]?story|story|mission|why|approach|faq|frequently|values|team|benefits)/i;
-  const seen = new Set<string>([(base.origin + base.pathname).replace(/\/+$/, '')]);
-  const out: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(markdown)) && out.length < max) {
-    const text = m[1] || '';
-    const href = m[2] || '';
-    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) continue;
-    let abs: URL;
-    try { abs = new URL(href, base); } catch { continue; }
-    if (abs.protocol !== 'http:' && abs.protocol !== 'https:') continue;
-    if (abs.hostname !== base.hostname || isBlockedHost(abs.hostname)) continue;
-    const key = (abs.origin + abs.pathname).replace(/\/+$/, '');
-    if (seen.has(key)) continue;
-    if (!(kw.test(abs.pathname) || kw.test(text))) continue;
-    seen.add(key);
-    out.push(abs.toString());
-  }
-  return out;
-}
-
-// Snap a "HH:MM" 24h time to the nearest 15-minute increment so it matches a
-// real <option> in the form's hours grid; null if unparseable.
-function snapTime(t: unknown): string | null {
-  if (typeof t !== 'string') return null;
-  const m = t.trim().match(/^(\d{1,2}):(\d{2})$/);
-  if (!m) return null;
-  let hh = +m[1];
-  let mm = +m[2];
-  if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
-  mm = Math.round(mm / 15) * 15;
-  if (mm === 60) { mm = 0; hh = (hh + 1) % 24; }
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-}
-function snapHours(hours: any): Record<string, any> | null {
-  if (!hours || typeof hours !== 'object') return null;
-  const out: Record<string, any> = {};
-  for (const d of DAYS) {
-    const h = hours[d];
-    if (!h || typeof h !== 'object') continue;
-    if (h.closed) { out[d] = { closed: true }; continue; }
-    const open = snapTime(h.open);
-    const close = snapTime(h.close);
-    if (open && close) out[d] = { open, close, closed: false };
-  }
-  return Object.keys(out).length ? out : null;
-}
-
-// Tool schema == the form's field names, so the model returns JSON the front end
 // applies directly. The model is told to OMIT anything not explicitly on the page.
 const EXTRACT_TOOL = {
   name: 'location_fields',
@@ -224,10 +156,10 @@ serve(async (req) => {
 
   const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
   const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-  const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY') ?? '';
   const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') ?? '';
   const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
-  if (!FIRECRAWL_API_KEY || (!GEMINI_API_KEY && !ANTHROPIC_API_KEY)) {
+  if (!GEMINI_API_KEY && !ANTHROPIC_API_KEY) {
+    console.error('scrape: no GEMINI_API_KEY or ANTHROPIC_API_KEY configured');
     return jsonError('Prefill is not configured on the server.', 503);
   }
 
@@ -277,14 +209,34 @@ serve(async (req) => {
     } catch { /* cache table missing/unavailable: fall through to live scrape */ }
   }
 
-  // ---- scrape the location page + up to 2 About/Story/FAQ pages --------------
-  const mainMd = await firecrawlMarkdown(url, FIRECRAWL_API_KEY);
-  if (!mainMd.trim()) return jsonError('Could not read that page right now.', 502);
-  let combined = mainMd.slice(0, FIRECRAWL_MAX_CHARS);
-  for (const eu of enrichmentLinks(mainMd, url, MAX_ENRICH_PAGES)) {
+  // ---- read the location page + up to 2 About/Story/FAQ pages ---------------
+  const main = await pageText(url);
+  if (!main.text.trim()) return jsonError('Could not read that page right now.', 502);
+
+  // A stale or wrong location URL typically 301s to the brand's location
+  // finder. Extracting that page yields confident nonsense, so name the real
+  // problem instead: the client can fix it in five seconds if we tell them.
+  const landedElsewhere =
+    new URL(main.finalUrl).pathname.replace(/\/+$/, '').toLowerCase() !==
+    parsed.pathname.replace(/\/+$/, '').toLowerCase();
+  if (landedElsewhere && FINDER_PATH_RE.test(new URL(main.finalUrl).pathname)) {
+    console.error(`scrape: ${url} redirected to finder page ${main.finalUrl}`);
+    return jsonError(
+      'That link redirects to your brand\'s location finder rather than a single studio page. ' +
+      'Please paste the URL for your specific location.',
+      422,
+    );
+  }
+  if (main.text.length < MIN_USEFUL_CHARS) {
+    console.error(`scrape: ${main.finalUrl} yielded only ${main.text.length} chars of text`);
+    return jsonError('There was not enough readable text on that page to pre-fill from.', 502);
+  }
+
+  let combined = main.text;
+  for (const eu of enrichmentLinks(main.html, main.finalUrl, MAX_ENRICH_PAGES)) {
     if (combined.length >= COMBINED_MAX_CHARS) break;
-    const md = await firecrawlMarkdown(eu, FIRECRAWL_API_KEY);
-    if (md.trim()) combined += `\n\n---\nAdditional page (${eu}):\n\n${md}`;
+    const extra = await pageText(eu);
+    if (extra.text.trim()) combined += `\n\n---\nAdditional page (${eu}):\n\n${extra.text}`;
   }
   combined = combined.slice(0, COMBINED_MAX_CHARS);
 

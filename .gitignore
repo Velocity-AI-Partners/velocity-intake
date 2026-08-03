@@ -3,3 +3,8 @@ node_modules/
 .vscode/
 .env
 .env.local
+
+# Local Supabase stack artifacts, created by `supabase start` when running the
+# round-trip test. Machine-specific — see test/README.md.
+supabase/.branches/
+supabase/.temp/
