@@ -109,9 +109,12 @@ serve(async (req) => {
         if (def.type === 'checkbox') clean[k] = v === true || v === 'true';
         else clean[k] = String(v ?? '').slice(0, MAX_VALUE_LEN);
       }
+      // Qualify with the group: a link that asks the same four things for two
+      // studios otherwise reports "API client ID" twice with no way to tell
+      // which one is missing.
       const missing = fields
         .filter((f) => f.required && !(f.type === 'checkbox' ? clean[f.key] === true : String(clean[f.key] || '').trim()))
-        .map((f) => f.label);
+        .map((f) => (f.group ? `${f.group} ${f.label}` : f.label));
       if (missing.length) return json({ state: 'error', message: `Missing: ${missing.join(', ')}` }, 400);
 
       // The one-use gate. If another submission won the race, zero rows come
