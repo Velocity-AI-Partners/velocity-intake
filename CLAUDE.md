@@ -54,6 +54,51 @@ Client-facing intake form for new Velocity AI Partners locations. A prospective 
 - Multi-location: repeatable location cards; per-location fields defined in `LOCATION_FIELDS` in `franchisor.js`.
 - For a second franchisor brand later: new row value for `form_variant`, swap the logo/branding, adjust `FORM_SECTIONS` — same table.
 
+## Secure credential handoff (`handoff.html`) — one-use links
+
+For collecting API credentials from someone outside Velocity (a CRM vendor, a
+franchisor support desk, a client's IT contact) without emailing secrets and
+without making them create an account anywhere.
+
+- `handoff.html` + `handoff.js` + `handoff.css` — standalone, decoupled from
+  `form.js`/`styles.css`. Reached directly at `/handoff.html?t=<token>`; no
+  entry in the `index.html` variant router because it is not an intake form.
+- Table `credential_handoffs` (migration `019`), edge function
+  `credential-handoff` (`verify_jwt=false`).
+
+**Why it does not reuse `location_intake_submissions`:** that table's trigger
+posts every insert and update to the `#client-onboarding` Slack channel. Sending
+credentials must not generate a Slack message (user directive 2026-08-04).
+
+**Why the write goes through an edge function** rather than an anon RLS policy
+like every other form here: single-use has to be server-enforced. Whoever holds
+the link holds the anon key too, so an anon UPDATE policy is replayable. The
+table has no anon grants at all; the guarantee is the conditional
+`update ... where submitted_at is null` inside the function.
+
+**No drafts, no autosave.** Every other form in this repo saves to localStorage
+on each keystroke. This one deliberately does not: credentials should not
+outlive the submit.
+
+To issue a link:
+
+```sql
+insert into credential_handoffs (token, label, intro, expires_at, notes, fields)
+values (
+  encode(gen_random_bytes(24), 'base64')::text,  -- then strip +/= for URL safety
+  'StretchMed — Momence API access',
+  'Two studios, one form. Nothing here is shared outside the Velocity team.',
+  now() + interval '14 days',
+  'Sent to Dave, StretchMed support, thread #SUP-50950',
+  '[{"key":"ki_client_id","label":"Client ID","group":"Kent Island","required":true}]'::jsonb
+);
+```
+
+Then send `https://onboarding.velocityaipartners.app/handoff.html?t=<token>`.
+
+After it comes back: read `payload`, move the values to their permanent home,
+then **delete the row**. The table is a mailbox, not storage.
+
 ## Per-client pre-filled variants (`magretti`, `song-koh`)
 
 When a client is worth a tailored link, we fork a variant instead of sending them the generic form. Existing ones: `?form=magretti` (Joe and Devon Magretti, 3 Stretch Zone studios MD) and `?form=song-koh` (Patrick Song and Robert Koh, Stretch Zone Reston VA).
