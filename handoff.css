@@ -59,7 +59,9 @@ h1 { font-size: 22px; line-height: 1.3; margin: 0 0 8px; }
   margin-bottom: 22px;
   font-size: 14px;
 }
-.hd-assure strong { display: block; margin-bottom: 6px; }
+/* Direct child only: the heading. A descendant selector here also caught the
+   <strong> inside the bullets and broke those sentences across three lines. */
+.hd-assure > strong { display: block; margin-bottom: 6px; }
 .hd-assure ul { margin: 0; padding-left: 18px; }
 .hd-assure li { margin-bottom: 4px; }
 
