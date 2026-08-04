@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Velocity AI Partners | Secure Credential Handoff</title>
+<meta name="description" content="One-time secure form for sending credentials to Velocity AI Partners.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/jpeg" href="favicon.jpg">
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<link rel="stylesheet" href="handoff.css?v=1">
+</head>
+<body>
+
+<div class="hd-bar">
+  <img src="velocity-logo-white.png" alt="Velocity AI Partners" class="hd-bar__logo">
+  <span class="hd-bar__title">Secure Credential Handoff</span>
+</div>
+
+<main class="hd-wrap">
+
+  <!-- Shown while the token is being checked. -->
+  <section id="hd-loading" class="hd-card">
+    <p class="hd-muted">Checking this link...</p>
+  </section>
+
+  <!-- The form itself; fields are rendered from the link definition. -->
+  <section id="hd-form-wrap" class="hd-card" hidden>
+    <h1 id="hd-label"></h1>
+    <p id="hd-intro" class="hd-lead"></p>
+
+    <div class="hd-assure">
+      <strong>How this works</strong>
+      <ul>
+        <li>This link works <strong>once</strong>, then it stops working for everyone.</li>
+        <li>What you enter goes straight into Velocity's system over an encrypted connection. It is not emailed, posted to chat, or shown to anyone outside the Velocity team.</li>
+        <li>Nothing you type here is saved in your browser.</li>
+      </ul>
+    </div>
+
+    <form id="hd-form" autocomplete="off" novalidate>
+      <div id="hd-fields"></div>
+      <p id="hd-error" class="hd-error" hidden></p>
+      <button type="submit" id="hd-submit" class="hd-btn">Send securely</button>
+      <p class="hd-muted hd-small">Please double-check the values before sending. Because the link is single-use, a correction needs a fresh link from us.</p>
+    </form>
+  </section>
+
+  <!-- Terminal states: done / used / expired / invalid / error. -->
+  <section id="hd-state" class="hd-card" hidden>
+    <h1 id="hd-state-title"></h1>
+    <p id="hd-state-body" class="hd-lead"></p>
+  </section>
+
+  <p class="hd-foot">
+    Sent by Velocity AI Partners. If you were not expecting this link, or anything here looks off,
+    do not enter anything and email <a href="mailto:tobias@velocityaipartners.ai">tobias@velocityaipartners.ai</a>.
+  </p>
+</main>
+
+<script src="handoff.js?v=1"></script>
+</body>
+</html>
