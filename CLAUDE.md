@@ -99,24 +99,39 @@ Then send `https://onboarding.velocityaipartners.app/handoff.html?t=<token>`.
 After it comes back: read `payload`, move the values to their permanent home,
 then **delete the row**. The table is a mailbox, not storage.
 
-## Per-client pre-filled variants (`magretti`, `song-koh`)
+## Per-client pre-filled links — use `CLIENT_PREFILLS`, do NOT fork
 
-When a client is worth a tailored link, we fork a variant instead of sending them the generic form. Existing ones: `?form=magretti` (Joe and Devon Magretti, 3 Stretch Zone studios MD) and `?form=song-koh` (Patrick Song and Robert Koh, Stretch Zone Reston VA).
+When a client is worth a tailored link, add a **config entry**, not a new file.
 
-These are **not** like the franchisor form: they submit standard `location_intake_submissions` rows, so `/client-onboarding` review and `provision-from-intake` work unchanged and no migration is needed.
+**Do not copy the form.** Forking is how we got here: six variant files (`magretti`, `song-koh`, `gorman`, `pelaez-spata`, `western-springs`, `willowbrook`) each snapshotted `form.js` at a point in time and then stopped receiving fixes. None of them got the 2026-08-02 data-loss fixes, and they all still write `automation_goals.goals` instead of the Campaign Map's `.campaigns`. They are served by `vercel.json` rewrites that bypass `index.html` entirely, which is why nothing that improves the main form ever reaches them.
 
-To build a new one:
+To build a new pre-filled link:
 
-1. Copy `song-koh.{html,js,css}` to `<client>.{html,js,css}` (it's the simpler single-studio base; `magretti.*` is the multi-studio one).
-2. Add one line to the variant router at the top of `index.html`.
-3. Edit the `LOCATIONS` array and the `addUser(...)` seeds in `<client>.js`, and the `<h1>`, `<title>`, and `data-known` contact values in `<client>.html`.
-4. Rename `DRAFT_KEY` so the new form doesn't collide with another variant's localStorage draft.
-5. Keep the honeypot input, `noindex`, and the `?v=N` cache-busters.
+1. Add an entry to `CLIENT_PREFILLS` near the top of `form.js`: `heading`, `subheading`, `fields` (keyed by the real `name=` attribute), `hours`, `users`, and optionally `draftFields` and `campaigns`.
+
+   **`fields` vs `draftFields` — the distinction is the point.** `fields` is chipped **"Pre-filled"** and means *we verified this for this studio* (signed agreement, the brand's own location page, the studio's own channels, our CRM): the client only has to confirm it. `draftFields` is chipped **"Draft"** and means *this is our starting point, carried over from how the locations we already run answer the same question*: the client is expected to edit it. Put anything brand-general in `draftFields`, and say what the chips mean in the `subheading`.
+
+   Pricing belongs in `draftFields`, always. Our own knowledge base has Stretch Zone membership ladders ranging from $119/$200/$360/$480 to $139/$240/$440/$600, with drop-ins at $85, $90 and $95, and some studios quoting only a per-session range. A price chipped "Pre-filled" reads as *we looked this up for you*, an owner skims and accepts, and the AI then quotes another studio's rate card to a real lead. When seeding pricing, lead the field with the brand's do-not-quote-before-the-demo rule so an unedited value still fails safe.
+
+   `campaigns` is an array of `camp_*` checkbox names to tick. Only seed campaigns matching scope that was actually sold and quantified for that client, and expect one section badge rather than 15 inline chips (see `SECTION_BADGE_REF` in `markAiSuggested()`).
+2. Add a rewrite in `vercel.json`: `{ "source": "/<slug>", "destination": "/index.html" }`. Keep the destination as plain `index.html` — a query string in the destination never reaches the browser, which is why `clientSlug()` reads `location.pathname`, not `location.search`.
+3. Bump `?v=N` on the `form.js` tag in `index.html`.
+4. Add expectations to `test/prefill.mjs` and run `node test/prefill.mjs`.
+
+`?client=<slug>` also works and is the form admin links should use. Both resolve to the same config.
+
+🔴 **`applyClientPrefill()` must stay between `initDraftFromUrl()` and `captureAutosaveBaseline()`.** After the draft load so a returning client's own answers always win; before the baseline so seeded values count as zero changes. Move it below the baseline and an untouched form inserts a row the moment the client closes the tab (`visibilitychange -> hidden` calls `autosaveNow()` directly), which fires `slack-intake-submission` and pings `#client-onboarding` with `<!channel>` for a form nobody filled in. `test/prefill.mjs` guards this; the guard is mutation-verified.
+
+Pre-filled rows are ordinary `location_intake_submissions` rows, so `/client-onboarding` review and `provision-from-intake` work unchanged and no migration is needed.
+
+### The six legacy forks (to retire)
+
+Still live, still stale. `song-koh` is **done**: `/reston`, `/song-koh` and `?form=song-koh` all now serve the live form via `CLIENT_PREFILLS.reston`, and `song-koh.{html,js,css}` are dead files kept only for reference. The remaining five (`magretti`, `gorman`, `pelaez-spata`, `western-springs`, `willowbrook`) should be migrated the same way. Three of them have live draft rows, so check `location_intake_submissions` before repointing a route.
 
 **Rules that matter more than coverage:**
 
-- **Pre-fill from verifiable sources only** — a signed agreement, the brand's official location page, or an existing location's knowledge base. Tag each pre-filled field with a source chip so the client can see what we filled and why. Never invent an email, a phone, or a price to fill a field.
-- **Label assumptions as assumptions.** If we're guessing a CRM platform, give the client a field to correct it and write their answer to `crm_platform_other` rather than recording the guess as fact.
+- **Pre-fill from verifiable sources only** — a signed agreement, the brand's official location page, or an existing location's knowledge base. Record the source in a comment on the `CLIENT_PREFILLS` entry. Every seeded field is chipped "Pre-filled" in the UI and the client is asked to correct anything wrong. Never invent an email, a phone, or a price to fill a field.
+- **Label assumptions as assumptions.** If we're guessing a CRM platform, leave it blank and let the client pick rather than recording the guess as fact.
 - **Verify the payload against the live schema before shipping.** Every key must be a real column in `location_intake_submissions` or PostgREST rejects the whole insert.
 - **Test the submit path without writing to prod.** Localhost is preview-only; to exercise the real `buildPayload`, load with `?live=1` and stub `window.fetch` so the payload can be inspected while nothing leaves the browser.
 

@@ -18,7 +18,10 @@
       else if (f === 'trimmed') location.replace('trimmed.html' + location.hash);
       else if (f === 'franchisor') location.replace('franchisor.html' + location.hash);
       else if (f === 'magretti') location.replace('magretti.html' + location.hash);
-      else if (f === 'song-koh') location.replace('song-koh.html' + location.hash);
+      // song-koh was the 2026-07-30 fork. Reston now runs on this form via the
+      // CLIENT_PREFILLS config in form.js, so the old slug points at the
+      // vanity path instead of the stale fork file.
+      else if (f === 'song-koh') location.replace('/reston' + location.hash);
       else if (f === 'gorman') location.replace('gorman.html' + location.hash);
       else if (f === 'pelaez-spata') location.replace('pelaez-spata.html' + location.hash);
       else if (f === 'western-springs') location.replace('western-springs.html' + location.hash);
@@ -827,6 +830,6 @@
 </main>
 
 
-<script src="form.js?v=29"></script>
+<script src="form.js?v=31"></script>
 </body>
 </html>

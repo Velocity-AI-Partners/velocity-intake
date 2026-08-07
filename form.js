@@ -13,6 +13,212 @@
   const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   const DAY_LABELS = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
 
+  // ------------------------------------------------------------ client prefill
+  //
+  // A pre-filled link for a specific client WITHOUT forking the form.
+  //
+  // The six variant forks (song-koh, magretti, gorman, pelaez-spata,
+  // western-springs, willowbrook) each copied form.js at a point in time and
+  // then stopped receiving fixes. None of them got the 2026-08-02 data-loss
+  // fixes, and they still write `automation_goals.goals` instead of the
+  // Campaign Map's `.campaigns`. A config entry here cannot drift: the client
+  // gets whatever the live form is, plus their known values on top.
+  //
+  // Only put facts here that came from a signed agreement, the brand's own
+  // location page, or a real conversation. Never invent an email, a phone or a
+  // price to fill a field -- every value below is chipped "Pre-filled" in the
+  // UI and the client is explicitly asked to correct anything wrong.
+  const CLIENT_PREFILLS = {
+    // Stretch Zone Reston VA -- Patrick Song and Rob Koh (AlphaFlex LLC).
+    // Closed Won 2026-08-05. $799/mo + $500 setup, 60-day initial term then
+    // month to month. Reston is the pilot of 6 studios (3 VA, 3 MD).
+    // Sources: address/phone/hours from stretchzone.com/locations/reston-va,
+    // verified 2026-07-30 against Yelp. Contact emails from George's "Welcome
+    // to Velocity AI Partners - Next Steps" thread (Rob is CC'd on it).
+    // ClubReady confirmed by George twice, incl. in that welcome email.
+    // contact_phone carries over from the 2026-07-30 /reston page, which
+    // Patrick received and did not correct.
+    reston: {
+      heading: 'Welcome, Patrick and Rob',
+      subheading: 'We filled in what we already know about Stretch Zone Reston. Please correct anything that looks wrong.',
+      fields: {
+        business_name: 'Stretch Zone Reston',
+        city: 'Reston',
+        address: '1468 North Point Village Drive, Reston, VA 20194',
+        business_phone: '(703) 822-5296',
+        timezone: 'America/New_York',
+        website_url: 'https://www.stretchzone.com/locations/reston-va',
+        location_page_url: 'https://www.stretchzone.com/locations/reston-va',
+        google_business_profile_url: 'https://www.google.com/maps/search/?api=1&query=Stretch%20Zone%201468%20North%20Point%20Village%20Drive%20Reston%20VA%2020194',
+        contact_name: 'Patrick Song',
+        contact_email: 'patrick@alphaflexllc.com',
+        contact_phone: '(917) 642-8030',
+        crm_platform: 'clubready'
+      },
+      hours: {
+        mon: ['08:00', '19:00'], tue: ['08:00', '19:00'], wed: ['08:00', '19:00'],
+        thu: ['08:00', '19:00'], fri: ['08:00', '19:00'],
+        sat: ['10:00', '16:00'], sun: ['10:00', '16:00']
+      },
+      users: [
+        { name: 'Patrick Song', email: 'patrick@alphaflexllc.com', role: 'admin' },
+        { name: 'Rob Koh', email: 'rob@alphaflexllc.com', role: 'admin' }
+      ]
+    },
+
+    // Chris Morrison -- Stretch Zone Cool Springs, TN.
+    // Signed 2026-08-07 (Docusign "Velocity AI Partners x Chris Morrison
+    // (Stretch Zone) Service Agreement"). $849/mo + $500 setup, 3-month commit.
+    // Sales Spark deal 0dc2d376, owner Paul Houle.
+    //
+    // COOL SPRINGS ONLY. Chris owns a second studio in Thompson's Station and
+    // the deal record says 2 locations, but George confirmed 2026-08-07 that
+    // Cool Springs is the one going live. If Thompson's Station follows, it
+    // needs its OWN entry and its own link -- one submission provisions exactly
+    // one location, so a second studio can never ride along on this form.
+    //
+    // SOURCES for the verified `fields` block:
+    //   address / business_phone / hours -- the brand's own location page,
+    //     stretchzone.com/locations/cool-springs-tn. /franklin-tn serves the
+    //     same studio; the canonical one is used here because it names it.
+    //     Read 2026-08-07.
+    //   business_email / instagram_handle -- the studio's own Instagram
+    //     (@stretchzone_coolsprings), whose bio carries coolspringstn@
+    //     stretchzone.com AND the same (615) 721-5190 as the brand page, which
+    //     is what ties the account to this studio rather than a nearby one.
+    //   contact_email / contact_phone -- Sales Spark lead 8f5302d1; Chris
+    //     confirmed the phone himself in his 2026-07-30 reply to Paul.
+    //   main_cta / intro_offer -- "First Stretch is FREE" on that same bio.
+    //   timezone -- middle TN is Central; the deal record also says Central.
+    //   crm_platform -- all 15 Stretch Zone locations we already run are on
+    //     ClubReady, so this is the brand default rather than a guess about
+    //     Chris specifically, and he can change it.
+    //
+    // NOT seeded, deliberately: facebook_page_url (a "Stretch Zone Franklin"
+    // page exists but Facebook blocks reads, so we cannot confirm it is his)
+    // and trial_booking_url (the studio's public links all point back at the
+    // brand location page, never at a real booking URL -- only Chris has it).
+    //
+    // 🔴 The `draftFields` block below is NOT verified for Cool Springs. It is
+    // how the Stretch Zones we already run answer these questions, seeded so
+    // Chris edits rather than types. PRICING IN PARTICULAR VARIES BY STUDIO:
+    // our own knowledge base has Baton Rouge at $139/$240/$440/$600 with a $95
+    // drop-in, the FL/MA studios at $119/$200/$360/$480 with $85, and Fair Oaks
+    // and Napa quoting "$45-$90 per 30-minute session". The ladder below is the
+    // most common one (6 of 14 studios) and the drop-in is the modal $85, but
+    // neither is a fact about Chris. Two things contain that risk: every value
+    // here is chipped "Draft" rather than "Pre-filled" and the subheading says
+    // what that means, and the pricing field itself leads with the brand's own
+    // do-not-quote-before-the-demo rule, which is what 7 of our studios tell
+    // their AI. Even unedited, the AI defers instead of quoting a wrong price.
+    'cool-springs': {
+      heading: 'Welcome, Chris',
+      subheading: 'Everything marked Pre-filled is what we already know about your Cool Springs studio, so please correct anything that looks wrong. Everything marked Draft is our starting point from running other Stretch Zones: edit it to match how you actually run Cool Springs, especially the pricing.',
+      fields: {
+        business_name: 'Stretch Zone Cool Springs',
+        city: 'Franklin',
+        address: '330 Mayfield Drive, Suite C9, Franklin, TN 37067',
+        business_phone: '(615) 721-5190',
+        business_email: 'coolspringstn@stretchzone.com',
+        timezone: 'America/Chicago',
+        website_url: 'https://www.stretchzone.com/locations/cool-springs-tn',
+        location_page_url: 'https://www.stretchzone.com/locations/cool-springs-tn',
+        google_business_profile_url: 'https://www.google.com/maps/search/?api=1&query=Stretch%20Zone%20330%20Mayfield%20Drive%20Franklin%20TN%2037067',
+        instagram_handle: '@stretchzone_coolsprings',
+        contact_name: 'Chris Morrison',
+        contact_email: 'morrison_chris@yahoo.com',
+        contact_phone: '(615) 525-7470',
+        crm_platform: 'clubready',
+        main_cta: 'book_demo'
+      },
+      draftFields: {
+        intro_offer:
+          'The first stretch is free. New leads book a complimentary practitioner-assisted session, which doubles as the assessment we use to recommend a frequency.',
+
+        bk_service_description:
+          'One-on-one practitioner-assisted stretching. A trained practitioner stretches the client on a patented Stretch Zone table, using a strap system to position, stabilize and isolate each muscle so it can be taken further and more safely than someone can stretch on their own. Sessions are by appointment, never self-guided and never a group class.',
+
+        // Leads with the do-not-quote rule on purpose. 7 of our Stretch Zones
+        // instruct their AI this way, and it is what keeps a wrong number from
+        // reaching a lead if Chris never edits the tiers below.
+        bk_membership_pricing:
+          'IMPORTANT: do not quote full membership pricing before the first stretch. If a lead asks directly, say options run roughly $40 to $55 per stretch depending on frequency, and that we review the exact plan in studio after the free session.\n\nMembership options:\nBasic Bi-Weekly (2 sessions/month): $119/month\n1x per week (4 sessions/month): $200/month ($50 per session)\n2x per week (8 sessions/month): $360/month ($45 per session)\n3x per week (12 sessions/month): $480/month ($40 per session)',
+
+        bk_single_session_rate: '$85 per session, pay as you go, no membership required.',
+
+        bk_eligibility:
+          'Open to adults of all fitness levels, including people who are not currently exercising. Clients with a recent injury, surgery or an acute medical condition should clear practitioner-assisted stretching with their doctor first.',
+
+        bk_first_visit:
+          'The first stretch is free and runs as a full session. The practitioner assesses range of motion, works through the areas the client cares about, and then talks through what frequency would help most. Wear comfortable clothes you can move in.',
+
+        bk_ideal_client:
+          'Active adults who want to keep moving well: desk workers who have tightened up, weekend athletes, runners and golfers, people training regularly who need recovery, and older adults working on mobility and balance.',
+
+        bk_unique_value:
+          'The table and strap system. Stabilizing and isolating a muscle is what lets a practitioner take a stretch further than a client can reach on their own, in a group class, or with a foam roller. Every session is one-on-one with a trained practitioner who tracks progress over time.',
+
+        // George's word for this: the concerns. These are the objections and
+        // motivations that actually come up, so the AI can meet them instead of
+        // reciting features.
+        bk_pain_points:
+          'What brings people in: stiffness and lost range of motion, back and hip tightness from sitting all day, nagging aches that limit what they can do, slow recovery between workouts, and wanting to stay mobile and steady with age.\n\nWhat holds them back: not knowing what assisted stretching actually is, assuming it is massage or physical therapy, worrying it will hurt, not being sure it is worth the money, thinking they are too out of shape or too inflexible to start, and not being able to find the time.',
+
+        bk_faq:
+          'Is this massage? No. Nothing is rubbed or manipulated; the practitioner moves the client through stretches on a table using a strap system.\n\nIs this physical therapy? No, and we do not treat, diagnose or rehabilitate injuries. Clients working through an injury should talk to their doctor or PT first.\n\nDoes it hurt? It should not. Stretches are taken to the edge of comfortable range, never past it, and the client tells the practitioner when to stop.\n\nWhat do I wear? Comfortable clothes you can move in.\n\nHow often should I come? That is exactly what the free first stretch is for.\n\nDo I have to buy a membership? No, single sessions are available, though most clients see more change with a regular frequency.',
+
+        // Compliance guardrails. Stretching studios are not medical providers
+        // and the AI must never imply otherwise.
+        avoid_words:
+          'Never claim we treat, cure, heal, fix or rehabilitate any injury or medical condition.\nNever diagnose, and never interpret a client\'s symptoms.\nDo not promise a specific medical or weight-loss outcome.\nDo not call the service massage, physical therapy or chiropractic.\nDo not quote full membership pricing before the first stretch.\nNo pushy or high-pressure closing language.',
+
+        preferred_words:
+          'Practitioner-assisted stretching, or assisted stretching.\nSession or stretch, rather than class or appointment slot.\nPractitioner, rather than therapist or masseuse.\nRange of motion, mobility, flexibility.\nFirst stretch is free.'
+      },
+      // Ticked to match the scope George quantified for Chris in the 2026-07-31
+      // ROI email: new leads (top of funnel), contacting 2,208 old leads, and
+      // retention/churn. Badged "Draft" as a section, so Chris can add or
+      // remove any of the 15 without hunting for what we changed.
+      campaigns: [
+        'camp_contacting_new_leads',
+        'camp_lead_reactivation_warm',
+        'camp_lead_reactivation_cold',
+        'camp_client_retention_high',
+        'camp_client_retention_medium'
+      ],
+      hours: {
+        mon: ['06:30', '20:00'], tue: ['06:30', '20:00'], wed: ['06:30', '20:00'],
+        thu: ['06:30', '20:00'], fri: ['06:30', '19:00'],
+        sat: ['07:00', '16:00'], sun: ['08:00', '14:00']
+      },
+      users: [
+        { name: 'Chris Morrison', email: 'morrison_chris@yahoo.com', role: 'admin' }
+      ]
+    }
+  };
+
+  // Short alias so a texted link stays short and unambiguous.
+  CLIENT_PREFILLS['coolsprings'] = CLIENT_PREFILLS['cool-springs'];
+
+  // `/song-koh` and `?form=song-koh` were the original 2026-07-30 routes and are
+  // in George's sent mail, so they have to keep resolving to the same client.
+  CLIENT_PREFILLS['song-koh'] = CLIENT_PREFILLS.reston;
+
+  // Which prefill applies. `?client=reston` is the explicit form (the main app
+  // builds admin links this way). The path form covers the clean vanity URL:
+  // `/reston` is a vercel.json REWRITE, so the browser URL stays `/reston` and
+  // location.search is empty -- a destination query string never reaches the
+  // client. Read the path, not the query, or the vanity link silently no-ops.
+  function clientSlug() {
+    try {
+      const q = new URLSearchParams(location.search).get('client');
+      if (q && CLIENT_PREFILLS[q.toLowerCase()]) return q.toLowerCase();
+      const p = location.pathname.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '').toLowerCase();
+      if (p && CLIENT_PREFILLS[p]) return p;
+    } catch (e) {}
+    return null;
+  }
+
   // Draft state: if the URL has ?draft=<uuid>, we are editing a server-side
   // draft. Save Draft writes back to the same row; Submit flips status to
   // 'pending'. If no draft param, we're on a blank form and the first Save
@@ -1475,19 +1681,28 @@
     return filled;
   }
 
-  function markAiSuggested(names) {
+  // chipText defaults to 'AI suggested' so every existing caller is unchanged.
+  // The client-prefill path passes 'Pre-filled': same chip, same clear-on-edit
+  // behaviour, honest about where the value actually came from.
+  function markAiSuggested(names, chipText) {
     const form = document.getElementById('intake-form');
     if (!form) return;
+    const text = chipText || 'AI suggested';
     const makeChip = (cls) => {
       const c = document.createElement('span');
       c.className = cls;
-      c.textContent = 'AI suggested';
+      c.textContent = text;
       return c;
     };
+    // Groups with no per-field label of their own: badge the section heading
+    // instead, keyed by a field we can use to find the right <section>.
+    const SECTION_BADGE_REF = {
+      hours: 'hours_mon_closed',
+      campaigns: 'camp_contacting_new_leads'
+    };
     (names || []).forEach((name) => {
-      // The hours grid has no per-field labels: badge the section heading.
-      if (name === 'hours') {
-        const ref = form.elements['hours_mon_closed'];
+      if (SECTION_BADGE_REF[name]) {
+        const ref = form.elements[SECTION_BADGE_REF[name]];
         const section = ref && ref.closest ? ref.closest('section') : null;
         const h2 = section ? section.querySelector('h2') : null;
         if (h2 && !h2.querySelector('.ai-suggested-badge')) h2.appendChild(makeChip('ai-suggested-badge'));
@@ -1522,6 +1737,99 @@
         node.addEventListener('change', clear, { once: true });
       }
     });
+  }
+
+  // Seed the form from CLIENT_PREFILLS for a pre-filled client link.
+  //
+  // Ordering is load-bearing. This runs AFTER initDraftFromUrl() so a returning
+  // client's saved answers always beat the static config, and BEFORE
+  // captureAutosaveBaseline() so the seeded values become the baseline. Run it
+  // after the baseline instead and changedFieldCount() reads ~20 on a form
+  // nobody has touched, autosave fires the 3-changed-field cold start, and the
+  // slack-intake-submission trigger pings #client-onboarding with <!channel>
+  // for a client who never typed a character.
+  function applyClientPrefill() {
+    const slug = clientSlug();
+    if (!slug) return null;
+    const cfg = CLIENT_PREFILLS[slug];
+    const form = document.getElementById('intake-form');
+    if (!cfg || !form) return null;
+
+    // A loaded draft is the client's own work. Never overwrite it.
+    if (draftId) return null;
+
+    // Two tiers of seeded value, chipped differently on purpose.
+    //   fields      -- verified for THIS studio (signed agreement, the brand's
+    //                  own location page, the studio's own channels, our CRM).
+    //                  Chipped "Pre-filled".
+    //   draftFields -- our starting draft, carried over from how the Stretch
+    //                  Zones we already run answer the same question. True of
+    //                  the brand, NOT verified for this studio. Chipped
+    //                  "Draft" so the client can see at a glance which values
+    //                  are ours to correct rather than ours to confirm.
+    // Keeping these apart is the difference between "we looked this up" and
+    // "we guessed" -- pricing especially varies studio to studio.
+    const filled = [];
+    const drafted = [];
+
+    const seed = (map, bucket) => {
+      Object.keys(map || {}).forEach((name) => {
+        const el = form.elements[name];
+        if (!el || typeof el.length === 'number' && el.tagName === undefined) return;
+        el.value = map[name];
+        bucket.push(name);
+      });
+    };
+
+    seed(cfg.fields, filled);
+    seed(cfg.draftFields, drafted);
+
+    if (cfg.hours) {
+      DAYS.forEach((d) => {
+        const h = cfg.hours[d];
+        if (!h) return;
+        const openEl = form.elements[`hours_${d}_open`];
+        const closeEl = form.elements[`hours_${d}_close`];
+        if (openEl) openEl.value = h[0];
+        if (closeEl) closeEl.value = h[1];
+      });
+      filled.push('hours');
+    }
+
+    // renderUsers() has already seeded row 0; addUser() appends the rest.
+    (cfg.users || []).forEach((u, i) => {
+      if (i > 0) addUser();
+      const nameEl = form.elements[`user_${i}_name`];
+      const emailEl = form.elements[`user_${i}_email`];
+      const roleEl = form.elements[`user_${i}_role`];
+      if (nameEl) nameEl.value = u.name;
+      if (emailEl) emailEl.value = u.email;
+      if (roleEl && u.role) roleEl.value = u.role;
+    });
+
+    // Campaign Map checkboxes. Ticking a box is a claim about what the client
+    // wants their AI Team Member to do, so only seed campaigns that match the
+    // scope we actually sold and quantified for them, and badge the whole
+    // section once rather than chipping 15 boxes individually.
+    (cfg.campaigns || []).forEach((name) => {
+      const el = form.elements[name];
+      if (!el || el.type !== 'checkbox') return;
+      el.checked = true;
+    });
+    if ((cfg.campaigns || []).length) drafted.push('campaigns');
+
+    // crm_platform is a select whose "other" text box is toggled by a change
+    // listener. Setting .value in code fires no event, so call the toggle.
+    if (cfg.fields && cfg.fields.crm_platform) toggleCrmOther();
+
+    const h1 = document.querySelector('header h1');
+    if (h1 && cfg.heading) h1.textContent = cfg.heading;
+    const lead = document.querySelector('header p.lead');
+    if (lead && cfg.subheading) lead.textContent = cfg.subheading;
+
+    markAiSuggested(filled, 'Pre-filled');
+    markAiSuggested(drafted, 'Draft');
+    return { slug, count: filled.length + drafted.length };
   }
 
   async function runPrefill(url, btn) {
@@ -1596,6 +1904,8 @@
     initPrefillButton();
 
     await initDraftFromUrl();
+    // Between the draft load and the baseline. See applyClientPrefill().
+    applyClientPrefill();
     captureAutosaveBaseline();
     maybeRestoreLocalBackup();
     initAutosave();
