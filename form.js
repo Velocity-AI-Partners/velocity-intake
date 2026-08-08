@@ -194,6 +194,154 @@
       users: [
         { name: 'Chris Morrison', email: 'morrison_chris@yahoo.com', role: 'admin' }
       ]
+    },
+
+    // Stretch Zone Gaithersburg MD -- Patrick Song and Rob Koh (AlphaFlex LLC),
+    // the SAME owners as `reston` above. Their second studio with us.
+    // Signed 2026-08-07 20:47 UTC (Docusign "Velocity AI Partners x Patrick Song
+    // (Stretch Zone) Location Addition"). $749/mo + $500 setup, 60 days up front
+    // then month to month -- terms confirmed by George 2026-08-08. The 60-day
+    // term is the same one George quoted Patrick by email on 2026-07-31 ("We do
+    // 60 days, then month to month after, cancel anytime") and had written into
+    // the contract on 2026-08-03, replacing the 90-day language.
+    // Sales Spark deal aa4a0982, owner Paul Houle.
+    //
+    // GAITHERSBURG ONLY. The group runs 6 Stretch Zones (3 VA, 3 MD) and the
+    // master agreement lets them add the rest at the same rates, but one
+    // submission provisions exactly one location. Ashburn and Potomac each need
+    // their OWN entry and their own link; they can never ride along on this form.
+    //
+    // SOURCES for the verified `fields` block:
+    //   address / business_phone / hours / intro_offer -- the brand's own
+    //     location page, stretchzone.com/locations/gaithersburg-md, read
+    //     2026-08-08 and cross-checked against the studio's Fresha listing,
+    //     which returns the same phone and the same 7 days of hours. Both give
+    //     the address with NO unit number; a search engine volunteered
+    //     "Unit 13", nothing we could read confirmed it, so it is not here.
+    //   business_email -- decoded from that page's own Cloudflare-obfuscated
+    //     mailto link (data-cfemail is XOR'd against its first byte), which
+    //     yields gaithersburg@stretchzone.com alongside the corporate
+    //     info@stretchzone.com. Independently corroborated by Sales Spark lead
+    //     3996e589, the Gaithersburg row owned by Rob Koh. NOTE: a second lead
+    //     row (3b0b8e2d) carries sz.gaithersburg.md@stretchzone.com for the same
+    //     studio -- same phone, so it is a duplicate. That address is the
+    //     import script's generated pattern and is NOT the studio's; the deal
+    //     notes flag the duplicate pair for deduping.
+    //   instagram_handle -- @stretchzone_gaithersburg, tied to THIS studio in
+    //     both directions: the brand's own location page lists it as the
+    //     studio's Instagram, and the account's bio links back to
+    //     stretchzone.com/locations/gaithersburg. The usual phone match was not
+    //     available (this bio publishes neither a phone nor an email), so the
+    //     two-way link is what does the disambiguating here.
+    //   contact_name / contact_email / contact_phone -- Patrick, from the
+    //     `reston` entry above. His phone independently matches +19176428030 on
+    //     Sales Spark lead 36dad8c2, the lead this deal hangs off.
+    //   timezone -- Maryland is Eastern.
+    //   crm_platform -- all 15 Stretch Zone locations we already run are on
+    //     ClubReady, and Reston is theirs and is on ClubReady, so this is the
+    //     brand default rather than a guess. They can change it.
+    //
+    // NOT seeded, deliberately: facebook_page_url (the location page names a
+    // Facebook account but Facebook blocks reads, so we cannot confirm it),
+    // trial_booking_url (only they have it), bk_package_pricing, bk_promotions
+    // and bk_cancellation_policy (studio-specific, and we have no source).
+    //
+    // 🔴 The `draftFields` block below is NOT verified for Gaithersburg. It is
+    // how the Stretch Zones we already run answer these questions, carried over
+    // wholesale from `cool-springs` because it is brand-level, and seeded so
+    // they edit rather than type. PRICING IN PARTICULAR VARIES BY STUDIO: our
+    // knowledge base has ladders from $119/$200/$360/$480 to $139/$240/$440/$600
+    // and drop-ins at $85, $90 and $95. Nothing here is a fact about this
+    // studio. Two things contain that risk: every value is chipped "Draft"
+    // rather than "Pre-filled" and the subheading says what that means, and the
+    // pricing field leads with the brand's do-not-quote-before-the-demo rule, so
+    // even unedited the AI defers instead of quoting another studio's rate card.
+    gaithersburg: {
+      heading: 'Welcome back, Patrick and Rob',
+      subheading: 'This form is for your Gaithersburg studio. Everything marked Pre-filled is what we already know about that location, so please correct anything that looks wrong. Everything marked Draft is our starting point from the other Stretch Zones we run: edit it to match how you actually run Gaithersburg, especially the pricing.',
+      fields: {
+        business_name: 'Stretch Zone Gaithersburg',
+        city: 'Gaithersburg',
+        address: '251 Kentlands Boulevard, Gaithersburg, MD 20878',
+        business_phone: '(301) 798-7376',
+        business_email: 'gaithersburg@stretchzone.com',
+        timezone: 'America/New_York',
+        website_url: 'https://www.stretchzone.com/locations/gaithersburg-md',
+        location_page_url: 'https://www.stretchzone.com/locations/gaithersburg-md',
+        google_business_profile_url: 'https://www.google.com/maps/search/?api=1&query=Stretch%20Zone%20251%20Kentlands%20Boulevard%20Gaithersburg%20MD%2020878',
+        instagram_handle: '@stretchzone_gaithersburg',
+        contact_name: 'Patrick Song',
+        contact_email: 'patrick@alphaflexllc.com',
+        contact_phone: '(917) 642-8030',
+        crm_platform: 'clubready',
+        main_cta: 'book_demo',
+        // Verified for THIS studio rather than carried over: the Gaithersburg
+        // page runs "A FREE 30min. STRETCH IS WAITING FOR YOU" and "Your first
+        // stretch with us is on the house". Stated plainly, with none of the
+        // operational elaboration that keeps the Cool Springs version a draft.
+        intro_offer: 'The first 30-minute stretch is free.'
+      },
+      draftFields: {
+        bk_service_description:
+          'One-on-one practitioner-assisted stretching. A trained practitioner stretches the client on a patented Stretch Zone table, using a strap system to position, stabilize and isolate each muscle so it can be taken further and more safely than someone can stretch on their own. Sessions are by appointment, never self-guided and never a group class.',
+
+        // Leads with the do-not-quote rule on purpose. 7 of our Stretch Zones
+        // instruct their AI this way, and it is what keeps a wrong number from
+        // reaching a lead if these tiers are never edited.
+        bk_membership_pricing:
+          'IMPORTANT: do not quote full membership pricing before the first stretch. If a lead asks directly, say options run roughly $40 to $55 per stretch depending on frequency, and that we review the exact plan in studio after the free session.\n\nMembership options:\nBasic Bi-Weekly (2 sessions/month): $119/month\n1x per week (4 sessions/month): $200/month ($50 per session)\n2x per week (8 sessions/month): $360/month ($45 per session)\n3x per week (12 sessions/month): $480/month ($40 per session)',
+
+        bk_single_session_rate: '$85 per session, pay as you go, no membership required.',
+
+        bk_eligibility:
+          'Open to adults of all fitness levels, including people who are not currently exercising. Clients with a recent injury, surgery or an acute medical condition should clear practitioner-assisted stretching with their doctor first.',
+
+        // Carried over from cool-springs, with one edit: the free session is
+        // described as 30 minutes, because that is what this studio's own page
+        // advertises. Leaving the generic "a full session" would have put the
+        // draft in conflict with the verified intro_offer on the same page.
+        bk_first_visit:
+          'The first stretch is free and runs as a full 30-minute session. The practitioner assesses range of motion, works through the areas the client cares about, and then talks through what frequency would help most. Wear comfortable clothes you can move in.',
+
+        bk_ideal_client:
+          'Active adults who want to keep moving well: desk workers who have tightened up, weekend athletes, runners and golfers, people training regularly who need recovery, and older adults working on mobility and balance.',
+
+        bk_unique_value:
+          'The table and strap system. Stabilizing and isolating a muscle is what lets a practitioner take a stretch further than a client can reach on their own, in a group class, or with a foam roller. Every session is one-on-one with a trained practitioner who tracks progress over time.',
+
+        bk_pain_points:
+          'What brings people in: stiffness and lost range of motion, back and hip tightness from sitting all day, nagging aches that limit what they can do, slow recovery between workouts, and wanting to stay mobile and steady with age.\n\nWhat holds them back: not knowing what assisted stretching actually is, assuming it is massage or physical therapy, worrying it will hurt, not being sure it is worth the money, thinking they are too out of shape or too inflexible to start, and not being able to find the time.',
+
+        bk_faq:
+          'Is this massage? No. Nothing is rubbed or manipulated; the practitioner moves the client through stretches on a table using a strap system.\n\nIs this physical therapy? No, and we do not treat, diagnose or rehabilitate injuries. Clients working through an injury should talk to their doctor or PT first.\n\nDoes it hurt? It should not. Stretches are taken to the edge of comfortable range, never past it, and the client tells the practitioner when to stop.\n\nWhat do I wear? Comfortable clothes you can move in.\n\nHow often should I come? That is exactly what the free first stretch is for.\n\nDo I have to buy a membership? No, single sessions are available, though most clients see more change with a regular frequency.',
+
+        // Compliance guardrails. Stretching studios are not medical providers
+        // and the AI must never imply otherwise.
+        avoid_words:
+          'Never claim we treat, cure, heal, fix or rehabilitate any injury or medical condition.\nNever diagnose, and never interpret a client\'s symptoms.\nDo not promise a specific medical or weight-loss outcome.\nDo not call the service massage, physical therapy or chiropractic.\nDo not quote full membership pricing before the first stretch.\nNo pushy or high-pressure closing language.',
+
+        preferred_words:
+          'Practitioner-assisted stretching, or assisted stretching.\nSession or stretch, rather than class or appointment slot.\nPractitioner, rather than therapist or masseuse.\nRange of motion, mobility, flexibility.\nFirst stretch is free.'
+      },
+      // Nothing ticked, on purpose. Ticking a Campaign Map box is a claim about
+      // what was sold, and nothing was quantified for Gaithersburg: the deal
+      // (aa4a0982) was opened by the expansion-flow agent with no proposal link,
+      // no call recordings and no scope notes, and the only mail to Patrick that
+      // mentions leads at all is the generic 2026-07-22 AI-audit nurture. Cool
+      // Springs got 5 ticks because George's 2026-07-31 ROI email counted 2,208
+      // old leads for that studio; there is no equivalent here, and Reston, the
+      // same owners' first location, ships with none ticked either. They pick on
+      // the onboarding call rather than confirm a scope we invented for them.
+      campaigns: [],
+      hours: {
+        mon: ['07:00', '19:00'], tue: ['07:00', '19:00'], wed: ['07:00', '19:00'],
+        thu: ['07:00', '19:00'], fri: ['07:00', '19:00'],
+        sat: ['08:00', '16:00'], sun: ['08:00', '16:00']
+      },
+      users: [
+        { name: 'Patrick Song', email: 'patrick@alphaflexllc.com', role: 'admin' },
+        { name: 'Rob Koh', email: 'rob@alphaflexllc.com', role: 'admin' }
+      ]
     }
   };
 

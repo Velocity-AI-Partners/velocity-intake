@@ -4,6 +4,7 @@
     { "source": "/song-koh", "destination": "/index.html" },
     { "source": "/cool-springs", "destination": "/index.html" },
     { "source": "/coolsprings", "destination": "/index.html" },
+    { "source": "/gaithersburg", "destination": "/index.html" },
     { "source": "/brickell", "destination": "/gorman.html" },
     { "source": "/gorman", "destination": "/gorman.html" },
     { "source": "/magretti", "destination": "/magretti.html" },

@@ -47,6 +47,7 @@ function check(name, ok, detail = '') {
 const REWRITES = {
   '/reston': '/index.html', '/song-koh': '/index.html',
   '/cool-springs': '/index.html', '/coolsprings': '/index.html',
+  '/gaithersburg': '/index.html',
 };
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg' };
 
@@ -304,19 +305,24 @@ try {
   check('?client=reston prefills too', q.fields.business_name === 'Stretch Zone Reston',
     `got ${JSON.stringify(q.fields.business_name)}`);
 
-  // ------------------------------------- 7. Chris Morrison, Cool Springs
-  // Cool Springs ONLY. Chris also owns Thompson's Station and the deal record
-  // says 2 locations, but George confirmed 2026-08-07 that Cool Springs is the
-  // one going live. If Thompson's Station follows it gets its own entry and
-  // its own link -- one submission provisions exactly one location.
+  // -------------------------------------------- 7. the per-studio prefills
+  // One entry per pre-filled client link. Every value below must match the
+  // brand's own location page or a named CRM record, not merely match the
+  // config -- a test that only asserts the config equals itself proves nothing
+  // about whether we sent the client someone else's address.
   //
-  // The values below must match the brand's own location page,
-  // stretchzone.com/locations/franklin-tn (which IS the Cool Springs studio),
-  // read 2026-08-07, plus the contact details on Sales Spark lead 8f5302d1.
-  const MORRISON = [
+  // Each is scoped to ONE studio even where the owner has more: Chris also owns
+  // Thompson's Station, Patrick and Rob own 6. One submission provisions exactly
+  // one location, so every additional studio gets its own entry and its own
+  // link and can never ride along on an existing form.
+  const STUDIOS = [
     {
       path: '/cool-springs', alias: '/coolsprings', label: 'Cool Springs',
+      // stretchzone.com/locations/cool-springs-tn (/franklin-tn serves the same
+      // studio), read 2026-08-07, plus Sales Spark lead 8f5302d1.
       heading: 'Welcome, Chris', studio: /Cool Springs/i,
+      owner: { name: 'Chris Morrison', email: 'morrison_chris@yahoo.com' },
+      userRows: 1,
       fields: {
         business_name: 'Stretch Zone Cool Springs',
         city: 'Franklin',
@@ -345,21 +351,65 @@ try {
         'camp_contacting_new_leads', 'camp_lead_reactivation_cold', 'camp_lead_reactivation_warm'],
       hours: { mon: ['06:30', '20:00'], fri: ['06:30', '19:00'], sat: ['07:00', '16:00'], sun: ['08:00', '14:00'] },
     },
+    {
+      // Patrick Song and Rob Koh's SECOND studio. Signed 2026-08-07, $749/mo +
+      // $500 setup, 60 days then month to month.
+      //
+      // Values from stretchzone.com/locations/gaithersburg-md read 2026-08-08,
+      // cross-checked against the studio's Fresha listing (same phone, same 7
+      // days of hours, and the same address with NO unit number). business_email
+      // is decoded from that page's own Cloudflare-obfuscated mailto and is
+      // corroborated by Sales Spark lead 3996e589; contact details are Patrick's
+      // from `reston`, his phone matching lead 36dad8c2.
+      path: '/gaithersburg', label: 'Gaithersburg',
+      heading: 'Welcome back, Patrick and Rob', studio: /Gaithersburg/i,
+      owner: { name: 'Patrick Song', email: 'patrick@alphaflexllc.com' },
+      userRows: 2,
+      fields: {
+        business_name: 'Stretch Zone Gaithersburg',
+        city: 'Gaithersburg',
+        address: '251 Kentlands Boulevard, Gaithersburg, MD 20878',
+        business_phone: '(301) 798-7376',
+        business_email: 'gaithersburg@stretchzone.com',
+        instagram_handle: '@stretchzone_gaithersburg',
+        timezone: 'America/New_York',
+        website_url: 'https://www.stretchzone.com/locations/gaithersburg-md',
+        location_page_url: 'https://www.stretchzone.com/locations/gaithersburg-md',
+        contact_name: 'Patrick Song',
+        contact_email: 'patrick@alphaflexllc.com',
+        contact_phone: '(917) 642-8030',
+        crm_platform: 'clubready',
+        main_cta: 'book_demo',
+        // Verified for this studio, so it is Pre-filled rather than Draft:
+        // their own page advertises a free 30-minute first stretch.
+        intro_offer: 'The first 30-minute stretch is free.',
+      },
+      draftFilled: ['bk_service_description', 'bk_membership_pricing',
+        'bk_single_session_rate', 'bk_eligibility', 'bk_first_visit', 'bk_ideal_client',
+        'bk_unique_value', 'bk_pain_points', 'bk_faq', 'avoid_words', 'preferred_words'],
+      mustBeBlank: ['trial_booking_url', 'facebook_page_url'],
+      // Deliberately empty: nothing was quantified for Gaithersburg. The deal
+      // carries no proposal and no scope notes, so ticking a box here would be
+      // asserting a scope we made up. This assertion is the guard against
+      // someone later copying Cool Springs' five ticks across.
+      campaigns: [],
+      hours: { mon: ['07:00', '19:00'], fri: ['07:00', '19:00'], sat: ['08:00', '16:00'], sun: ['08:00', '16:00'] },
+    },
   ];
 
-  for (const s of MORRISON) {
-    console.log(`\n--- ${s.path} (Chris Morrison, ${s.label}) ---`);
+  for (const s of STUDIOS) {
+    console.log(`\n--- ${s.path} (${s.owner.name}, ${s.label}) ---`);
     await cdp.goto(`http://127.0.0.1:${PORT}${s.path}`);
     const m = await cdp.eval(READ_FORM);
 
     for (const [k, want] of Object.entries(s.fields)) {
       check(`${s.label}: ${k}`, m.fields[k] === want, `got ${JSON.stringify(m.fields[k])}, want ${JSON.stringify(want)}`);
     }
-    check(`${s.label}: heading greets Chris`, m.h1 === s.heading, `got ${JSON.stringify(m.h1)}`);
-    // Chris owns two studios, so the page has to say WHICH one this form is
-    // for, and still ask him to correct anything wrong.
+    check(`${s.label}: heading greets the owner`, m.h1 === s.heading, `got ${JSON.stringify(m.h1)}`);
+    // Every owner here runs more than one studio, so the page has to say WHICH
+    // one this form is for, and still ask them to correct anything wrong.
     check(`${s.label}: subheading names the studio`, s.studio.test(m.lead), `got ${JSON.stringify(m.lead)}`);
-    check(`${s.label}: subheading asks him to correct anything wrong`, /correct anything/i.test(m.lead), `got ${JSON.stringify(m.lead)}`);
+    check(`${s.label}: subheading asks them to correct anything wrong`, /correct anything/i.test(m.lead), `got ${JSON.stringify(m.lead)}`);
 
     for (const [day, want] of Object.entries(s.hours)) {
       check(`${s.label}: ${day} hours ${want[0]}-${want[1]}`,
@@ -367,8 +417,9 @@ try {
         JSON.stringify(m.hours[day]));
     }
 
-    check(`${s.label}: one dashboard user row (Chris only)`, m.userRows === 1, `got ${m.userRows}`);
-    check(`${s.label}: user 0 is Chris`, m.users[0].name === 'Chris Morrison' && m.users[0].email === 'morrison_chris@yahoo.com',
+    check(`${s.label}: ${s.userRows} dashboard user row(s)`, m.userRows === s.userRows, `got ${m.userRows}`);
+    check(`${s.label}: user 0 is ${s.owner.name}`,
+      m.users[0].name === s.owner.name && m.users[0].email === s.owner.email,
       JSON.stringify(m.users[0]));
 
     // ---- the two-tier chip contract -------------------------------------
@@ -398,9 +449,11 @@ try {
       /never claim we treat, cure, heal/i.test(m.fields.avoid_words || ''),
       `got ${JSON.stringify((m.fields.avoid_words || '').slice(0, 80))}`);
 
-    check(`${s.label}: the contracted campaigns are ticked`,
+    check(s.campaigns.length
+      ? `${s.label}: the contracted campaigns are ticked`
+      : `${s.label}: NO campaigns are ticked (nothing was quantified)`,
       JSON.stringify(m.campaignsChecked) === JSON.stringify(s.campaigns),
-      `got ${JSON.stringify(m.campaignsChecked)}`);
+      `got ${JSON.stringify(m.campaignsChecked)}, want ${JSON.stringify(s.campaigns)}`);
     check(`${s.label}: crm "other" box stays hidden`, m.crmOtherHidden === true, `hidden=${m.crmOtherHidden}`);
     // The reason for using CLIENT_PREFILLS instead of forking the form.
     check(`${s.label}: all 15 Campaign Map checkboxes present`, m.campaignBoxes === 15, `got ${m.campaignBoxes}`);
@@ -422,10 +475,13 @@ try {
       'the seeded values are being counted as client edits, so an untouched form inserts a row and pings Slack');
 
     // The short alias is what actually gets texted, so it has to resolve.
-    await cdp.goto(`http://127.0.0.1:${PORT}${s.alias}`);
-    const a = await cdp.eval(READ_FORM);
-    check(`${s.label}: ${s.alias} resolves to the same studio`, a.fields.business_name === s.fields.business_name,
-      `got ${JSON.stringify(a.fields.business_name)}`);
+    // Only hyphenated slugs need one; /gaithersburg is already one word.
+    if (s.alias) {
+      await cdp.goto(`http://127.0.0.1:${PORT}${s.alias}`);
+      const a = await cdp.eval(READ_FORM);
+      check(`${s.label}: ${s.alias} resolves to the same studio`, a.fields.business_name === s.fields.business_name,
+        `got ${JSON.stringify(a.fields.business_name)}`);
+    }
   }
 
   // Chris's link must not be Reston's. Both are Stretch Zone studios seeded
@@ -440,13 +496,35 @@ try {
     !/alphaflex/i.test(JSON.stringify(cs.users)),
     JSON.stringify(cs.fields));
 
+  // Gaithersburg is the sharper version of the same risk. It is the SAME owners
+  // as Reston, so it legitimately carries Patrick, Rob and alphaflexllc.com and
+  // the check above would not catch a slip -- the only thing separating the two
+  // forms is the studio's own address, phone, email and hours. If any Reston
+  // studio data leaked across, this form would provision Reston a second time.
+  console.log('\n--- Gaithersburg carries the right studio, not Reston ---');
+  await cdp.goto(`http://127.0.0.1:${PORT}/gaithersburg`);
+  const g = await cdp.eval(READ_FORM);
+  check('Gaithersburg carries no Reston studio data',
+    g.fields.business_name === 'Stretch Zone Gaithersburg' &&
+    !/reston/i.test(JSON.stringify(g.fields)) &&
+    !/north point village/i.test(JSON.stringify(g.fields)) &&
+    !/822-5296/.test(JSON.stringify(g.fields)),
+    JSON.stringify(g.fields));
+  check('Gaithersburg still carries the shared owners',
+    /alphaflexllc\.com/.test(JSON.stringify(g.users)) && g.users[1].name === 'Rob Koh',
+    JSON.stringify(g.users));
+
   // Reston must survive the change: same file, and its config sits directly
-  // above the new entry.
-  console.log('\n--- reston still works after adding Morrison ---');
+  // above the two newer entries.
+  console.log('\n--- reston still works after adding the newer studios ---');
   await cdp.goto(`http://127.0.0.1:${PORT}/reston`);
   const still = await cdp.eval(READ_FORM);
   check('reston is unaffected', still.fields.business_name === 'Stretch Zone Reston' && still.userRows === 2,
     `got ${JSON.stringify(still.fields.business_name)}, ${still.userRows} user rows`);
+  check('reston still carries its own address and phone',
+    still.fields.address === '1468 North Point Village Drive, Reston, VA 20194' &&
+    still.fields.business_phone === '(703) 822-5296',
+    `got ${JSON.stringify(still.fields.address)}, ${JSON.stringify(still.fields.business_phone)}`);
 } finally {
   if (cdp && cdp.ws) try { cdp.ws.close(); } catch {}
   if (chrome) try { chrome.kill('SIGKILL'); } catch {}
